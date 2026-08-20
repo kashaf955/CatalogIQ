@@ -43,9 +43,3 @@ cd FrontEnd
 npm run dev
 ```
 
-## Status
-
-- Frontend scaffolded and dependencies installed.
-- Backend source files scaffolded (Express server, Product model, CRUD routes, scraper stub).
-- **`npm install` in `Backend/` has not been run yet** — the machine's C: drive was full (0 GB free) at setup time, which blocks npm and other tooling. Free up space on C: and run `npm install` in `Backend/` to finish setup.
-- Competitor scraping logic (`src/scrapers/genericScraper.ts`) is a stub — selectors need to be added once target competitor site(s) are known.
