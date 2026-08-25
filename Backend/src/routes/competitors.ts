@@ -5,6 +5,7 @@ import { CompetitorProduct } from "../models/CompetitorProduct";
 import { ProcessingRun } from "../models/ProcessingRun";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { runScrapeForMatches } from "../services/competitorScrapeService";
+import { emitProcessingRunUpdate } from "../queue/socket";
 
 const router = Router();
 
@@ -98,8 +99,16 @@ router.post(
     });
     try {
       const summary = await runScrapeForMatches(req.params.id, body.matchResultIds, run.id);
+      const updated = await ProcessingRun.findById(run.id);
+      emitProcessingRunUpdate(run.id, updated);
       res.json({ processingRunId: run.id, ...summary });
     } catch (err) {
+      const updated = await ProcessingRun.findByIdAndUpdate(
+        run.id,
+        { status: "failed", errorMessages: [(err as Error).message], errorCount: 1, finishedAt: new Date() },
+        { new: true }
+      );
+      emitProcessingRunUpdate(run.id, updated);
       res.status(400).json({ error: (err as Error).message, processingRunId: run.id });
     }
   })

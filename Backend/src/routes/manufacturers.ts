@@ -4,11 +4,13 @@ import { z } from "zod";
 import { Manufacturer } from "../models/Manufacturer";
 import { ManufacturerProduct } from "../models/ManufacturerProduct";
 import { ImportMapping } from "../models/ImportMapping";
+import { ProcessingRun } from "../models/ProcessingRun";
 import { catalogFileUpload } from "../middleware/upload";
 import { asyncHandler } from "../middleware/asyncHandler";
 import { parseUploadedFile } from "../services/fileParsingService";
 import { suggestFieldMap } from "../services/columnMappingService";
 import { importManufacturerRows } from "../services/manufacturerImportService";
+import { emitProcessingRunUpdate } from "../queue/socket";
 
 const router = Router();
 
@@ -126,8 +128,23 @@ router.post(
     const brandColumn = typeof req.body.brandColumn === "string" ? req.body.brandColumn : undefined;
 
     const parsed = await parseUploadedFile(req.file.buffer, req.file.originalname);
-    const summary = await importManufacturerRows(req.params.id, parsed.rows, fieldMap, brandColumn);
-    res.json(summary);
+    const run = await ProcessingRun.create({
+      type: "manufacturer_import",
+      status: "queued",
+      manufacturer: req.params.id,
+      totalItems: parsed.rows.length,
+    });
+
+    const summary = await importManufacturerRows(
+      req.params.id,
+      parsed.rows,
+      fieldMap,
+      brandColumn,
+      run.id
+    );
+    const updated = await ProcessingRun.findById(run.id);
+    emitProcessingRunUpdate(run.id, updated);
+    res.json({ processingRunId: run.id, ...summary });
   })
 );
 
