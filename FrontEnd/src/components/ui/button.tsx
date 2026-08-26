@@ -4,20 +4,22 @@ import type { VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:opacity-90",
-        secondary: "bg-secondary text-secondary-foreground hover:opacity-80",
-        outline: "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground",
+        default:
+          "bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary-hover hover:shadow-md hover:shadow-primary/25",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-border/70",
+        outline:
+          "border border-border bg-card shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/30",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        destructive: "bg-destructive text-destructive-foreground hover:opacity-90",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:opacity-90",
       },
       size: {
         default: "h-9 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-6",
+        lg: "h-11 rounded-lg px-6 text-[15px]",
         icon: "h-9 w-9",
       },
     },

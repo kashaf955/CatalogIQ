@@ -7,10 +7,11 @@ import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { MatchStatusBadge, ReviewStatusBadge } from "./StatusBadge";
 
-function Column({ title, children }: { title: string; children: ReactNode }) {
+function Column({ title, accent, children }: { title: string; accent: string; children: ReactNode }) {
   return (
-    <div className="flex-1 rounded-md border border-border p-3">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex-1 rounded-lg border border-border bg-muted/30 p-3.5">
+      <p className={`mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider ${accent}`}>
+        <span className="h-1.5 w-1.5 rounded-full bg-current" />
         {title}
       </p>
       {children}
@@ -45,24 +46,28 @@ export function ComparisonRow({ result, onUpdated }: { result: MatchResult; onUp
   const { ourProduct: our, manufacturerProduct: mfg, competitorProduct: comp } = result;
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 pt-4">
+    <Card className="hover:shadow-md">
+      <CardContent className="flex flex-col gap-4 pt-4">
         <div className="flex flex-wrap items-center gap-2">
           <MatchStatusBadge status={result.matchStatus} />
           <ReviewStatusBadge status={result.reviewStatus} />
           {result.matchedSignal && (
-            <span className="text-xs text-muted-foreground">signal: {result.matchedSignal}</span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              signal: {result.matchedSignal}
+            </span>
           )}
-          <span className="text-xs text-muted-foreground">
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
             confidence: {(result.confidence * 100).toFixed(0)}%
           </span>
           {result.decisionSource === "ai" && (
-            <span className="text-xs text-muted-foreground">via Claude</span>
+            <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+              via Claude
+            </span>
           )}
         </div>
 
         <div className="flex flex-col gap-3 md:flex-row">
-          <Column title="Our Product">
+          <Column title="Our Product" accent="text-primary">
             {our ? (
               <>
                 <Field label="SKU" value={our.sku} />
@@ -77,7 +82,7 @@ export function ComparisonRow({ result, onUpdated }: { result: MatchResult; onUp
             )}
           </Column>
 
-          <Column title="Manufacturer">
+          <Column title="Manufacturer" accent="text-warning">
             {mfg ? (
               <>
                 <Field label="MPN" value={mfg.mpn} />
@@ -92,7 +97,7 @@ export function ComparisonRow({ result, onUpdated }: { result: MatchResult; onUp
             )}
           </Column>
 
-          <Column title="Competitor">
+          <Column title="Competitor" accent="text-success">
             {comp ? (
               <>
                 <p className="font-medium">{comp.name}</p>
@@ -114,7 +119,7 @@ export function ComparisonRow({ result, onUpdated }: { result: MatchResult; onUp
           </p>
         )}
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <Input
             placeholder="Add a note"
             value={note}

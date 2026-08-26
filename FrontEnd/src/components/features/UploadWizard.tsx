@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useId, useState } from "react";
+import { UploadCloud, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
 import { Select } from "../ui/select";
+import { TableShell, TableHead, TableHeadCell, TableBody, TableRow, TableCell } from "../ui/table";
 import type { ImportSummary, UploadPreview } from "../../api/types";
 
 const STANDARD_FIELDS: { key: string; label: string; required?: boolean }[] = [
@@ -45,6 +47,7 @@ export function UploadWizard({
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputId = useId();
 
   const fields = requireSku
     ? [{ key: "sku", label: "SKU", required: true }, ...STANDARD_FIELDS.filter((f) => f.key !== "sku")]
@@ -90,14 +93,31 @@ export function UploadWizard({
         <CardTitle>Upload CSV or Excel file</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <input
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-          className="text-sm"
-        />
+        <label
+          htmlFor={inputId}
+          className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50 hover:bg-accent/40"
+        >
+          {file ? (
+            <FileSpreadsheet className="h-8 w-8 text-primary" />
+          ) : (
+            <UploadCloud className="h-8 w-8 text-muted-foreground" />
+          )}
+          <p className="text-sm font-medium">{file ? file.name : "Click to choose a file"}</p>
+          <p className="text-xs text-muted-foreground">CSV or Excel (.csv, .xlsx, .xls)</p>
+          <input
+            id={inputId}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+        </label>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <p className="flex items-center gap-1.5 text-sm text-destructive">
+            <AlertCircle className="h-4 w-4" /> {error}
+          </p>
+        )}
 
         {preview && (
           <>
@@ -144,48 +164,46 @@ export function UploadWizard({
               )}
             </div>
 
-            <div className="overflow-x-auto rounded-md border border-border">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted">
-                  <tr>
-                    {preview.headers.map((h) => (
-                      <th key={h} className="whitespace-nowrap px-3 py-2 font-medium">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {preview.sampleRows.map((row, i) => (
-                    <tr key={i} className="border-t border-border">
-                      {preview.headers.map((h) => (
-                        <td key={h} className="whitespace-nowrap px-3 py-2">
-                          {row[h]}
-                        </td>
-                      ))}
-                    </tr>
+            <TableShell className="text-xs">
+              <TableHead>
+                <tr>
+                  {preview.headers.map((h) => (
+                    <TableHeadCell key={h} className="whitespace-nowrap">
+                      {h}
+                    </TableHeadCell>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </tr>
+              </TableHead>
+              <TableBody>
+                {preview.sampleRows.map((row, i) => (
+                  <TableRow key={i}>
+                    {preview.headers.map((h) => (
+                      <TableCell key={h} className="whitespace-nowrap py-2">
+                        {row[h]}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </TableShell>
 
-            <Button onClick={handleImport} disabled={busy}>
+            <Button onClick={handleImport} disabled={busy} size="lg" className="w-fit">
               {busy ? "Importing..." : "Import"}
             </Button>
           </>
         )}
 
         {summary && (
-          <div className="rounded-md border border-border bg-muted/50 p-3 text-sm">
-            <p>
-              Imported <strong>{summary.imported}</strong>, skipped{" "}
-              <strong>{summary.skipped}</strong>.
+          <div className="flex flex-col gap-2 rounded-lg border border-success/30 bg-success-bg p-3.5 text-sm">
+            <p className="flex items-center gap-1.5 font-medium text-success">
+              <CheckCircle2 className="h-4 w-4" />
+              Imported {summary.imported}, skipped {summary.skipped}
               {summary.brandsSeen && summary.brandsSeen.length > 0 && (
-                <> Brands: {summary.brandsSeen.join(", ")}.</>
+                <span className="font-normal text-success/80"> — brands: {summary.brandsSeen.join(", ")}</span>
               )}
             </p>
             {summary.errors.length > 0 && (
-              <ul className="mt-2 max-h-32 list-disc overflow-y-auto pl-5 text-xs text-destructive">
+              <ul className="max-h-32 list-disc overflow-y-auto pl-5 text-xs text-destructive">
                 {summary.errors.slice(0, 20).map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}

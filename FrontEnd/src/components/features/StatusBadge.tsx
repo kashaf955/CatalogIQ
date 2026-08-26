@@ -1,3 +1,5 @@
+import { CheckCircle2, Ban, RefreshCw, XCircle, AlertTriangle, Clock, ThumbsDown, GitBranch, HelpCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
 import type { MatchStatus, ReviewStatus } from "../../api/types";
 
@@ -17,8 +19,22 @@ const MATCH_STATUS_LABEL: Record<MatchStatus, string> = {
   needs_review: "Needs review",
 };
 
+const MATCH_STATUS_ICON: Record<MatchStatus, LucideIcon> = {
+  matched: CheckCircle2,
+  discontinued: Ban,
+  replacement_available: RefreshCw,
+  no_match: XCircle,
+  needs_review: AlertTriangle,
+};
+
 export function MatchStatusBadge({ status }: { status: MatchStatus }) {
-  return <Badge variant={MATCH_STATUS_VARIANT[status]}>{MATCH_STATUS_LABEL[status]}</Badge>;
+  const Icon = MATCH_STATUS_ICON[status];
+  return (
+    <Badge variant={MATCH_STATUS_VARIANT[status]}>
+      <Icon className="h-3 w-3" />
+      {MATCH_STATUS_LABEL[status]}
+    </Badge>
+  );
 }
 
 const REVIEW_STATUS_VARIANT: Record<ReviewStatus, "success" | "destructive" | "secondary" | "outline"> = {
@@ -29,6 +45,28 @@ const REVIEW_STATUS_VARIANT: Record<ReviewStatus, "success" | "destructive" | "s
   needs_info: "secondary",
 };
 
+const REVIEW_STATUS_ICON: Record<ReviewStatus, LucideIcon> = {
+  pending: Clock,
+  approved: CheckCircle2,
+  rejected: ThumbsDown,
+  variant: GitBranch,
+  needs_info: HelpCircle,
+};
+
+const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+  variant: "Variant",
+  needs_info: "Needs info",
+};
+
 export function ReviewStatusBadge({ status }: { status: ReviewStatus }) {
-  return <Badge variant={REVIEW_STATUS_VARIANT[status]}>{status.replace("_", " ")}</Badge>;
+  const Icon = REVIEW_STATUS_ICON[status];
+  return (
+    <Badge variant={REVIEW_STATUS_VARIANT[status]}>
+      <Icon className="h-3 w-3" />
+      {REVIEW_STATUS_LABEL[status]}
+    </Badge>
+  );
 }

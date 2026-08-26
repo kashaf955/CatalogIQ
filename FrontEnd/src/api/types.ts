@@ -58,7 +58,7 @@ export interface CompetitorSite {
   _id: string;
   name: string;
   baseUrl: string;
-  selectors: CompetitorSelectors;
+  selectors?: CompetitorSelectors;
 }
 
 export interface CompetitorProduct extends StandardProductFields {
