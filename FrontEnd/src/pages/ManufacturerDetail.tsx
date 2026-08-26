@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { GitCompareArrows, Factory } from "lucide-react";
 import { manufacturersApi, matchingApi } from "../api/client";
 import type { Manufacturer } from "../api/types";
 import { UploadWizard } from "../components/features/UploadWizard";
@@ -55,12 +56,17 @@ export function ManufacturerDetail() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{manufacturer?.name ?? "Manufacturer"}</h1>
-        <p className="text-sm text-muted-foreground">
-          Upload this manufacturer's catalog, then compare only the brand(s) you select against
-          our catalog — not the entire combined website.
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+          <Factory className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{manufacturer?.name ?? "Manufacturer"}</h1>
+          <p className="text-sm text-muted-foreground">
+            Upload this manufacturer's catalog, then compare only the brand(s) you select against
+            our catalog — not the entire combined website.
+          </p>
+        </div>
       </div>
 
       <UploadWizard
@@ -82,25 +88,29 @@ export function ManufacturerDetail() {
               No brands imported yet. Upload a manufacturer file above first.
             </p>
           )}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {brandCounts.map(({ brand, count }) => (
               <label
                 key={brand}
-                className="flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                className="flex cursor-pointer items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-sm transition-colors has-checked:border-primary/40 has-checked:bg-accent has-checked:text-primary"
               >
                 <input
                   type="checkbox"
                   checked={selectedBrands.includes(brand)}
                   onChange={() => toggleBrand(brand)}
+                  className="accent-current"
                 />
                 {brand} <span className="text-muted-foreground">({count})</span>
               </label>
             ))}
           </div>
-          <Button onClick={runComparison} disabled={running || selectedBrands.length === 0}>
+          <Button onClick={runComparison} disabled={running || selectedBrands.length === 0} className="w-fit">
+            <GitCompareArrows className="h-4 w-4" />
             {running ? "Running comparison..." : "Compare selected brand(s)"}
           </Button>
-          {runResult && <p className="text-sm text-muted-foreground">{runResult}</p>}
+          {runResult && (
+            <p className="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">{runResult}</p>
+          )}
         </CardContent>
       </Card>
     </div>

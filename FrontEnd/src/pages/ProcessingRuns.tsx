@@ -3,6 +3,15 @@ import { io } from "socket.io-client";
 import { processingRunsApi } from "../api/client";
 import type { ProcessingRun } from "../api/types";
 import { Badge } from "../components/ui/badge";
+import {
+  TableShell,
+  TableHead,
+  TableHeadCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableEmpty,
+} from "../components/ui/table";
 
 const STATUS_VARIANT: Record<ProcessingRun["status"], "secondary" | "warning" | "success" | "destructive"> = {
   queued: "secondary",
@@ -10,6 +19,20 @@ const STATUS_VARIANT: Record<ProcessingRun["status"], "secondary" | "warning" | 
   completed: "success",
   failed: "destructive",
 };
+
+function ProgressBar({ value, total }: { value: number; total: number }) {
+  const pct = total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs text-muted-foreground">
+        {value} / {total || "?"}
+      </span>
+    </div>
+  );
+}
 
 export function ProcessingRuns() {
   const [runs, setRuns] = useState<ProcessingRun[]>([]);
@@ -30,51 +53,44 @@ export function ProcessingRuns() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Processing Runs</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Processing Runs</h1>
         <p className="text-sm text-muted-foreground">
           Imports, matching runs and competitor scrapes run as background jobs rather than long
-          browser requests (spec section 23). Live updates arrive over Socket.IO when the queue
-          worker is running.
+          browser requests. Live updates arrive over Socket.IO when the queue worker is running.
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-3 py-2 font-medium">Type</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Progress</th>
-              <th className="px-3 py-2 font-medium">Errors</th>
-              <th className="px-3 py-2 font-medium">Started</th>
-            </tr>
-          </thead>
-          <tbody>
-            {runs.map((r) => (
-              <tr key={r._id} className="border-t border-border">
-                <td className="px-3 py-2">{r.type.replace(/_/g, " ")}</td>
-                <td className="px-3 py-2">
-                  <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
-                </td>
-                <td className="px-3 py-2">
-                  {r.processedItems} / {r.totalItems || "?"}
-                </td>
-                <td className="px-3 py-2">{r.errorCount}</td>
-                <td className="px-3 py-2 text-muted-foreground">
-                  {new Date(r.createdAt).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-            {runs.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
-                  No processing runs yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <TableShell>
+        <TableHead>
+          <tr>
+            <TableHeadCell>Type</TableHeadCell>
+            <TableHeadCell>Status</TableHeadCell>
+            <TableHeadCell>Progress</TableHeadCell>
+            <TableHeadCell>Errors</TableHeadCell>
+            <TableHeadCell>Started</TableHeadCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {runs.map((r) => (
+            <TableRow key={r._id}>
+              <TableCell className="font-medium capitalize">{r.type.replace(/_/g, " ")}</TableCell>
+              <TableCell>
+                <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
+              </TableCell>
+              <TableCell>
+                <ProgressBar value={r.processedItems} total={r.totalItems} />
+              </TableCell>
+              <TableCell className={r.errorCount > 0 ? "text-destructive" : "text-muted-foreground"}>
+                {r.errorCount}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {new Date(r.createdAt).toLocaleString()}
+              </TableCell>
+            </TableRow>
+          ))}
+          {runs.length === 0 && <TableEmpty colSpan={5}>No processing runs yet.</TableEmpty>}
+        </TableBody>
+      </TableShell>
     </div>
   );
 }

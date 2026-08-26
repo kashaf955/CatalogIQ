@@ -4,6 +4,15 @@ import type { OurProduct } from "../api/types";
 import { UploadWizard } from "../components/features/UploadWizard";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import {
+  TableShell,
+  TableHead,
+  TableHeadCell,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableEmpty,
+} from "../components/ui/table";
 
 export function OurCatalog() {
   const [products, setProducts] = useState<OurProduct[]>([]);
@@ -47,41 +56,37 @@ export function OurCatalog() {
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-3 py-2 font-medium">SKU</th>
-              <th className="px-3 py-2 font-medium">MPN</th>
-              <th className="px-3 py-2 font-medium">Name</th>
-              <th className="px-3 py-2 font-medium">Brand</th>
-              <th className="px-3 py-2 font-medium">Category</th>
-              <th className="px-3 py-2 font-medium">Price</th>
-              <th className="px-3 py-2 font-medium">Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p._id} className="border-t border-border">
-                <td className="px-3 py-2">{p.sku}</td>
-                <td className="px-3 py-2">{p.mpn}</td>
-                <td className="px-3 py-2">{p.name}</td>
-                <td className="px-3 py-2">{p.brand}</td>
-                <td className="px-3 py-2">{p.category}</td>
-                <td className="px-3 py-2">{p.price != null ? `$${p.price.toFixed(2)}` : ""}</td>
-                <td className="px-3 py-2 text-muted-foreground">{p.sourceType}</td>
-              </tr>
-            ))}
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-muted-foreground">
-                  No products yet. Upload a CSV/Excel file above to get started.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <TableShell>
+        <TableHead>
+          <tr>
+            <TableHeadCell>SKU</TableHeadCell>
+            <TableHeadCell>MPN</TableHeadCell>
+            <TableHeadCell>Name</TableHeadCell>
+            <TableHeadCell>Brand</TableHeadCell>
+            <TableHeadCell>Category</TableHeadCell>
+            <TableHeadCell>Price</TableHeadCell>
+            <TableHeadCell>Source</TableHeadCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {products.map((p) => (
+            <TableRow key={p._id}>
+              <TableCell className="font-medium">{p.sku}</TableCell>
+              <TableCell className="text-muted-foreground">{p.mpn}</TableCell>
+              <TableCell>{p.name}</TableCell>
+              <TableCell>{p.brand}</TableCell>
+              <TableCell className="text-muted-foreground">{p.category}</TableCell>
+              <TableCell>{p.price != null ? `$${p.price.toFixed(2)}` : ""}</TableCell>
+              <TableCell className="text-muted-foreground">{p.sourceType}</TableCell>
+            </TableRow>
+          ))}
+          {products.length === 0 && (
+            <TableEmpty colSpan={7}>
+              No products yet. Upload a CSV/Excel file above to get started.
+            </TableEmpty>
+          )}
+        </TableBody>
+      </TableShell>
     </div>
   );
 }

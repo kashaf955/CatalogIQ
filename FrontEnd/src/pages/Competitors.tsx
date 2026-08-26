@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Globe, Settings2, Plus, AlertCircle } from "lucide-react";
 import { competitorsApi } from "../api/client";
 import type { CompetitorSelectors, CompetitorSite } from "../api/types";
+import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -81,11 +83,12 @@ export function Competitors() {
           </div>
 
           <Button variant="outline" size="sm" className="w-fit" onClick={() => setShowAdvanced((v) => !v)}>
+            <Settings2 className="h-3.5 w-3.5" />
             {showAdvanced ? "Hide" : "Show"} scraping configuration
           </Button>
 
           {showAdvanced && (
-            <div className="grid grid-cols-1 gap-3 rounded-md border border-border p-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/30 p-3.5 sm:grid-cols-2">
               {SELECTOR_FIELDS.map(({ key, label, placeholder }) => (
                 <div key={key} className="flex flex-col gap-1">
                   <Label>{label}</Label>
@@ -99,8 +102,13 @@ export function Competitors() {
             </div>
           )}
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && (
+            <p className="flex items-center gap-1.5 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4" /> {error}
+            </p>
+          )}
           <Button onClick={handleCreate} disabled={!name || !baseUrl} className="w-fit">
+            <Plus className="h-4 w-4" />
             Add competitor
           </Button>
         </CardContent>
@@ -108,15 +116,18 @@ export function Competitors() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {sites.map((s) => (
-          <Card key={s._id}>
-            <CardContent className="pt-4">
-              <p className="font-medium">{s.name}</p>
-              <p className="text-sm text-muted-foreground">{s.baseUrl}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {s.selectors.searchUrlTemplate
-                  ? "Search configuration set"
-                  : "No search configuration yet — add selectors before scraping"}
-              </p>
+          <Card key={s._id} className="hover:shadow-md">
+            <CardContent className="flex items-start gap-3 pt-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                <Globe className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{s.name}</p>
+                <p className="truncate text-sm text-muted-foreground">{s.baseUrl}</p>
+                <Badge variant={s.selectors?.searchUrlTemplate ? "success" : "outline"} className="mt-2">
+                  {s.selectors?.searchUrlTemplate ? "Ready to scrape" : "Needs configuration"}
+                </Badge>
+              </div>
             </CardContent>
           </Card>
         ))}

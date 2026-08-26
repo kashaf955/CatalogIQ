@@ -41,7 +41,7 @@ const CompetitorSiteSchema = new Schema<CompetitorSiteDocument>(
     baseUrl: { type: String, required: true },
     selectors: { type: CompetitorSelectorSchema, default: {} },
   },
-  { timestamps: true }
+  { timestamps: true, minimize: false }
 );
 
 export const CompetitorSite = model<CompetitorSiteDocument>(

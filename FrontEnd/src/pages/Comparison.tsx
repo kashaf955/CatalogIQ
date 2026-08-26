@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Search, GitCompareArrows } from "lucide-react";
 import { comparisonApi, manufacturersApi } from "../api/client";
 import type { Manufacturer, MatchResult, MatchStatus } from "../api/types";
 import { ComparisonRow } from "../components/features/ComparisonRow";
 import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 
@@ -85,84 +87,104 @@ export function Comparison() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">Manufacturer Comparison</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Manufacturer Comparison</h1>
         <p className="text-sm text-muted-foreground">
           Pick a manufacturer and brand(s) to see the relevant products from our catalog side by
           side with the manufacturer's catalog and, where available, the competitor's product.
         </p>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-md border border-border p-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <Select
-            className="max-w-xs"
-            value={manufacturerId}
-            onChange={(e) => updateParams({ manufacturer: e.target.value, brand: [] })}
-          >
-            <option value="">All manufacturers</option>
-            {manufacturers.map((m) => (
-              <option key={m._id} value={m._id}>
-                {m.name}
-              </option>
-            ))}
-          </Select>
-
-          <Input
-            placeholder="Search SKU, MPN or name"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && refresh()}
-            className="max-w-xs"
-          />
-          <Button variant="outline" onClick={refresh}>
-            Search
-          </Button>
-        </div>
-
-        {brandOptions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {brandOptions.map((brand) => (
-              <label
-                key={brand}
-                className="flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1 text-xs has-[:checked]:border-primary has-[:checked]:bg-primary/5"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedBrands.includes(brand)}
-                  onChange={() => toggleBrand(brand)}
-                />
-                {brand}
-              </label>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-2">
-          {MATCH_STATUS_OPTIONS.map(({ value, label }) => (
-            <label
-              key={value}
-              className="flex cursor-pointer items-center gap-1 rounded-full border border-border px-3 py-1 text-xs has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+      <Card>
+        <CardContent className="flex flex-col gap-4 pt-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Select
+              className="max-w-xs"
+              value={manufacturerId}
+              onChange={(e) => updateParams({ manufacturer: e.target.value, brand: [] })}
             >
-              <input
-                type="checkbox"
-                checked={selectedStatuses.includes(value)}
-                onChange={() => toggleStatus(value)}
+              <option value="">All manufacturers</option>
+              {manufacturers.map((m) => (
+                <option key={m._id} value={m._id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+
+            <div className="relative max-w-xs flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search SKU, MPN or name"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && refresh()}
+                className="pl-8"
               />
-              {label}
-            </label>
-          ))}
-        </div>
-      </div>
+            </div>
+            <Button variant="outline" onClick={refresh}>
+              Search
+            </Button>
+          </div>
+
+          {brandOptions.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                Brand
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {brandOptions.map((brand) => (
+                  <label
+                    key={brand}
+                    className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs transition-colors has-checked:border-primary/40 has-checked:bg-accent has-checked:text-primary"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.includes(brand)}
+                      onChange={() => toggleBrand(brand)}
+                    />
+                    {brand}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Match status
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {MATCH_STATUS_OPTIONS.map(({ value, label }) => (
+                <label
+                  key={value}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs transition-colors has-checked:border-primary/40 has-checked:bg-accent has-checked:text-primary"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedStatuses.includes(value)}
+                    onChange={() => toggleStatus(value)}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-col gap-4">
         {results.map((r) => (
           <ComparisonRow key={r._id} result={r} onUpdated={refresh} />
         ))}
         {results.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No comparison results yet. Select a manufacturer and run a comparison from its detail
-            page, or adjust your filters.
-          </p>
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
+              <GitCompareArrows className="h-8 w-8 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
+                No comparison results yet. Select a manufacturer and run a comparison from its
+                detail page, or adjust your filters.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
