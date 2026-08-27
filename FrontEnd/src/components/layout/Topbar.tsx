@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import { FLAT_NAV_ITEMS } from "./navConfig";
+import { ThemeToggle } from "../ui/theme-toggle";
 
 export function Topbar() {
   const location = useLocation();
@@ -36,9 +37,12 @@ export function Topbar() {
         ))}
       </nav>
 
-      <div className="hidden items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground md:flex">
-        <span className="h-1.5 w-1.5 rounded-full bg-warning" />
-        Local dev
+      <div className="flex items-center gap-3">
+        <div className="hidden items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground md:flex">
+          <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+          Local dev
+        </div>
+        <ThemeToggle />
       </div>
     </header>
   );

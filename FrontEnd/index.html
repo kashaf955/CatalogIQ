@@ -11,6 +11,18 @@
       rel="stylesheet"
     />
     <title>CatalogIQ</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("catalogiq-theme");
+          var dark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

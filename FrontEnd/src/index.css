@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: 240 20% 98%;
   --foreground: 240 10% 12%;
@@ -26,31 +28,29 @@
   --shadow-color: 240 30% 60%;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 240 16% 7%;
-    --foreground: 240 10% 94%;
-    --card: 240 14% 10%;
-    --card-foreground: 240 10% 94%;
-    --border: 240 10% 18%;
-    --muted: 240 10% 14%;
-    --muted-foreground: 240 6% 62%;
-    --primary: 258 92% 70%;
-    --primary-hover: 258 92% 76%;
-    --primary-foreground: 240 20% 8%;
-    --secondary: 240 10% 15%;
-    --secondary-foreground: 0 0% 96%;
-    --accent: 258 40% 18%;
-    --accent-foreground: 258 90% 82%;
-    --destructive: 0 70% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --success: 152 55% 50%;
-    --success-bg: 152 40% 16%;
-    --warning: 38 92% 58%;
-    --warning-bg: 38 60% 16%;
-    --ring: 258 92% 70%;
-    --shadow-color: 240 60% 2%;
-  }
+.dark {
+  --background: 240 16% 7%;
+  --foreground: 240 10% 94%;
+  --card: 240 14% 10%;
+  --card-foreground: 240 10% 94%;
+  --border: 240 10% 18%;
+  --muted: 240 10% 14%;
+  --muted-foreground: 240 6% 62%;
+  --primary: 258 92% 70%;
+  --primary-hover: 258 92% 76%;
+  --primary-foreground: 240 20% 8%;
+  --secondary: 240 10% 15%;
+  --secondary-foreground: 0 0% 96%;
+  --accent: 258 40% 18%;
+  --accent-foreground: 258 90% 82%;
+  --destructive: 0 70% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 152 55% 50%;
+  --success-bg: 152 40% 16%;
+  --warning: 38 92% 58%;
+  --warning-bg: 38 60% 16%;
+  --ring: 258 92% 70%;
+  --shadow-color: 240 60% 2%;
 }
 
 @theme inline {
@@ -99,6 +99,9 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 #root {
