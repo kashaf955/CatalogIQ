@@ -2,7 +2,6 @@
 
 Multi-tenant SaaS for product matching, manufacturer comparison, and competitor intelligence. CatalogIQ ingests catalog, manufacturer, and competitor data into one standard product model, then matches, reviews, and exports upload-ready updates.
 
-Backend folders are in place. Application code is intentionally empty so you can implement each layer.
 
 ---
 
