@@ -4,7 +4,7 @@ const { connectDB } = require("./src/config/database");
 const { PORT } = require("./src/config/env");
 const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
-
+const tenantRoutes = require("./src/routes/tenantRoutes");
 const app = express();
 
 app.use(cors(
@@ -12,7 +12,7 @@ app.use(cors(
     origin: process.env.FRONTEND_URL,
     credentials: true,
   }
-));
+)); 
 app.use(express.json());
 app.use(cookieParser());
 
@@ -21,6 +21,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/tenants", tenantRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
