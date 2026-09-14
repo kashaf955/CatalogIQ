@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { connectDB } = require("./src/config/database");
 const { PORT } = require("./src/config/env");
-const authRoutes = require("./src/routes/authRoutes").default;
+const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
 

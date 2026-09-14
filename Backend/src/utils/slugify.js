@@ -1,5 +1,5 @@
-export function slugify(value: string): string {
-  const slug = value
+function slugify(value) {
+  const slug = String(value)
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
@@ -8,3 +8,5 @@ export function slugify(value: string): string {
 
   return slug || "workspace";
 }
+
+module.exports = { slugify };

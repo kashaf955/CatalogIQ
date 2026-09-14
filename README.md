@@ -9,13 +9,14 @@ Multi-tenant SaaS for product matching, manufacturer comparison, and competitor 
 
 ```text
 CatalogIQ/
-├── Backend/
+├── Backend/                     Node.js + Express (JavaScript)
 │   ├── src/
-│   │   ├── config/              Env, MongoDB, Redis
-│   │   ├── models/              Tenant, User, Membership, Product, sources
-│   │   ├── middleware/          Auth, tenant, roles, validation, errors
-│   │   ├── routes/              Express routers
-│   │   └── utils/               JWT, errors, helpers
+│   │   ├── config/
+│   │   ├── models/
+│   │   ├── middleware/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   └── utils/
 │   ├── server.js
 │   └── package.json
 └── README.md
@@ -201,14 +202,14 @@ The matching engine should not depend on a single ecommerce platform. Every sour
 
 | Area | Choice |
 | --- | --- |
-| API | Node.js, Express, TypeScript |
+| API | Node.js, Express, JavaScript |
 | Database | MongoDB (shared cluster, `tenantId` isolation) |
 | Cache / jobs | Redis + BullMQ |
 | Live progress | Socket.IO |
 | Validation | Zod |
 | AI | Claude API |
 | Browser automation | Playwright / Apify |
-| Frontend (planned) | React, TypeScript, Vite, Tailwind, shadcn/ui |
+| Frontend (you’ll build) | React, JavaScript |
 | Deploy | Docker |
 
 ---

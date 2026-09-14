@@ -1,10 +1,9 @@
-import type { NextFunction, Request, Response } from "express";
-import Membership from "../models/membershipModel";
-import Tenant from "../models/tenantModels";
-import User from "../models/userModel";
-import { verifyToken } from "../utils/jwt";
+const Membership = require("../models/membershipModel");
+const Tenant = require("../models/tenantModels");
+const User = require("../models/userModel");
+const { verifyToken } = require("../utils/jwt");
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+const authenticate = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.startsWith("Bearer ")
       ? req.headers.authorization.split(" ")[1]
@@ -63,8 +62,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const authorize = (...roles: Array<"owner" | "admin" | "reviewer" | "member">) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+const authorize = (...roles) => {
+  return (req, res, next) => {
     const role = req.membership?.role;
 
     if (!role || !roles.includes(role)) {
@@ -74,3 +73,5 @@ export const authorize = (...roles: Array<"owner" | "admin" | "reviewer" | "memb
     next();
   };
 };
+
+module.exports = { authenticate, authorize };

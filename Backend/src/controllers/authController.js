@@ -1,13 +1,12 @@
-import bcrypt from "bcryptjs";
-import type { Request, Response } from "express";
-import mongoose from "mongoose";
-import Membership from "../models/membershipModel";
-import Tenant from "../models/tenantModels";
-import User from "../models/userModel";
-import { generateToken } from "../utils/jwt";
-import { slugify } from "../utils/slugify";
+const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
+const Membership = require("../models/membershipModel");
+const Tenant = require("../models/tenantModels");
+const User = require("../models/userModel");
+const { generateToken } = require("../utils/jwt");
+const { slugify } = require("../utils/slugify");
 
-async function uniqueSlug(companyName: string): Promise<string> {
+async function uniqueSlug(companyName) {
   const base = slugify(companyName);
   let slug = base;
   let suffix = 1;
@@ -20,14 +19,9 @@ async function uniqueSlug(companyName: string): Promise<string> {
   return slug;
 }
 
-export class AuthController {
-  register = async (req: Request, res: Response) => {
-    const { companyName, name, email, password } = req.body as {
-      companyName?: string;
-      name?: string;
-      email?: string;
-      password?: string;
-    };
+class AuthController {
+  register = async (req, res) => {
+    const { companyName, name, email, password } = req.body;
 
     if (!companyName || !name || !email || !password) {
       return res.status(400).json({
@@ -103,12 +97,7 @@ export class AuthController {
     } catch (error) {
       await session.abortTransaction();
 
-      if (
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        error.code === 11000
-      ) {
+      if (error && error.code === 11000) {
         return res.status(409).json({ message: "Email or workspace already exists" });
       }
 
@@ -118,12 +107,8 @@ export class AuthController {
     }
   };
 
-  login = async (req: Request, res: Response) => {
-    const { email, password, tenantId } = req.body as {
-      email?: string;
-      password?: string;
-      tenantId?: string;
-    };
+  login = async (req, res) => {
+    const { email, password, tenantId } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "email and password are required" });
@@ -141,7 +126,7 @@ export class AuthController {
       return res.status(403).json({ message: "Account is inactive" });
     }
 
-    const membershipQuery: Record<string, unknown> = {
+    const membershipQuery = {
       userId: user._id,
       status: "active",
     };
@@ -201,11 +186,11 @@ export class AuthController {
     });
   };
 
-  logout = async (_req: Request, res: Response) => {
+  logout = async (_req, res) => {
     return res.json({ message: "Logged out" });
   };
 
-  me = async (req: Request, res: Response) => {
+  me = async (req, res) => {
     return res.json({
       user: req.user,
       tenant: req.tenant,
@@ -213,3 +198,5 @@ export class AuthController {
     });
   };
 }
+
+module.exports = { AuthController };

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const tenantSchema = new mongoose.Schema(
   {
@@ -51,4 +51,4 @@ const tenantSchema = new mongoose.Schema(
 
 const Tenant = mongoose.model("Tenant", tenantSchema);
 
-export default Tenant;
+module.exports = Tenant;

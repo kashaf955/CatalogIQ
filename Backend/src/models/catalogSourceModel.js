@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const catalogSourceSchema = new mongoose.Schema(
   {
@@ -68,4 +68,4 @@ catalogSourceSchema.index({ tenantId: 1, type: 1, name: 1 });
 
 const CatalogSource = mongoose.model("CatalogSource", catalogSourceSchema);
 
-export default CatalogSource;
+module.exports = CatalogSource;
