@@ -1,18 +1,20 @@
 const express = require("express");
 const cors = require("cors");
 const { connectDB } = require("./src/config/database");
-const { PORT } = require("./src/config/env");
+const { PORT, FRONTEND_URL } = require("./src/config/env");
 const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const tenantRoutes = require("./src/routes/tenantRoutes");
 const app = express();
 
-app.use(cors(
-  {
-    origin: process.env.FRONTEND_URL,
+app.use(
+  cors({
+    origin: FRONTEND_URL,
     credentials: true,
-  }
-)); 
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+); 
 app.use(express.json());
 app.use(cookieParser());
 

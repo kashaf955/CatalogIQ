@@ -8,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 module.exports = {
   PORT,
@@ -16,4 +17,5 @@ module.exports = {
   JWT_EXPIRES_IN,
   JWT_REFRESH_SECRET,
   JWT_REFRESH_EXPIRES_IN,
+  FRONTEND_URL,
 };
