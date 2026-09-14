@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+}
+
 html,
 body {
   min-height: 100%;
   margin: 0;
   background-color: #1c1f24;
   color: #e8eaed;
+  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
 #root {
