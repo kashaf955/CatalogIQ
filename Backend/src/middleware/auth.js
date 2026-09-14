@@ -5,13 +5,9 @@ const { verifyToken } = require("../utils/jwt");
 
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.startsWith("Bearer ")
-      ? req.headers.authorization.split(" ")[1]
+    const token = req.cookies.accessToken
+      ? req.cookies.accessToken
       : undefined;
-
-    if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
 
     const decoded = verifyToken(token);
     if (!decoded) {

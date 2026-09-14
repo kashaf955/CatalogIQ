@@ -30,7 +30,9 @@ class AuthController {
     }
 
     if (password.length < 8) {
-      return res.status(400).json({ message: "Password must be at least 8 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
     }
 
     const existing = await User.findOne({ email: email.toLowerCase() });
@@ -51,7 +53,7 @@ class AuthController {
             email: email.toLowerCase(),
           },
         ],
-        { session }
+        { session },
       );
 
       const user = new User({
@@ -70,16 +72,27 @@ class AuthController {
             status: "active",
           },
         ],
-        { session }
+        { session },
       );
 
       await session.commitTransaction();
 
-      const token = generateToken(String(user._id), membership.role, String(tenant._id));
+      const token = generateToken(
+        String(user._id),
+        membership.role,
+        String(tenant._id),
+      );
+
+      res.cookie("accessToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 1000,
+        path: "/",
+      });
 
       return res.status(201).json({
         message: "Workspace created",
-        accessToken: token,
         user: {
           id: String(user._id),
           name: user.name,
@@ -98,7 +111,9 @@ class AuthController {
       await session.abortTransaction();
 
       if (error && error.code === 11000) {
-        return res.status(409).json({ message: "Email or workspace already exists" });
+        return res
+          .status(409)
+          .json({ message: "Email or workspace already exists" });
       }
 
       throw error;
@@ -111,12 +126,15 @@ class AuthController {
     const { email, password, tenantId } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "email and password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false }).select(
-      "+password"
-    );
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      isDeleted: false,
+    }).select("+password");
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -166,10 +184,21 @@ class AuthController {
       return res.status(403).json({ message: "Workspace is not active" });
     }
 
-    const token = generateToken(String(user._id), membership.role, String(tenant._id));
+    const token = generateToken(
+      String(user._id),
+      membership.role,
+      String(tenant._id),
+    );
+
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+      path: "/",
+    });
 
     return res.json({
-      accessToken: token,
       user: {
         id: String(user._id),
         name: user.name,
@@ -187,16 +216,22 @@ class AuthController {
   };
 
   logout = async (_req, res) => {
-    return res.json({ message: "Logged out" });
+    return res
+      .clearCookie("accessToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        sameSite: "lax",
+      })
+      .json({ message: "Logged out" });
   };
 
-  me = async (req, res) => {
-    return res.json({
+  me = async (req, res) =>
+    res.json({
       user: req.user,
       tenant: req.tenant,
       role: req.membership?.role,
     });
-  };
 }
 
 module.exports = { AuthController };
