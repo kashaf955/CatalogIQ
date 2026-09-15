@@ -20,3 +20,11 @@ body {
   min-height: 100vh;
   background-color: #1c1f24;
 }
+
+@media (max-width: 767px) {
+  #root {
+    max-width: 100%;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}

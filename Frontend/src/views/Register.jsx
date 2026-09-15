@@ -19,7 +19,7 @@ const Register = () => {
       await dispatch(register(companyName, name, email, password));
       navigate("/");
     } catch {
-      // error is stored in Redux and shown below
+      
     }
   };
   const fieldClass =
