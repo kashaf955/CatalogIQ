@@ -1,5 +1,5 @@
 import axios from "axios";
-import { setRole, setTenantId, setUser } from "../reducers/authReducers";
+import { setRole, setTenantId, setUser, setLoading, setSuccess, setFailed, clearFeedback } from "../reducers/authReducers";
 
 const API = "/api/v1/auth";
 
@@ -9,32 +9,51 @@ export const login = (email, password, tenantId) => async (dispatch) => {
     body.tenantId = tenantId;
   }
 
-  const response = await axios.post(`${API}/login`, body, {
-    withCredentials: true,
-  });
+  dispatch(setLoading());
 
-  dispatch(setUser(response.data.user));
-  dispatch(setTenantId(response.data.tenant?.id ?? null));
-  dispatch(setRole(response.data.role));
-  return response.data;
+  try {
+    const response = await axios.post(`${API}/login`, body, {
+      withCredentials: true,
+    });
+
+    dispatch(setSuccess("Login successful"));
+    dispatch(setUser(response.data.user));
+    dispatch(setTenantId(response.data.tenant?.id ?? null));
+    dispatch(setRole(response.data.role));
+    return response.data;
+  } catch (err) {
+    dispatch(setFailed(err.response?.data?.message || "Invalid credentials"));
+    throw err;
+  }
 };
 
 export const register = (companyName, name, email, password) => async (dispatch) => {
-  const response = await axios.post(
-    `${API}/register`,
-    { companyName, name, email, password },
-    { withCredentials: true }
-  );
+  dispatch(setLoading());
 
-  dispatch(setUser(response.data.user));
-  dispatch(setTenantId(response.data.tenant?.id ?? null));
-  dispatch(setRole(response.data.role));
-  return response.data;
+  try {
+    const response = await axios.post(
+      `${API}/register`,
+      { companyName, name, email, password },
+      { withCredentials: true }
+    );
+
+    dispatch(setSuccess("Registration successful"));
+    dispatch(setUser(response.data.user));
+    dispatch(setTenantId(response.data.tenant?.id ?? null));
+    dispatch(setRole(response.data.role));
+    return response.data;
+  } catch (err) {
+    dispatch(setFailed(err.response?.data?.message || "Registration failed"));
+    throw err;
+  }
 };
 
 export const logout = () => async (dispatch) => {
+  dispatch(setLoading());
+
   await axios.post(`${API}/logout`, {}, { withCredentials: true });
   dispatch(setUser(null));
   dispatch(setTenantId(null));
   dispatch(setRole(null));
+  dispatch(clearFeedback());
 };

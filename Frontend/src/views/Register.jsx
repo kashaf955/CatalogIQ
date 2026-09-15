@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../actions/authActions";
 import Header from "../components/Header";
@@ -7,8 +7,7 @@ import Header from "../components/Header";
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const { status, error } = useSelector((state) => state.auth);
   const [companyName, setCompanyName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,19 +15,13 @@ const Register = () => {
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    setError(null);
-    setLoading(true);
-
     try {
       await dispatch(register(companyName, name, email, password));
-      navigate("/login");
-    } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
-    } finally {
-      setLoading(false);
+      navigate("/");
+    } catch {
+      // error is stored in Redux and shown below
     }
   };
-
   const fieldClass =
     "mt-2 w-full rounded-md border border-white/15 bg-[#1c1f24] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-indigo-400";
 
@@ -51,7 +44,7 @@ const Register = () => {
             This creates a new tenant. You become the owner.
           </p>
 
-          {error ? (
+          {status === "failed" ? (
             <p className="mb-4 rounded-md bg-red-500/15 px-3 py-2 text-sm text-red-300">
               {error}
             </p>
@@ -108,18 +101,35 @@ const Register = () => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={status === "loading"}
             className="w-full rounded-md bg-indigo-500 py-3 font-medium text-white hover:bg-indigo-400 disabled:opacity-70"
           >
-            {loading ? "Creating..." : "Create workspace"}
+            {status === "loading" ? "Creating..." : status === "succeeded" ? "Workspace created successfully" : "Create workspace"}
           </button>
 
-          <p className="mt-6 text-center text-sm text-gray-400">
-            Already have an account?{" "}
+          {status === "succeeded" ? (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Workspace created successfully{" "}
+              <Link to="/" className="text-indigo-300 hover:text-indigo-200">
+                Go to home
+              </Link>
+            </p>
+          ) : null}
+
+          {status === "failed" ? (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Workspace creation failed
+            </p>
+          ) : null}
+
+          {status === "idle" ? (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Already have an account?
             <Link to="/login" className="text-indigo-300 hover:text-indigo-200">
-              Sign in
-            </Link>
-          </p>
+                Sign in
+              </Link>
+            </p>
+          ) : null}
         </form>
       </div>
     </div>
