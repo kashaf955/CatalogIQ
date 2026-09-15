@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../actions/authActions";
 import Header from "../components/Header";
@@ -7,23 +7,16 @@ import Header from "../components/Header";
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { status, error } = useSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    setError(null);
-    setLoading(true);
-
     try {
       await dispatch(login(email, password));
       navigate("/");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
+    } catch {
     }
   };
 
@@ -44,7 +37,7 @@ const Login = () => {
             Use your workspace email and password.
           </p>
 
-          {error ? (
+          {status === "failed" ? (
             <p className="mb-4 rounded-md bg-red-500/15 px-3 py-2 text-sm text-red-300">
               {error}
             </p>
@@ -76,18 +69,26 @@ const Login = () => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={status === "loading"}
             className="w-full rounded-md bg-indigo-500 py-3 font-medium text-white hover:bg-indigo-400 disabled:opacity-70"
           >
-            {loading ? "Signing in..." : "Login"}
+            {status === "loading" ? "Signing in..." : status === "succeeded" ? "Login successful" : "Login"}
           </button>
 
-          <p className="mt-6 text-center text-sm text-gray-400">
-            New company?{" "}
-            <Link to="/register" className="text-indigo-300 hover:text-indigo-200">
-              Create a workspace
-            </Link>
-          </p>
+          {status === "succeeded" ? (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Login successful
+              <Link to="/" className="text-indigo-300 hover:text-indigo-200">
+                Go to home
+              </Link>
+            </p>
+          ) : null}
+
+          {status === "failed" ? (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Login failed
+            </p>
+          ) : null}
         </form>
       </div>
     </div>
