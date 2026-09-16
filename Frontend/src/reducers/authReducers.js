@@ -9,6 +9,7 @@ const authSlice = createSlice({
     status: "idle",
     error: null,
     message: null,
+    checked: false,
   },
   reducers: {
     setUser: (state, action) => {
@@ -40,8 +41,11 @@ const authSlice = createSlice({
       state.message = null;
       state.error = null;
     },
+    setChecked: (state) => {
+      state.checked = true;
+    },
   },
 });
 
-export const { setUser, setTenantId, setRole, setLoading, setSuccess, setFailed, clearFeedback } = authSlice.actions;
+export const { setUser, setTenantId, setRole, setLoading, setSuccess, setFailed, clearFeedback, setChecked } = authSlice.actions;
 export default authSlice.reducer;

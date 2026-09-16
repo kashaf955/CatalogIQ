@@ -1,5 +1,5 @@
 import axios from "axios";
-import { setRole, setTenantId, setUser, setLoading, setSuccess, setFailed, clearFeedback } from "../reducers/authReducers";
+import { setRole, setTenantId, setUser, setLoading, setSuccess, setFailed, clearFeedback, setChecked } from "../reducers/authReducers";
 
 const API = "/api/v1/auth";
 
@@ -20,6 +20,7 @@ export const login = (email, password, tenantId) => async (dispatch) => {
     dispatch(setUser(response.data.user));
     dispatch(setTenantId(response.data.tenant?.id ?? null));
     dispatch(setRole(response.data.role));
+    dispatch(setChecked());
     return response.data;
   } catch (err) {
     dispatch(setFailed(err.response?.data?.message || "Invalid credentials"));
@@ -41,6 +42,7 @@ export const register = (companyName, name, email, password) => async (dispatch)
     dispatch(setUser(response.data.user));
     dispatch(setTenantId(response.data.tenant?.id ?? null));
     dispatch(setRole(response.data.role));
+    dispatch(setChecked());
     return response.data;
   } catch (err) {
     dispatch(setFailed(err.response?.data?.message || "Registration failed"));
@@ -49,11 +51,33 @@ export const register = (companyName, name, email, password) => async (dispatch)
 };
 
 export const logout = () => async (dispatch) => {
-  dispatch(setLoading());
+  try {
+    await axios.post(`${API}/logout`, {}, { withCredentials: true });
+  } catch {
+    
+  }
 
-  await axios.post(`${API}/logout`, {}, { withCredentials: true });
   dispatch(setUser(null));
   dispatch(setTenantId(null));
   dispatch(setRole(null));
   dispatch(clearFeedback());
+};
+
+export const loadUser = () => async (dispatch, getState) => {
+  try {
+    const response = await axios.get(`${API}/me`, { withCredentials: true });
+    dispatch(setUser(response.data.user));
+    dispatch(setTenantId(response.data.tenant?.id ?? null));
+    dispatch(setRole(response.data.role));
+    dispatch(setChecked());
+    return response.data;
+  } catch {
+    if (!getState().auth.user) {
+      dispatch(setUser(null));
+      dispatch(setTenantId(null));
+      dispatch(setRole(null));
+    }
+    dispatch(setChecked());
+    return null;
+  }
 };

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import logo from "../assets/logo.png";
+import { logout } from "../actions/authActions";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -12,10 +14,51 @@ const navLinks = [
 const Header = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
+
+  const onLogout = async () => {
+    setOpen(false);
+    await dispatch(logout());
+    navigate("/login");
+  };
+
+  const guestButtons = (
+    <>
+      <Link
+        to="/login"
+        className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
+      >
+        Login
+      </Link>
+      <Link
+        to="/register"
+        className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
+      >
+        Get Started
+      </Link>
+    </>
+  );
+
+  const sessionButtons = (
+    <>
+      <span className="max-w-40 truncate text-sm text-gray-300">
+        {user?.name}
+      </span>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
+      >
+        Logout
+      </button>
+    </>
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-indigo-400/30 bg-[#1c1f24] shadow-[0_0_24px_rgba(99,102,241,0.18)]">
@@ -41,27 +84,26 @@ const Header = () => {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            to="/login"
-            className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
-          >
-            Login
-          </Link>
-          <Link
-            to="/register"
-            className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
-          >
-            Get Started
-          </Link>
+          {user ? sessionButtons : guestButtons}
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <Link
-            to="/login"
-            className="rounded-md bg-indigo-500 px-3 py-2 text-sm text-white hover:bg-indigo-400"
-          >
-            Login
-          </Link>
+          {user ? (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="rounded-md bg-indigo-500 px-3 py-2 text-sm text-white hover:bg-indigo-400"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="rounded-md bg-indigo-500 px-3 py-2 text-sm text-white hover:bg-indigo-400"
+            >
+              Login
+            </Link>
+          )}
           <button
             type="button"
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/40 text-white"
@@ -88,6 +130,9 @@ const Header = () => {
           id="mobile-nav"
           className="flex flex-col gap-1 border-t border-white/10 py-3 lg:hidden"
         >
+          {user ? (
+            <p className="px-3 pb-1 text-sm text-gray-400">{user.name}</p>
+          ) : null}
           {navLinks.map((link) => (
             <Link
               key={link.to}
@@ -97,12 +142,22 @@ const Header = () => {
               {link.label}
             </Link>
           ))}
-          <Link
-            to="/register"
-            className="mt-2 rounded-md bg-indigo-500 px-4 py-2.5 text-center text-white hover:bg-indigo-400"
-          >
-            Get Started
-          </Link>
+          {user ? (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-2 rounded-md bg-indigo-500 px-4 py-2.5 text-center text-white hover:bg-indigo-400"
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              to="/register"
+              className="mt-2 rounded-md bg-indigo-500 px-4 py-2.5 text-center text-white hover:bg-indigo-400"
+            >
+              Get Started
+            </Link>
+          )}
         </nav>
       ) : null}
     </header>
