@@ -17,6 +17,9 @@ const Header = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const links = user
+    ? [...navLinks, { to: "/members", label: "Members" }]
+    : navLinks;
 
   useEffect(() => {
     setOpen(false);
@@ -72,7 +75,7 @@ const Header = () => {
         </Link>
 
         <nav className="hidden items-center gap-6 text-base lg:flex xl:gap-10 xl:text-xl">
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -133,7 +136,7 @@ const Header = () => {
           {user ? (
             <p className="px-3 pb-1 text-sm text-gray-400">{user.name}</p>
           ) : null}
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}

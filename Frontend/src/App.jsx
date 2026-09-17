@@ -4,12 +4,20 @@ import { useDispatch, useSelector } from "react-redux";
 import Home from "./views/Home.jsx";
 import Login from "./views/login.jsx";
 import Register from "./views/Register.jsx";
+import MembersInvite from "./views/memebrsInvite.jsx";
 import { loadUser } from "./actions/authActions";
 
 const GuestOnly = ({ children }) => {
   const { user, checked } = useSelector((state) => state.auth);
   if (!checked) return null;
   if (user) return <Navigate to="/" replace />;
+  return children;
+};
+
+const RequireAuth = ({ children }) => {
+  const { user, checked } = useSelector((state) => state.auth);
+  if (!checked) return null;
+  if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
@@ -41,6 +49,14 @@ const App = () => {
             <GuestOnly>
               <Register />
             </GuestOnly>
+          }
+        />
+        <Route
+          path="/members"
+          element={
+            <RequireAuth>
+              <MembersInvite />
+            </RequireAuth>
           }
         />
       </Routes>
