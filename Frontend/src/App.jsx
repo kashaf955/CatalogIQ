@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Home from "./views/Home.jsx";
 import Login from "./views/login.jsx";
 import Register from "./views/Register.jsx";
+import Members from "./views/Members.jsx";
 import MembersInvite from "./views/memebrsInvite.jsx";
 import { loadUser } from "./actions/authActions";
 
@@ -53,6 +54,14 @@ const App = () => {
         />
         <Route
           path="/members"
+          element={
+            <RequireAuth>
+              <Members />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/members/invite"
           element={
             <RequireAuth>
               <MembersInvite />
