@@ -11,6 +11,7 @@ body {
   background-color: #1c1f24;
   color: #e8eaed;
   font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  scroll-behavior: smooth;
 }
 
 #root {
