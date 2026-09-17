@@ -22,6 +22,12 @@ body {
   background-color: #1c1f24;
 }
 
+#root:has([data-dashboard]) {
+  max-width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
 @media (max-width: 767px) {
   #root {
     max-width: 100%;

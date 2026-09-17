@@ -6,7 +6,6 @@ const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const tenantRoutes = require("./src/routes/tenantRoutes");
 const catalogRoutes = require("./src/routes/CatalogRoutes");
-const {authenticate} = require("./src/middleware/auth");
 const app = express();
 
 app.use(
@@ -23,7 +22,6 @@ app.use(cookieParser());
 app.get("/", (_req, res) => {
   res.json({ message: "Backend is running!" });
 });
-app.use(authenticate);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tenants", tenantRoutes);
 app.use("/api/v1/catalogs", catalogRoutes);

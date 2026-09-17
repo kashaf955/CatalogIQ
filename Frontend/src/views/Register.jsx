@@ -17,7 +17,7 @@ const Register = () => {
     event.preventDefault();
     try {
       await dispatch(register(companyName, name, email, password));
-      navigate("/");
+      navigate("/login");
     } catch {
       
     }

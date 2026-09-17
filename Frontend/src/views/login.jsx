@@ -15,7 +15,7 @@ const Login = () => {
     event.preventDefault();
     try {
       await dispatch(login(email, password));
-      navigate("/");
+      navigate("/dashboard");
     } catch {
     }
   };

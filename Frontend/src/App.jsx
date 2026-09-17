@@ -6,12 +6,14 @@ import Login from "./views/login.jsx";
 import Register from "./views/Register.jsx";
 import Members from "./views/Members.jsx";
 import MembersInvite from "./views/memebrsInvite.jsx";
+import Dashboard from "./views/Dashboard.jsx";
+import DashboardLayout from "./components/DashboardLayout.jsx";
 import { loadUser } from "./actions/authActions";
 
 const GuestOnly = ({ children }) => {
   const { user, checked } = useSelector((state) => state.auth);
   if (!checked) return null;
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -19,6 +21,14 @@ const RequireAuth = ({ children }) => {
   const { user, checked } = useSelector((state) => state.auth);
   if (!checked) return null;
   if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
+
+const RequireInvite = ({ children }) => {
+  const { role } = useSelector((state) => state.auth);
+  if (role !== "owner" && role !== "admin") {
+    return <Navigate to="/dashboard/members" replace />;
+  }
   return children;
 };
 
@@ -52,22 +62,30 @@ const App = () => {
             </GuestOnly>
           }
         />
-        <Route
-          path="/members"
-          element={
-            <RequireAuth>
-              <Members />
-            </RequireAuth>
-          }
-        />
+        <Route path="/members" element={<Navigate to="/dashboard/members" replace />} />
         <Route
           path="/members/invite"
+          element={<Navigate to="/dashboard/members/invite" replace />}
+        />
+        <Route
+          path="/dashboard"
           element={
             <RequireAuth>
-              <MembersInvite />
+              <DashboardLayout />
             </RequireAuth>
           }
-        />
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="members" element={<Members />} />
+          <Route
+            path="members/invite"
+            element={
+              <RequireInvite>
+                <MembersInvite />
+              </RequireInvite>
+            }
+          />
+        </Route>
       </Routes>
     </Router>
   );

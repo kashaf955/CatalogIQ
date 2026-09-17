@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Header from "../components/Header.jsx";
 import axios from "axios";
 
 const fieldClass =
@@ -33,14 +32,11 @@ const MembersInvite = () => {
   };
 
   return (
-    <div className="pb-16">
-      <Header />
-
-      <div className="flex justify-center px-4 py-16">
-        <form
+    <div className="flex justify-center py-4">
+      <form
         onSubmit={handleSubmit}
-          className="w-full max-w-md rounded-2xl border border-indigo-400/40 bg-[#22262d] p-8 shadow-[0_0_32px_rgba(99,102,241,0.25)]"
-        >
+        className="w-full max-w-md rounded-2xl border border-indigo-400/40 bg-[#22262d] p-8 shadow-[0_0_32px_rgba(99,102,241,0.25)]"
+      >
           <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
             Workspace
           </p>
@@ -61,7 +57,7 @@ const MembersInvite = () => {
           {message ? (
             <p className="mb-4 rounded-md bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">
               {message}{" "}
-              <Link to="/members" className="text-indigo-300 hover:text-indigo-200">
+              <Link to="/dashboard/members" className="text-indigo-300 hover:text-indigo-200">
                 View members
               </Link>
             </p>
@@ -115,12 +111,11 @@ const MembersInvite = () => {
           </button>
 
           <p className="mt-6 text-center text-sm text-gray-400">
-            <Link to="/members" className="text-indigo-300 hover:text-indigo-200">
+            <Link to="/dashboard/members" className="text-indigo-300 hover:text-indigo-200">
               Back to members
             </Link>
           </p>
         </form>
-      </div>
     </div>
   );
 };

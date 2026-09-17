@@ -16,15 +16,9 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user, role } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const links = user
-    ? [
-        ...navLinks,
-        { to: "/members", label: "Members" },
-        ...(role === "owner" || role === "admin"
-          ? [{ to: "/members/invite", label: "Invite" }]
-          : []),
-      ]
+    ? [...navLinks, { to: "/dashboard", label: "Dashboard" }]
     : navLinks;
 
   useEffect(() => {
