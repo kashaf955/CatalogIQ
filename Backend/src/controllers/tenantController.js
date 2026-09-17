@@ -92,4 +92,26 @@ class TenantController {
   };
 }
 
-module.exports = { TenantController };
+removeMembership = async (req, res) => {
+  const membership = await Membership.findOne({
+    _id: req.params.memberId,
+    tenantId: req.tenant.id,
+  });
+
+  if (!membership) {
+    return res.status(404).json({ message: "Member not found" });
+  }
+
+  if (membership.role === "owner") {
+    return res.status(403).json({ message: "Cannot remove the owner" });
+  }
+
+  if (String(membership.userId) === req.user.id) {
+    return res.status(400).json({ message: "You cannot remove yourself" });
+  }
+
+  await membership.deleteOne();
+  return res.json({ message: "Member removed" });
+};     
+
+module.exports = { TenantController, removeMembership };

@@ -28,6 +28,18 @@ const Members = () => {
     loadMembers();
   }, []);
 
+  const removeMember = async (memberId) => {
+    setError(null);
+    try {
+      await axios.delete(`/api/v1/tenants/me/members/${memberId}`, {
+        withCredentials: true,
+      });
+      setMembers((current) => current.filter((member) => member.id !== memberId));
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not remove member");
+    }
+  };
+
   return (
     <div className="pb-16">
       <Header />
@@ -55,8 +67,9 @@ const Members = () => {
 
         <div className="overflow-x-auto rounded-2xl border border-indigo-400/30 bg-[#22262d] shadow-[0_0_24px_rgba(99,102,241,0.12)]">
           {error ? (
-            <p className="px-4 py-6 text-sm text-red-300">{error}</p>
-          ) : loading ? (
+            <p className="px-4 py-3 text-sm text-red-300">{error}</p>
+          ) : null}
+          {loading ? (
             <p className="px-4 py-6 text-sm text-gray-400">Loading members...</p>
           ) : members.length === 0 ? (
             <p className="px-4 py-6 text-sm text-gray-400">No members yet.</p>
@@ -82,6 +95,13 @@ const Members = () => {
                     <td className="px-4 py-3 capitalize text-gray-300">{member.role}</td>
                     <td className="px-4 py-3 capitalize text-gray-300">
                       {member.status}
+                    </td>
+                    <td className="px-4 py-3">
+                      {member.status === "active" ? (
+                        <button onClick={() => removeMember(member.id)} className="text-red-500 hover:text-red-400">
+                          Remove
+                        </button>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
