@@ -74,7 +74,7 @@ const Members = () => {
           ) : members.length === 0 ? (
             <p className="px-4 py-6 text-sm text-gray-400">No members yet.</p>
           ) : (
-            <table className="w-full min-w-[32rem] text-left text-sm">
+            <table className="w-full min-w-lg text-left text-sm">
               <thead className="border-b border-white/10 text-gray-400">
                 <tr>
                   <th className="px-4 py-3 font-medium">Name</th>
