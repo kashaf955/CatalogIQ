@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 const { generateToken } = require("../utils/jwt");
 const { slugify } = require("../utils/slugify");
 
-async function uniqueSlug(companyName) {
+
   const base = slugify(companyName);
   let slug = base;
   let suffix = 1;
@@ -17,7 +17,7 @@ async function uniqueSlug(companyName) {
   }
 
   return slug;
-}
+  
 
 class AuthController {
   register = async (req, res) => {
