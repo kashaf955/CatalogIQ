@@ -8,6 +8,8 @@ import Members from "./views/Members.jsx";
 import MembersInvite from "./views/memebrsInvite.jsx";
 import Dashboard from "./views/Dashboard.jsx";
 import DashboardLayout from "./components/DashboardLayout.jsx";
+import Catalogs from "./views/Catalogs.jsx";
+import CatalogForm from "./views/CatalogForm.jsx";
 import { loadUser } from "./actions/authActions";
 
 const GuestOnly = ({ children }) => {
@@ -76,6 +78,9 @@ const App = () => {
           }
         >
           <Route index element={<Dashboard />} />
+          <Route path="catalogs" element={<Catalogs />} />
+          <Route path="catalogs/new" element={<CatalogForm />} />
+          <Route path="catalogs/:id" element={<CatalogForm />} />
           <Route path="members" element={<Members />} />
           <Route
             path="members/invite"

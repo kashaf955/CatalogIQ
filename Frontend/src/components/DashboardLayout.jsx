@@ -28,6 +28,9 @@ const DashboardLayout = () => {
       <NavLink to="/dashboard" end className={navClass} onClick={() => setOpen(false)}>
         Overview
       </NavLink>
+      <NavLink to="/dashboard/catalogs" className={navClass} onClick={() => setOpen(false)}>
+        Catalogs
+      </NavLink>
       <NavLink to="/dashboard/members" end className={navClass} onClick={() => setOpen(false)}>
         Members
       </NavLink>
