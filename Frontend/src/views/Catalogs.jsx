@@ -102,7 +102,14 @@ const Catalogs = () => {
                   key={catalog._id}
                   className="border-b border-white/5 last:border-0"
                 >
-                  <td className="px-4 py-3 text-white">{catalog.name}</td>
+                  <td className="px-4 py-3 text-white">
+                    <Link
+                      to={`/dashboard/catalogs/${catalog._id}`}
+                      className="hover:text-indigo-300"
+                    >
+                      {catalog.name}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-gray-300">
                     {typeLabel[catalog.type] || catalog.type}
                   </td>
@@ -118,23 +125,31 @@ const Catalogs = () => {
                     {catalog.status}
                   </td>
                   <td className="px-4 py-3">
-                    {canManage ? (
-                      <div className="flex gap-3">
-                        <Link
-                          to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-indigo-300 hover:text-indigo-200"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => removeCatalog(catalog._id)}
-                          className="text-red-500 hover:text-red-400"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : null}
+                    <div className="flex gap-3">
+                      <Link
+                        to={`/dashboard/catalogs/${catalog._id}`}
+                        className="text-indigo-300 hover:text-indigo-200"
+                      >
+                        Ingest
+                      </Link>
+                      {canManage ? (
+                        <>
+                          <Link
+                            to={`/dashboard/catalogs/${catalog._id}/edit`}
+                            className="text-indigo-300 hover:text-indigo-200"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => removeCatalog(catalog._id)}
+                            className="text-red-500 hover:text-red-400"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}

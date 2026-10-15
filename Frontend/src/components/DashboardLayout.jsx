@@ -31,6 +31,18 @@ const DashboardLayout = () => {
       <NavLink to="/dashboard/catalogs" className={navClass} onClick={() => setOpen(false)}>
         Catalogs
       </NavLink>
+      <NavLink to="/dashboard/products" className={navClass} onClick={() => setOpen(false)}>
+        Products
+      </NavLink>
+      <NavLink to="/dashboard/matches" className={navClass} onClick={() => setOpen(false)}>
+        Matches
+      </NavLink>
+      <NavLink to="/dashboard/reviews" className={navClass} onClick={() => setOpen(false)}>
+        Review
+      </NavLink>
+      <NavLink to="/dashboard/export" className={navClass} onClick={() => setOpen(false)}>
+        Export
+      </NavLink>
       <NavLink to="/dashboard/members" end className={navClass} onClick={() => setOpen(false)}>
         Members
       </NavLink>

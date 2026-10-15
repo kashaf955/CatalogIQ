@@ -10,6 +10,11 @@ import Dashboard from "./views/Dashboard.jsx";
 import DashboardLayout from "./components/DashboardLayout.jsx";
 import Catalogs from "./views/Catalogs.jsx";
 import CatalogForm from "./views/CatalogForm.jsx";
+import CatalogDetail from "./views/CatalogDetail.jsx";
+import Products from "./views/Products.jsx";
+import Matches from "./views/Matches.jsx";
+import Reviews from "./views/Reviews.jsx";
+import Export from "./views/Export.jsx";
 import { loadUser } from "./actions/authActions";
 
 const GuestOnly = ({ children }) => {
@@ -80,7 +85,12 @@ const App = () => {
           <Route index element={<Dashboard />} />
           <Route path="catalogs" element={<Catalogs />} />
           <Route path="catalogs/new" element={<CatalogForm />} />
-          <Route path="catalogs/:id" element={<CatalogForm />} />
+          <Route path="catalogs/:id" element={<CatalogDetail />} />
+          <Route path="catalogs/:id/edit" element={<CatalogForm />} />
+          <Route path="products" element={<Products />} />
+          <Route path="matches" element={<Matches />} />
+          <Route path="reviews" element={<Reviews />} />
+          <Route path="export" element={<Export />} />
           <Route path="members" element={<Members />} />
           <Route
             path="members/invite"
