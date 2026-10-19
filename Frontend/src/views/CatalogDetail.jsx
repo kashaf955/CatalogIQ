@@ -29,6 +29,7 @@ const CatalogDetail = () => {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fileName, setFileName] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -52,11 +53,39 @@ const CatalogDetail = () => {
   }, [id]);
 
   const kind = catalog?.connection?.kind;
-  const onIngest = (event) => {
+  const isBigCommerce =
+    kind === "api" &&
+    String(catalog?.connection?.platform || "").toLowerCase() === "bigcommerce";
+
+  const onIngest = async (event) => {
     event.preventDefault();
-    setMessage(
-      "Ingest is UI-only for now. The job will write products on the next backend pass."
-    );
+    setError(null);
+    setMessage(null);
+
+    if (!isBigCommerce) {
+      setMessage(
+        "Excel and website ingest are not connected yet. Use a BigCommerce API source to fetch products."
+      );
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await axios.post(
+        `/api/v1/catalogs/${id}/ingest`,
+        {},
+        { withCredentials: true }
+      );
+      setMessage(
+        response.data.message
+          ? `${response.data.message}. Imported ${response.data.imported ?? 0} products.`
+          : "Products imported"
+      );
+    } catch (err) {
+      setError(err.response?.data?.message || "Ingest failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -116,8 +145,14 @@ const CatalogDetail = () => {
           <p className="mt-1 capitalize text-white">{catalog.status}</p>
         </div>
         <div className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-5">
-          <p className="text-sm text-gray-400">URL</p>
-          <p className="mt-1 truncate text-white">{catalog.url || "—"}</p>
+          <p className="text-sm text-gray-400">
+            {isBigCommerce ? "Store hash" : "URL"}
+          </p>
+          <p className="mt-1 truncate text-white">
+            {isBigCommerce
+              ? catalog.connection?.storeHash || "—"
+              : catalog.url || "—"}
+          </p>
         </div>
         <div className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-5">
           <p className="text-sm text-gray-400">Brands</p>
@@ -164,10 +199,12 @@ const CatalogDetail = () => {
           </label>
         ) : null}
 
-        {kind === "api" ? (
+        {isBigCommerce ? (
           <p className="mt-6 text-sm text-gray-400">
-            This will call the {catalog.connection?.platform || "API"} connection
-            stored on the source.
+            This will fetch catalog products from BigCommerce store{" "}
+            {catalog.connection?.storeHash || "(missing store hash)"} using the
+            saved access token
+            {catalog.connection?.accessTokenSet ? "" : " (token not saved)"}.
           </p>
         ) : null}
 
@@ -187,10 +224,10 @@ const CatalogDetail = () => {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={!kind}
+            disabled={!kind || saving}
             className="rounded-md bg-indigo-500 px-4 py-2.5 font-medium text-white hover:bg-indigo-400 disabled:opacity-50"
           >
-            Run ingest
+            {saving ? "Fetching..." : "Run ingest"}
           </button>
           <Link
             to="/dashboard/catalogs"

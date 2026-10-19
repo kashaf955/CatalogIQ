@@ -60,13 +60,17 @@ const CatalogForm = () => {
   const [manufacturer, setManufacturer] = useState("");
   const [brands, setBrands] = useState("");
   const [url, setUrl] = useState("");
+  const [storeHash, setStoreHash] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [accessTokenSet, setAccessTokenSet] = useState(false);
   const [status, setStatus] = useState("active");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(isEdit);
 
   const template = templates.find((item) => item.id === templateId) || templates[0];
   const showManufacturer = template.type === "manufacturer";
-  const showUrl = template.kind === "api" || template.kind === "website";
+  const showWebsiteUrl = template.kind === "website";
+  const showBigCommerce = template.kind === "api" && template.platform === "bigcommerce";
 
   useEffect(() => {
     if (!canManage) {
@@ -99,6 +103,9 @@ const CatalogForm = () => {
         setManufacturer(catalog.manufacturer || "");
         setBrands((catalog.brands || []).join(", "));
         setUrl(catalog.url || "");
+        setStoreHash(catalog.connection?.storeHash || "");
+        setAccessToken("");
+        setAccessTokenSet(Boolean(catalog.connection?.accessTokenSet));
         setStatus(catalog.status || "active");
       } catch (err) {
         setError(err.response?.data?.message || "Could not load catalog");
@@ -127,10 +134,13 @@ const CatalogForm = () => {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
-      url: showUrl ? url || undefined : undefined,
+      url: showWebsiteUrl || showBigCommerce ? url || undefined : undefined,
       connection: {
         kind: template.kind,
         platform: template.platform || undefined,
+        storeHash: showBigCommerce ? storeHash || undefined : undefined,
+        accessToken:
+          showBigCommerce && accessToken ? accessToken : undefined,
       },
       status,
     };
@@ -170,7 +180,7 @@ const CatalogForm = () => {
           {isEdit ? "Edit catalog" : "Add catalog"}
         </h1>
         <p className="mb-6 text-gray-400">
-          Save a source. Ingest and matching come later.
+          Save a source. BigCommerce catalogs can fetch products on ingest.
         </p>
 
         {error ? (
@@ -241,9 +251,9 @@ const CatalogForm = () => {
           />
         </label>
 
-        {showUrl ? (
+        {showWebsiteUrl ? (
           <label className="mb-4 block text-sm text-gray-300">
-            {template.kind === "website" ? "Website URL" : "API URL"}
+            Website URL
             <input
               type="url"
               placeholder="https://"
@@ -252,6 +262,48 @@ const CatalogForm = () => {
               onChange={(event) => setUrl(event.target.value)}
             />
           </label>
+        ) : null}
+
+        {showBigCommerce ? (
+          <>
+            <label className="mb-4 block text-sm text-gray-300">
+              Store hash
+              <input
+                type="text"
+                required
+                placeholder="abc123xyz"
+                className={fieldClass}
+                value={storeHash}
+                onChange={(event) => setStoreHash(event.target.value)}
+              />
+            </label>
+            <label className="mb-4 block text-sm text-gray-300">
+              Access token
+              <input
+                type="password"
+                required={!isEdit || !accessTokenSet}
+                placeholder={
+                  accessTokenSet
+                    ? "Saved — enter a new token to replace"
+                    : "BigCommerce API token"
+                }
+                className={fieldClass}
+                value={accessToken}
+                onChange={(event) => setAccessToken(event.target.value)}
+                autoComplete="off"
+              />
+            </label>
+            <label className="mb-4 block text-sm text-gray-300">
+              Storefront URL
+              <input
+                type="url"
+                placeholder="https://store.com (optional)"
+                className={fieldClass}
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+              />
+            </label>
+          </>
         ) : null}
 
         <label className="mb-6 block text-sm text-gray-300">
