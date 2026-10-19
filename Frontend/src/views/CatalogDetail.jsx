@@ -52,7 +52,13 @@ const CatalogDetail = () => {
     loadCatalog();
   }, [id]);
 
-  const kind = catalog?.connection?.kind;
+  const kind =
+    catalog?.connection?.kind ||
+    (catalog?.type === "manufacturer" || catalog?.type === "our_catalog"
+      ? "excel"
+      : catalog?.type === "competitor"
+        ? "website"
+        : undefined);
   const isBigCommerce =
     kind === "api" &&
     String(catalog?.connection?.platform || "").toLowerCase() === "bigcommerce";
@@ -206,7 +212,7 @@ const CatalogDetail = () => {
               type="file"
               accept=".xlsx,.xls,.csv"
               required
-              className={fieldClass}
+              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-indigo-500 file:px-3 file:py-1.5 file:text-sm file:text-white`}
               onChange={(event) => setFile(event.target.files?.[0] || null)}
             />
             {file ? (

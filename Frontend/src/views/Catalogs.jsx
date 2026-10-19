@@ -131,7 +131,11 @@ const Catalogs = () => {
                         to={`/dashboard/catalogs/${catalog._id}`}
                         className="text-indigo-300 hover:text-indigo-200"
                       >
-                        Ingest
+                        {catalog.connection?.kind === "excel" ||
+                        catalog.connection?.kind === "csv" ||
+                        !catalog.connection?.kind
+                          ? "Upload"
+                          : "Ingest"}
                       </Link>
                       {canManage ? (
                         <>

@@ -56,13 +56,16 @@ const CatalogForm = () => {
   const [accessToken, setAccessToken] = useState("");
   const [accessTokenSet, setAccessTokenSet] = useState(false);
   const [status, setStatus] = useState("active");
+  const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
 
   const template = templates.find((item) => item.id === templateId) || templates[0];
   const showManufacturer = template.type === "manufacturer";
   const showWebsiteUrl = template.kind === "website";
   const showApi = template.kind === "api";
+  const showExcel = template.kind === "excel";
   const showBigCommerce = showApi && platform === "bigcommerce";
 
   useEffect(() => {
@@ -113,6 +116,11 @@ const CatalogForm = () => {
     event.preventDefault();
     setError(null);
 
+    if (showExcel && !isEdit && !file) {
+      setError("Choose an Excel or CSV file to upload");
+      return;
+    }
+
     const payload = {
       name,
       description: description || undefined,
@@ -133,18 +141,34 @@ const CatalogForm = () => {
     };
 
     try {
+      setSaving(true);
+      let catalogId = id;
       if (isEdit) {
         await axios.put(`/api/v1/catalogs/${id}`, payload, {
           withCredentials: true,
         });
       } else {
-        await axios.post("/api/v1/catalogs", payload, {
+        const created = await axios.post("/api/v1/catalogs", payload, {
           withCredentials: true,
         });
+        catalogId = created.data?._id;
       }
-      navigate("/dashboard/catalogs");
+
+      if (showExcel && file && catalogId) {
+        const form = new FormData();
+        form.append("file", file);
+        await axios.post(`/api/v1/catalogs/${catalogId}/ingest`, form, {
+          withCredentials: true,
+        });
+        navigate(`/dashboard/products?source=${catalogId}`);
+        return;
+      }
+
+      navigate(catalogId ? `/dashboard/catalogs/${catalogId}` : "/dashboard/catalogs");
     } catch (err) {
       setError(err.response?.data?.message || "Could not save catalog");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -239,6 +263,26 @@ const CatalogForm = () => {
           />
         </label>
 
+        {showExcel ? (
+          <label className="mb-4 block text-sm text-gray-300">
+            Excel file
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              required={!isEdit}
+              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-indigo-500 file:px-3 file:py-1.5 file:text-sm file:text-white`}
+              onChange={(event) => setFile(event.target.files?.[0] || null)}
+            />
+            <span className="mt-2 block text-xs text-gray-400">
+              {file
+                ? file.name
+                : isEdit
+                  ? "Optional. Upload to replace products for this source."
+                  : "Required. First row should be column headers (Name, SKU, Brand, Price…)."}
+            </span>
+          </label>
+        ) : null}
+
         {showWebsiteUrl ? (
           <label className="mb-4 block text-sm text-gray-300">
             Competitor website
@@ -323,9 +367,18 @@ const CatalogForm = () => {
 
         <button
           type="submit"
-          className="w-full rounded-md bg-indigo-500 py-3 font-medium text-white hover:bg-indigo-400"
+          disabled={saving}
+          className="w-full rounded-md bg-indigo-500 py-3 font-medium text-white hover:bg-indigo-400 disabled:opacity-50"
         >
-          {isEdit ? "Save changes" : "Create catalog"}
+          {saving
+            ? "Saving..."
+            : showExcel && file
+              ? isEdit
+                ? "Save and upload"
+                : "Create and upload"
+              : isEdit
+                ? "Save changes"
+                : "Create catalog"}
         </button>
 
         <p className="mt-6 text-center text-sm text-gray-400">
