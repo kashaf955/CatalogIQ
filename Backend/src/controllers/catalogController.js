@@ -1,6 +1,34 @@
 const CatalogSource = require("../models/catalogSourceModel");
 const Product = require("../models/productModel");
 const { fetchBigCommerceProducts } = require("../services/bigcommerceService");
+const { parseExcelProducts } = require("../services/excelService");
+
+const upsertProducts = async (tenantId, sourceId, items, matchKey) => {
+  const ops = items.map((item) => {
+    const filter = { tenantId, sourceId, isDeleted: false };
+    if (matchKey === "bigcommerceId") {
+      filter["attributes.bigcommerceId"] = item.attributes.bigcommerceId;
+    } else {
+      filter.sku = item.sku;
+    }
+    return {
+      updateOne: {
+        filter,
+        update: {
+          $set: {
+            ...item,
+            tenantId,
+            sourceId,
+            isDeleted: false,
+            deletedAt: null,
+          },
+        },
+        upsert: true,
+      },
+    };
+  });
+  return Product.bulkWrite(ops);
+};
 
 const publicCatalog = (catalog) => {
   if (!catalog) return null;
@@ -116,54 +144,58 @@ const catalogController = {
 
       const kind = catalog.connection?.kind;
       const platform = String(catalog.connection?.platform || "").toLowerCase();
+      let fetched = [];
+      let matchKey = "sku";
+      let label = "Products imported";
 
-      if (kind !== "api" || platform !== "bigcommerce") {
+      if (kind === "excel" || kind === "csv") {
+        if (!req.file?.buffer) {
+          return res.status(400).json({ message: "Upload an Excel or CSV file" });
+        }
+        fetched = parseExcelProducts(req.file.buffer);
+        matchKey = "sku";
+        label = "Excel products imported";
+      } else if (kind === "api" && platform === "bigcommerce") {
+        fetched = await fetchBigCommerceProducts({
+          storeHash: catalog.connection.storeHash,
+          accessToken: catalog.connection.accessToken,
+        });
+        matchKey = "bigcommerceId";
+        label = "BigCommerce products imported";
+      } else if (kind === "website") {
         return res.status(400).json({
-          message: "This source is not a BigCommerce API catalog",
+          message: "Competitor website scrape is not connected yet",
+        });
+      } else if (kind === "api") {
+        return res.status(400).json({
+          message: "This API adapter is not connected yet",
+        });
+      } else {
+        return res.status(400).json({
+          message: "This source has no ingest method",
         });
       }
-
-      const fetched = await fetchBigCommerceProducts({
-        storeHash: catalog.connection.storeHash,
-        accessToken: catalog.connection.accessToken,
-      });
 
       if (fetched.length === 0) {
         catalog.status = "active";
         await catalog.save();
         return res.status(200).json({
-          message: "No products returned from BigCommerce",
+          message: "No products found in this source",
           imported: 0,
         });
       }
 
-      const ops = fetched.map((item) => ({
-        updateOne: {
-          filter: {
-            tenantId: req.tenant.id,
-            sourceId: catalog._id,
-            "attributes.bigcommerceId": item.attributes.bigcommerceId,
-            isDeleted: false,
-          },
-          update: {
-            $set: {
-              ...item,
-              tenantId: req.tenant.id,
-              sourceId: catalog._id,
-              isDeleted: false,
-              deletedAt: null,
-            },
-          },
-          upsert: true,
-        },
-      }));
-
-      const result = await Product.bulkWrite(ops);
+      const result = await upsertProducts(
+        req.tenant.id,
+        catalog._id,
+        fetched,
+        matchKey
+      );
       catalog.status = "active";
       await catalog.save();
 
       return res.status(200).json({
-        message: "BigCommerce products imported",
+        message: label,
         imported: fetched.length,
         upserted: result.upsertedCount,
         modified: result.modifiedCount,

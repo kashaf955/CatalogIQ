@@ -29,7 +29,9 @@ app.use("/api/v1/catalogs", catalogRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ message: "Internal server error" });
+  res.status(err.status || 500).json({
+    message: err.message || "Internal server error",
+  });
 });
 
 const port = PORT || 3000;
