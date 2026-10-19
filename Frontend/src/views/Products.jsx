@@ -69,7 +69,9 @@ const Products = () => {
           </p>
           <h1 className="text-3xl font-semibold text-white">Products</h1>
           <p className="mt-2 text-gray-400">
-            Rows ingested from a catalog source.
+            {loading
+              ? "Rows ingested from a catalog source."
+              : `${rows.length} product${rows.length === 1 ? "" : "s"}`}
           </p>
         </div>
         <Link
@@ -120,6 +122,7 @@ const Products = () => {
           <table className="w-full min-w-lg text-left text-sm">
             <thead className="border-b border-white/10 text-gray-400">
               <tr>
+                <th className="px-4 py-3 font-medium">No.</th>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">SKU</th>
                 <th className="px-4 py-3 font-medium">MPN</th>
@@ -132,11 +135,12 @@ const Products = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.map((product) => (
+              {rows.map((product, index) => (
                 <tr
                   key={product._id || product.sku}
                   className="border-b border-white/5 last:border-0"
                 >
+                  <td className="px-4 py-3 text-gray-400">{index + 1}</td>
                   <td className="px-4 py-3 text-white">{product.name || "—"}</td>
                   <td className="px-4 py-3 text-gray-300">{product.sku || "—"}</td>
                   <td className="px-4 py-3 text-gray-300">{product.mpn || "—"}</td>
