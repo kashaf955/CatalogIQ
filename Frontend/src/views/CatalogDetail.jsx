@@ -28,7 +28,7 @@ const CatalogDetail = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [fileName, setFileName] = useState("");
+  const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -62,24 +62,37 @@ const CatalogDetail = () => {
     setError(null);
     setMessage(null);
 
-    if (!isBigCommerce) {
+    const isExcel = kind === "excel" || kind === "csv";
+    if (isExcel && !file) {
+      setError("Choose an Excel or CSV file to upload");
+      return;
+    }
+
+    if (!isExcel && !isBigCommerce) {
       setMessage(
-        kind === "excel"
-          ? "Excel ingest is next: company catalog files and manufacturer sheets."
-          : kind === "website"
-            ? "Competitor website scrape is next."
-            : "This API adapter is not connected yet. BigCommerce is the only live fetch."
+        kind === "website"
+          ? "Competitor website scrape is not connected yet."
+          : "This API adapter is not connected yet."
       );
       return;
     }
 
     setSaving(true);
     try {
-      const response = await axios.post(
-        `/api/v1/catalogs/${id}/ingest`,
-        {},
-        { withCredentials: true }
-      );
+      let response;
+      if (isExcel) {
+        const form = new FormData();
+        form.append("file", file);
+        response = await axios.post(`/api/v1/catalogs/${id}/ingest`, form, {
+          withCredentials: true,
+        });
+      } else {
+        response = await axios.post(
+          `/api/v1/catalogs/${id}/ingest`,
+          {},
+          { withCredentials: true }
+        );
+      }
       setMessage(
         response.data.message
           ? `${response.data.message}. Imported ${response.data.imported ?? 0} products.`
@@ -192,13 +205,12 @@ const CatalogDetail = () => {
             <input
               type="file"
               accept=".xlsx,.xls,.csv"
+              required
               className={fieldClass}
-              onChange={(event) =>
-                setFileName(event.target.files?.[0]?.name || "")
-              }
+              onChange={(event) => setFile(event.target.files?.[0] || null)}
             />
-            {fileName ? (
-              <span className="mt-2 block text-xs text-gray-400">{fileName}</span>
+            {file ? (
+              <span className="mt-2 block text-xs text-gray-400">{file.name}</span>
             ) : null}
           </label>
         ) : null}
@@ -220,8 +232,8 @@ const CatalogDetail = () => {
         {kind === "excel" ? (
           <p className="mt-2 text-sm text-gray-400">
             {catalog.type === "manufacturer"
-              ? "Upload the manufacturer sheet. Parsing is not connected yet."
-              : "Upload the company catalog spreadsheet. Parsing is not connected yet."}
+              ? "Upload the manufacturer Excel sheet. First row should be column headers."
+              : "Upload the company catalog Excel file. First row should be column headers."}
           </p>
         ) : null}
 
@@ -234,10 +246,14 @@ const CatalogDetail = () => {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={!kind || saving}
+            disabled={!kind || saving || ((kind === "excel" || kind === "csv") && !file)}
             className="rounded-md bg-indigo-500 px-4 py-2.5 font-medium text-white hover:bg-indigo-400 disabled:opacity-50"
           >
-            {saving ? "Fetching..." : "Run ingest"}
+            {saving
+              ? "Uploading..."
+              : kind === "excel" || kind === "csv"
+                ? "Upload and ingest"
+                : "Run ingest"}
           </button>
           <Link
             to="/dashboard/catalogs"
