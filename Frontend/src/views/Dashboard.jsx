@@ -24,7 +24,7 @@ const Dashboard = () => {
         >
           <h2 className="text-xl font-semibold text-white">Catalogs</h2>
           <p className="mt-2 text-sm text-gray-400">
-            Add your catalog, manufacturer files, and competitor sites.
+            Company catalog (Excel or API), manufacturer Excel, competitor sites.
           </p>
         </Link>
         <Link
