@@ -45,6 +45,22 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "USD",
     },
+    weight: {
+      type: Number,
+    },
+    width: {
+      type: Number,
+    },
+    height: {
+      type: Number,
+    },
+    depth: {
+      type: Number,
+    },
+    fitment: {
+      type: String,
+      trim: true,
+    },
     images: {
       type: [String],
       default: [],

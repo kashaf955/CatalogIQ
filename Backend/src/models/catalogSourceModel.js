@@ -43,6 +43,15 @@ const catalogSourceSchema = new mongoose.Schema(
         type: String,
         trim: true,
       },
+      storeHash: {
+        type: String,
+        trim: true,
+      },
+      accessToken: {
+        type: String,
+        trim: true,
+        select: false,
+      },
       columnMap: {
         type: mongoose.Schema.Types.Mixed,
       },
