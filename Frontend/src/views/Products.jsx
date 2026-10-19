@@ -54,7 +54,7 @@ const Products = () => {
     return products.filter((product) => {
       if (source && String(product.sourceId) !== source) return false;
       if (!needle) return true;
-      return [product.name, product.sku, product.mpn, product.brand]
+      return [product.name, product.sku, product.mpn, product.brand, product.fitment]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle));
     });
@@ -124,6 +124,10 @@ const Products = () => {
                 <th className="px-4 py-3 font-medium">SKU</th>
                 <th className="px-4 py-3 font-medium">MPN</th>
                 <th className="px-4 py-3 font-medium">Brand</th>
+                <th className="px-4 py-3 font-medium">Price</th>
+                <th className="px-4 py-3 font-medium">Weight</th>
+                <th className="px-4 py-3 font-medium">Dimensions</th>
+                <th className="px-4 py-3 font-medium">Fitment</th>
                 <th className="px-4 py-3 font-medium">Source</th>
               </tr>
             </thead>
@@ -138,6 +142,22 @@ const Products = () => {
                   <td className="px-4 py-3 text-gray-300">{product.mpn || "—"}</td>
                   <td className="px-4 py-3 text-gray-300">
                     {product.brand || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-300">
+                    {product.price != null ? `$${Number(product.price).toFixed(2)}` : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-300">
+                    {product.weight != null ? product.weight : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-gray-300">
+                    {product.width || product.height || product.depth
+                      ? [product.width, product.height, product.depth]
+                          .map((value) => (value != null ? value : "—"))
+                          .join(" × ")
+                      : "—"}
+                  </td>
+                  <td className="max-w-56 truncate px-4 py-3 text-gray-300" title={product.fitment || ""}>
+                    {product.fitment || "—"}
                   </td>
                   <td className="px-4 py-3 text-gray-300">
                     {catalogName(product.sourceId)}
