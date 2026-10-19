@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
 
@@ -17,9 +17,29 @@ const kindLabel = {
   website: "Website",
 };
 
+const tabs = [
+  {
+    id: "company",
+    label: "Company catalog",
+    types: ["our_catalog"],
+    empty: "No company catalog yet. Add your Excel file or API source.",
+    addLabel: "Add company catalog",
+  },
+  {
+    id: "compare",
+    label: "Compare catalogs",
+    types: ["manufacturer", "competitor"],
+    empty: "No catalogs to compare yet. Add a manufacturer Excel or competitor website.",
+    addLabel: "Add compare catalog",
+  },
+];
+
 const Catalogs = () => {
   const { role } = useSelector((state) => state.auth);
   const canManage = role === "owner" || role === "admin";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabId = searchParams.get("tab") === "compare" ? "compare" : "company";
+  const tab = tabs.find((item) => item.id === tabId) || tabs[0];
   const [catalogs, setCatalogs] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +60,15 @@ const Catalogs = () => {
 
     loadCatalogs();
   }, []);
+
+  const rows = useMemo(
+    () => catalogs.filter((catalog) => tab.types.includes(catalog.type)),
+    [catalogs, tab.types]
+  );
+
+  const setTab = (next) => {
+    setSearchParams(next === "company" ? {} : { tab: next });
+  };
 
   const removeCatalog = async (catalogId) => {
     setError(null);
@@ -64,18 +93,38 @@ const Catalogs = () => {
           </p>
           <h1 className="text-3xl font-semibold text-white">Catalogs</h1>
           <p className="mt-2 text-gray-400">
-            Company catalog (Excel or API), manufacturer Excel, and competitor
-            websites.
+            Your company catalog, then manufacturer and competitor sources to
+            compare against.
           </p>
         </div>
         {canManage ? (
           <Link
-            to="/dashboard/catalogs/new"
+            to={`/dashboard/catalogs/new?tab=${tab.id}`}
             className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
           >
-            Add catalog
+            {tab.addLabel}
           </Link>
         ) : null}
+      </div>
+
+      <div className="mb-6 flex gap-2 border-b border-white/10">
+        {tabs.map((item) => {
+          const active = item.id === tab.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setTab(item.id)}
+              className={`-mb-px rounded-t-md px-4 py-2.5 text-sm font-medium ${
+                active
+                  ? "border border-b-transparent border-indigo-400/40 bg-[#22262d] text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-indigo-400/30 bg-[#22262d] shadow-[0_0_24px_rgba(99,102,241,0.12)]">
@@ -84,8 +133,8 @@ const Catalogs = () => {
         ) : null}
         {loading ? (
           <p className="px-4 py-6 text-sm text-gray-400">Loading catalogs...</p>
-        ) : catalogs.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400">No catalogs yet.</p>
+        ) : rows.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-gray-400">{tab.empty}</p>
         ) : (
           <table className="w-full min-w-lg text-left text-sm">
             <thead className="border-b border-white/10 text-gray-400">
@@ -98,7 +147,7 @@ const Catalogs = () => {
               </tr>
             </thead>
             <tbody>
-              {catalogs.map((catalog) => (
+              {rows.map((catalog) => (
                 <tr
                   key={catalog._id}
                   className="border-b border-white/5 last:border-0"
@@ -140,7 +189,7 @@ const Catalogs = () => {
                       {canManage ? (
                         <>
                           <Link
-                            to={`/dashboard/catalogs/${catalog._id}/edit`}
+                            to={`/dashboard/catalogs/${catalog._id}/edit?tab=${tab.id}`}
                             className="text-indigo-300 hover:text-indigo-200"
                           >
                             Edit

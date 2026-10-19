@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
 
@@ -41,11 +41,22 @@ const templateIdFor = (type, kind) => {
 const CatalogForm = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "compare" ? "compare" : "company";
+  const catalogsPath =
+    tab === "compare" ? "/dashboard/catalogs?tab=compare" : "/dashboard/catalogs";
+  const visibleTemplates = isEdit
+    ? templates
+    : templates.filter((item) =>
+        tab === "compare"
+          ? item.type === "manufacturer" || item.type === "competitor"
+          : item.type === "our_catalog"
+      );
   const navigate = useNavigate();
   const { role } = useSelector((state) => state.auth);
   const canManage = role === "owner" || role === "admin";
 
-  const [templateId, setTemplateId] = useState("our_excel");
+  const [templateId, setTemplateId] = useState(visibleTemplates[0].id);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [manufacturer, setManufacturer] = useState("");
@@ -61,7 +72,10 @@ const CatalogForm = () => {
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
-  const template = templates.find((item) => item.id === templateId) || templates[0];
+  const template =
+    templates.find((item) => item.id === templateId) ||
+    visibleTemplates[0] ||
+    templates[0];
   const showManufacturer = template.type === "manufacturer";
   const showWebsiteUrl = template.kind === "website";
   const showApi = template.kind === "api";
@@ -70,9 +84,15 @@ const CatalogForm = () => {
 
   useEffect(() => {
     if (!canManage) {
-      navigate("/dashboard/catalogs", { replace: true });
+      navigate(catalogsPath, { replace: true });
     }
-  }, [canManage, navigate]);
+  }, [canManage, catalogsPath, navigate]);
+
+  useEffect(() => {
+    if (!isEdit) {
+      setTemplateId(visibleTemplates[0].id);
+    }
+  }, [tab, isEdit]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -164,7 +184,7 @@ const CatalogForm = () => {
         return;
       }
 
-      navigate(catalogId ? `/dashboard/catalogs/${catalogId}` : "/dashboard/catalogs");
+      navigate(catalogId ? `/dashboard/catalogs/${catalogId}` : catalogsPath);
     } catch (err) {
       setError(err.response?.data?.message || "Could not save catalog");
     } finally {
@@ -185,14 +205,15 @@ const CatalogForm = () => {
         className="w-full max-w-md rounded-2xl border border-indigo-400/40 bg-[#22262d] p-8 shadow-[0_0_32px_rgba(99,102,241,0.25)]"
       >
         <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
-          Workspace
+          {tab === "compare" ? "Compare catalogs" : "Company catalog"}
         </p>
         <h1 className="mb-2 text-3xl font-semibold text-white">
           {isEdit ? "Edit catalog" : "Add catalog"}
         </h1>
         <p className="mb-6 text-gray-400">
-          Company catalog from Excel or any API. Manufacturer lists are Excel.
-          Competitor data comes from a website.
+          {tab === "compare"
+            ? "Manufacturer Excel or a competitor website to match against your catalog."
+            : "Your store catalog from Excel or an API."}
         </p>
 
         {error ? (
@@ -208,7 +229,7 @@ const CatalogForm = () => {
             value={templateId}
             onChange={(event) => handleTemplate(event.target.value)}
           >
-            {templates.map((item) => (
+            {visibleTemplates.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.label}
               </option>
@@ -383,7 +404,7 @@ const CatalogForm = () => {
 
         <p className="mt-6 text-center text-sm text-gray-400">
           <Link
-            to="/dashboard/catalogs"
+            to={catalogsPath}
             className="text-indigo-300 hover:text-indigo-200"
           >
             Back to catalogs
