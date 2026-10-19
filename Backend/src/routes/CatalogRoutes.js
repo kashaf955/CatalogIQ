@@ -8,6 +8,7 @@ router.use(authenticate);
 router.get("/", catalogController.getCatalog);
 router.get("/:id", catalogController.getCatalogById);
 router.post("/", catalogController.createCatalog);
+router.post("/:id/ingest", catalogController.ingestCatalog);
 router.put("/:id", catalogController.updateCatalog);
 router.delete("/:id", catalogController.deleteCatalog);
 

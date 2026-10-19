@@ -6,6 +6,7 @@ const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const tenantRoutes = require("./src/routes/tenantRoutes");
 const catalogRoutes = require("./src/routes/CatalogRoutes");
+const productRoutes = require("./src/routes/productRoutes");
 const app = express();
 
 app.use(
@@ -25,6 +26,7 @@ app.get("/", (_req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tenants", tenantRoutes);
 app.use("/api/v1/catalogs", catalogRoutes);
+app.use("/api/v1/products", productRoutes);
 app.use((err, _req, res, _next) => {
   console.error(err);
   res.status(500).json({ message: "Internal server error" });
