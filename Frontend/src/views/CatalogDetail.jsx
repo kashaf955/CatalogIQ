@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const typeLabel = {
-  our_catalog: "Our catalog",
+  our_catalog: "Company catalog",
   manufacturer: "Manufacturer",
   competitor: "Competitor",
 };
@@ -64,7 +64,11 @@ const CatalogDetail = () => {
 
     if (!isBigCommerce) {
       setMessage(
-        "Excel and website ingest are not connected yet. Use a BigCommerce API source to fetch products."
+        kind === "excel"
+          ? "Excel ingest is next: company catalog files and manufacturer sheets."
+          : kind === "website"
+            ? "Competitor website scrape is next."
+            : "This API adapter is not connected yet. BigCommerce is the only live fetch."
       );
       return;
     }
@@ -146,12 +150,12 @@ const CatalogDetail = () => {
         </div>
         <div className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-5">
           <p className="text-sm text-gray-400">
-            {isBigCommerce ? "Store hash" : "URL"}
+            {kind === "api" ? "API" : kind === "excel" ? "File source" : "Website"}
           </p>
           <p className="mt-1 truncate text-white">
-            {isBigCommerce
-              ? catalog.connection?.storeHash || "—"
-              : catalog.url || "—"}
+            {kind === "api"
+              ? catalog.connection?.platform || catalog.url || "Generic API"
+              : catalog.url || "Excel upload on ingest"}
           </p>
         </div>
         <div className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-5">
@@ -199,19 +203,25 @@ const CatalogDetail = () => {
           </label>
         ) : null}
 
-        {isBigCommerce ? (
+        {kind === "api" ? (
           <p className="mt-6 text-sm text-gray-400">
-            This will fetch catalog products from BigCommerce store{" "}
-            {catalog.connection?.storeHash || "(missing store hash)"} using the
-            saved access token
-            {catalog.connection?.accessTokenSet ? "" : " (token not saved)"}.
+            {isBigCommerce
+              ? `Fetch from the BigCommerce adapter (store ${catalog.connection?.storeHash || "hash missing"}).`
+              : `Fetch from ${catalog.url || "the saved API URL"} with the stored token. Generic REST ingest is not wired yet.`}
           </p>
         ) : null}
 
         {kind === "website" ? (
           <p className="mt-6 text-sm text-gray-400">
-            This will crawl {catalog.url || "the competitor URL"} for product
-            pages.
+            Scrape product pages from {catalog.url || "the competitor website"}.
+          </p>
+        ) : null}
+
+        {kind === "excel" ? (
+          <p className="mt-2 text-sm text-gray-400">
+            {catalog.type === "manufacturer"
+              ? "Upload the manufacturer sheet. Parsing is not connected yet."
+              : "Upload the company catalog spreadsheet. Parsing is not connected yet."}
           </p>
         ) : null}
 

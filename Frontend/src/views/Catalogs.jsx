@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const typeLabel = {
-  our_catalog: "Our catalog",
+  our_catalog: "Company catalog",
   manufacturer: "Manufacturer",
   competitor: "Competitor",
 };
@@ -64,7 +64,8 @@ const Catalogs = () => {
           </p>
           <h1 className="text-3xl font-semibold text-white">Catalogs</h1>
           <p className="mt-2 text-gray-400">
-            Sources for your catalog, manufacturers, and competitors.
+            Company catalog (Excel or API), manufacturer Excel, and competitor
+            websites.
           </p>
         </div>
         {canManage ? (

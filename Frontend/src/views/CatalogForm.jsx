@@ -8,42 +8,33 @@ const fieldClass =
 
 const templates = [
   {
-    id: "our_api",
-    label: "Our catalog — BigCommerce API",
-    type: "our_catalog",
-    kind: "api",
-    platform: "bigcommerce",
-  },
-  {
     id: "our_excel",
-    label: "Our catalog — Excel",
+    label: "Company catalog — Excel",
     type: "our_catalog",
     kind: "excel",
-    platform: "",
+  },
+  {
+    id: "our_api",
+    label: "Company catalog — API",
+    type: "our_catalog",
+    kind: "api",
   },
   {
     id: "mfr_excel",
     label: "Manufacturer — Excel",
     type: "manufacturer",
     kind: "excel",
-    platform: "",
   },
   {
     id: "comp_web",
     label: "Competitor — Website",
     type: "competitor",
     kind: "website",
-    platform: "",
   },
 ];
 
-const templateIdFor = (type, kind, platform) => {
-  const match = templates.find(
-    (item) =>
-      item.type === type &&
-      item.kind === kind &&
-      (item.platform || "") === (platform || "")
-  );
+const templateIdFor = (type, kind) => {
+  const match = templates.find((item) => item.type === type && item.kind === kind);
   return match?.id || "our_excel";
 };
 
@@ -54,12 +45,13 @@ const CatalogForm = () => {
   const { role } = useSelector((state) => state.auth);
   const canManage = role === "owner" || role === "admin";
 
-  const [templateId, setTemplateId] = useState("our_api");
+  const [templateId, setTemplateId] = useState("our_excel");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [manufacturer, setManufacturer] = useState("");
   const [brands, setBrands] = useState("");
   const [url, setUrl] = useState("");
+  const [platform, setPlatform] = useState("");
   const [storeHash, setStoreHash] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [accessTokenSet, setAccessTokenSet] = useState(false);
@@ -70,7 +62,8 @@ const CatalogForm = () => {
   const template = templates.find((item) => item.id === templateId) || templates[0];
   const showManufacturer = template.type === "manufacturer";
   const showWebsiteUrl = template.kind === "website";
-  const showBigCommerce = template.kind === "api" && template.platform === "bigcommerce";
+  const showApi = template.kind === "api";
+  const showBigCommerce = showApi && platform === "bigcommerce";
 
   useEffect(() => {
     if (!canManage) {
@@ -91,18 +84,13 @@ const CatalogForm = () => {
           setError("Catalog not found");
           return;
         }
-        setTemplateId(
-          templateIdFor(
-            catalog.type,
-            catalog.connection?.kind,
-            catalog.connection?.platform
-          )
-        );
+        setTemplateId(templateIdFor(catalog.type, catalog.connection?.kind));
         setName(catalog.name || "");
         setDescription(catalog.description || "");
         setManufacturer(catalog.manufacturer || "");
         setBrands((catalog.brands || []).join(", "));
         setUrl(catalog.url || "");
+        setPlatform(catalog.connection?.platform || "");
         setStoreHash(catalog.connection?.storeHash || "");
         setAccessToken("");
         setAccessTokenSet(Boolean(catalog.connection?.accessTokenSet));
@@ -134,13 +122,12 @@ const CatalogForm = () => {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
-      url: showWebsiteUrl || showBigCommerce ? url || undefined : undefined,
+      url: showWebsiteUrl || showApi ? url || undefined : undefined,
       connection: {
         kind: template.kind,
-        platform: template.platform || undefined,
+        platform: showApi ? platform || undefined : undefined,
         storeHash: showBigCommerce ? storeHash || undefined : undefined,
-        accessToken:
-          showBigCommerce && accessToken ? accessToken : undefined,
+        accessToken: showApi && accessToken ? accessToken : undefined,
       },
       status,
     };
@@ -180,7 +167,8 @@ const CatalogForm = () => {
           {isEdit ? "Edit catalog" : "Add catalog"}
         </h1>
         <p className="mb-6 text-gray-400">
-          Save a source. BigCommerce catalogs can fetch products on ingest.
+          Company catalog from Excel or any API. Manufacturer lists are Excel.
+          Competitor data comes from a website.
         </p>
 
         {error ? (
@@ -253,10 +241,11 @@ const CatalogForm = () => {
 
         {showWebsiteUrl ? (
           <label className="mb-4 block text-sm text-gray-300">
-            Website URL
+            Competitor website
             <input
               type="url"
-              placeholder="https://"
+              required
+              placeholder="https://competitor.com"
               className={fieldClass}
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -264,28 +253,39 @@ const CatalogForm = () => {
           </label>
         ) : null}
 
-        {showBigCommerce ? (
+        {showApi ? (
           <>
             <label className="mb-4 block text-sm text-gray-300">
-              Store hash
-              <input
-                type="text"
-                required
-                placeholder="abc123xyz"
+              API platform
+              <select
                 className={fieldClass}
-                value={storeHash}
-                onChange={(event) => setStoreHash(event.target.value)}
+                value={platform}
+                onChange={(event) => setPlatform(event.target.value)}
+              >
+                <option value="">Generic REST API</option>
+                <option value="bigcommerce">BigCommerce</option>
+              </select>
+            </label>
+            <label className="mb-4 block text-sm text-gray-300">
+              API URL
+              <input
+                type="url"
+                required={!showBigCommerce}
+                placeholder="https://api.example.com/products"
+                className={fieldClass}
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
               />
             </label>
             <label className="mb-4 block text-sm text-gray-300">
-              Access token
+              API token
               <input
                 type="password"
                 required={!isEdit || !accessTokenSet}
                 placeholder={
                   accessTokenSet
                     ? "Saved — enter a new token to replace"
-                    : "BigCommerce API token"
+                    : "Bearer or store token"
                 }
                 className={fieldClass}
                 value={accessToken}
@@ -293,16 +293,19 @@ const CatalogForm = () => {
                 autoComplete="off"
               />
             </label>
-            <label className="mb-4 block text-sm text-gray-300">
-              Storefront URL
-              <input
-                type="url"
-                placeholder="https://store.com (optional)"
-                className={fieldClass}
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-              />
-            </label>
+            {showBigCommerce ? (
+              <label className="mb-4 block text-sm text-gray-300">
+                Store hash
+                <input
+                  type="text"
+                  required
+                  placeholder="Only if this API is BigCommerce"
+                  className={fieldClass}
+                  value={storeHash}
+                  onChange={(event) => setStoreHash(event.target.value)}
+                />
+              </label>
+            ) : null}
           </>
         ) : null}
 
