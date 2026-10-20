@@ -160,7 +160,7 @@ const fetchBigCommerceProducts = async ({ storeHash, accessToken }) => {
     const result = await bigcommerceRequest(
       hash,
       token,
-      `/v3/catalog/products?limit=50&page=${page}&include=images,primary_image,custom_fields`
+      `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields`
     );
     for (const item of result.data || []) {
       if (!item?.name) continue;

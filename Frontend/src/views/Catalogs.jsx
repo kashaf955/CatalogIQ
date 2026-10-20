@@ -177,6 +177,12 @@ const Catalogs = () => {
                   <td className="px-4 py-3">
                     <div className="flex gap-3">
                       <Link
+                        to={`/dashboard/products?source=${catalog._id}`}
+                        className="text-indigo-300 hover:text-indigo-200"
+                      >
+                        View products
+                      </Link>
+                      <Link
                         to={`/dashboard/catalogs/${catalog._id}`}
                         className="text-indigo-300 hover:text-indigo-200"
                       >

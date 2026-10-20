@@ -150,7 +150,10 @@ const CatalogForm = () => {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
-      url: showWebsiteUrl || showApi ? url || undefined : undefined,
+      url:
+        showWebsiteUrl || (showApi && !showBigCommerce)
+          ? url || undefined
+          : undefined,
       connection: {
         kind: template.kind,
         platform: showApi ? platform || undefined : undefined,
@@ -331,17 +334,19 @@ const CatalogForm = () => {
                 <option value="bigcommerce">BigCommerce</option>
               </select>
             </label>
-            <label className="mb-4 block text-sm text-gray-300">
-              API URL
-              <input
-                type="url"
-                required={!showBigCommerce}
-                placeholder="https://api.example.com/products"
-                className={fieldClass}
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-              />
-            </label>
+            {showBigCommerce ? null : (
+              <label className="mb-4 block text-sm text-gray-300">
+                API URL
+                <input
+                  type="url"
+                  required
+                  placeholder="https://api.example.com/products"
+                  className={fieldClass}
+                  value={url}
+                  onChange={(event) => setUrl(event.target.value)}
+                />
+              </label>
+            )}
             <label className="mb-4 block text-sm text-gray-300">
               API token
               <input
@@ -364,7 +369,7 @@ const CatalogForm = () => {
                 <input
                   type="text"
                   required
-                  placeholder="Only if this API is BigCommerce"
+                  placeholder="abcxyz store hash from BigCommerce"
                   className={fieldClass}
                   value={storeHash}
                   onChange={(event) => setStoreHash(event.target.value)}

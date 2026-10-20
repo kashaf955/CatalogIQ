@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import ProcessingBar from "../components/ProcessingBar.jsx";
 
 const typeLabel = {
   our_catalog: "Company catalog",
@@ -30,6 +31,7 @@ const CatalogDetail = () => {
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [imported, setImported] = useState(null);
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -67,6 +69,7 @@ const CatalogDetail = () => {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setImported(null);
 
     const isExcel = kind === "excel" || kind === "csv";
     if (isExcel && !file) {
@@ -99,17 +102,26 @@ const CatalogDetail = () => {
           {},
           {
             withCredentials: true,
-            timeout: kind === "website" ? 10 * 60 * 1000 : 30000,
+            timeout: kind === "excel" || kind === "csv" ? 60000 : 15 * 60 * 1000,
           }
         );
       }
+      const count = response.data.imported ?? 0;
+      setImported(count);
       setMessage(
         response.data.message
-          ? `${response.data.message}. Imported ${response.data.imported ?? 0} products.`
+          ? `${response.data.message}. Imported ${count} products.`
           : "Products imported"
       );
     } catch (err) {
-      setError(err.response?.data?.message || "Ingest failed");
+      if (err.code === "ECONNABORTED" || err.message === "Network Error" || !err.response) {
+        setImported(0);
+        setError(
+          "The request timed out, but the server may still be importing. Open this catalog's products to check."
+        );
+      } else {
+        setError(err.response?.data?.message || "Ingest failed");
+      }
     } finally {
       setSaving(false);
     }
@@ -161,7 +173,7 @@ const CatalogDetail = () => {
             to={`/dashboard/products?source=${catalog._id}`}
             className="rounded-md bg-indigo-500 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-indigo-400"
           >
-            View products
+            View catalog products
           </Link>
         </div>
       </div>
@@ -209,6 +221,15 @@ const CatalogDetail = () => {
           </p>
         ) : null}
 
+        {imported != null && !saving ? (
+          <Link
+            to={`/dashboard/products?source=${catalog._id}`}
+            className="mt-4 inline-flex rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-400"
+          >
+            View products
+          </Link>
+        ) : null}
+
         {kind === "excel" || kind === "csv" ? (
           <label className="mt-6 block text-sm text-gray-300">
             File
@@ -254,6 +275,18 @@ const CatalogDetail = () => {
           <p className="mt-6 text-sm text-gray-400">
             Edit this source and choose a connection before ingesting.
           </p>
+        ) : null}
+
+        {saving ? (
+          <ProcessingBar
+            label={
+              kind === "website"
+                ? "Searching competitor site. This can take several minutes."
+                : kind === "api"
+                  ? "Fetching products. Keep this page open."
+                  : "Uploading and importing products..."
+            }
+          />
         ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
