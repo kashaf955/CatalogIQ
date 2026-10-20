@@ -27,8 +27,9 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tenants", tenantRoutes);
 app.use("/api/v1/catalogs", catalogRoutes);
 app.use("/api/v1/products", productRoutes);
-app.use((err, _req, res, _next) => {
-  console.error(err);
+app.use((err, req, res, _next) => {
+  console.error(`[http] ${req.method} ${req.originalUrl} ${err.status || 500}: ${err.message}`);
+  if (err.stack) console.error(err.stack);
   res.status(err.status || 500).json({
     message: err.message || "Internal server error",
   });

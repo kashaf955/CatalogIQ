@@ -2,6 +2,9 @@ const CatalogSource = require("../models/catalogSourceModel");
 const Product = require("../models/productModel");
 const { fetchBigCommerceProducts } = require("../services/bigcommerceService");
 const { parseExcelProducts } = require("../services/excelService");
+const { fetchWebsiteProducts } = require("../services/websiteScrapeService");
+const { fetchRestProducts } = require("../services/restApiService");
+const { logError } = require("../utils/logger");
 
 const upsertProducts = async (tenantId, sourceId, items, matchKey) => {
   const ops = items.map((item) => {
@@ -50,6 +53,7 @@ const catalogController = {
       });
       return res.status(200).json(catalogs.map(publicCatalog));
     } catch (error) {
+      logError("catalogs.list", error);
       return res.status(500).json({ message: error.message });
     }
   },
@@ -66,6 +70,7 @@ const catalogController = {
       }
       return res.status(200).json(publicCatalog(catalog));
     } catch (error) {
+      logError("catalogs.get", error, { id: req.params.id });
       return res.status(500).json({ message: error.message });
     }
   },
@@ -81,6 +86,7 @@ const catalogController = {
       );
       return res.status(201).json(publicCatalog(created));
     } catch (error) {
+      logError("catalogs.create", error);
       return res.status(500).json({ message: error.message });
     }
   },
@@ -113,6 +119,7 @@ const catalogController = {
 
       return res.status(200).json(publicCatalog(catalog));
     } catch (error) {
+      logError("catalogs.update", error, { id: req.params.id });
       return res.status(500).json({ message: error.message });
     }
   },
@@ -126,6 +133,7 @@ const catalogController = {
       );
       return res.status(200).json(publicCatalog(catalog));
     } catch (error) {
+      logError("catalogs.delete", error, { id: req.params.id });
       return res.status(500).json({ message: error.message });
     }
   },
@@ -144,6 +152,9 @@ const catalogController = {
 
       const kind = catalog.connection?.kind;
       const platform = String(catalog.connection?.platform || "").toLowerCase();
+      console.log(
+        `[ingest] catalog=${catalog._id} name="${catalog.name}" kind=${kind || "none"} platform=${platform || "none"} url=${catalog.url || "none"}`
+      );
       let fetched = [];
       let matchKey = "sku";
       let label = "Products imported";
@@ -163,13 +174,39 @@ const catalogController = {
         matchKey = "bigcommerceId";
         label = "BigCommerce products imported";
       } else if (kind === "website") {
-        return res.status(400).json({
-          message: "Competitor website scrape is not connected yet",
+        if (!catalog.url) {
+          return res.status(400).json({
+            message: "Add a competitor website URL before ingesting",
+          });
+        }
+        const companySources = await CatalogSource.find({
+          tenantId: req.tenant.id,
+          type: "our_catalog",
+          isDeleted: false,
+        }).select("_id");
+        const queries = await Product.find({
+          tenantId: req.tenant.id,
+          sourceId: { $in: companySources.map((source) => source._id) },
+          isDeleted: false,
+        }).select("_id sku mpn name brand");
+        fetched = await fetchWebsiteProducts({
+          url: catalog.url,
+          queries,
         });
+        matchKey = "sku";
+        label = "Competitor products imported";
       } else if (kind === "api") {
-        return res.status(400).json({
-          message: "This API adapter is not connected yet",
+        if (!catalog.url) {
+          return res.status(400).json({
+            message: "Add an API URL before ingesting",
+          });
+        }
+        fetched = await fetchRestProducts({
+          url: catalog.url,
+          accessToken: catalog.connection?.accessToken,
         });
+        matchKey = "sku";
+        label = "API products imported";
       } else {
         return res.status(400).json({
           message: "This source has no ingest method",
@@ -194,6 +231,9 @@ const catalogController = {
       catalog.status = "active";
       await catalog.save();
 
+      console.log(
+        `[ingest] done catalog=${catalog._id} imported=${fetched.length} upserted=${result.upsertedCount} modified=${result.modifiedCount}`
+      );
       return res.status(200).json({
         message: label,
         imported: fetched.length,
@@ -201,6 +241,7 @@ const catalogController = {
         modified: result.modifiedCount,
       });
     } catch (error) {
+      logError("ingest", error, { id: req.params.id });
       return res.status(error.status || 500).json({ message: error.message });
     }
   },
