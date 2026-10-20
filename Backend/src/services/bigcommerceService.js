@@ -100,6 +100,10 @@ const bigcommerceRequest = async (storeHash, accessToken, path) => {
 
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
+    console.error(`[bigcommerce] ${response.status} ${path}`, {
+      title: body.title,
+      message: body.message,
+    });
     const detail = body.title || body.message || `BigCommerce ${response.status}`;
     const error = new Error(detail);
     error.status = response.status === 401 || response.status === 403 ? 400 : 502;
