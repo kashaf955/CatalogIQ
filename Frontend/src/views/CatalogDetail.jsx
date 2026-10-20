@@ -74,12 +74,13 @@ const CatalogDetail = () => {
       return;
     }
 
-    if (!isExcel && !isBigCommerce) {
-      setMessage(
-        kind === "website"
-          ? "Competitor website scrape is not connected yet."
-          : "This API adapter is not connected yet."
-      );
+    if (kind === "website" && !catalog?.url) {
+      setError("Add a competitor website URL before ingesting");
+      return;
+    }
+
+    if (kind === "api" && !isBigCommerce && !catalog?.url) {
+      setError("Add an API URL before ingesting");
       return;
     }
 
@@ -96,7 +97,10 @@ const CatalogDetail = () => {
         response = await axios.post(
           `/api/v1/catalogs/${id}/ingest`,
           {},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            timeout: kind === "website" ? 10 * 60 * 1000 : 30000,
+          }
         );
       }
       setMessage(
@@ -225,13 +229,16 @@ const CatalogDetail = () => {
           <p className="mt-6 text-sm text-gray-400">
             {isBigCommerce
               ? `Fetch from the BigCommerce adapter (store ${catalog.connection?.storeHash || "hash missing"}).`
-              : `Fetch from ${catalog.url || "the saved API URL"} with the stored token. Generic REST ingest is not wired yet.`}
+              : `GET ${catalog.url || "the saved API URL"} with the stored token. The response should be a JSON product list.`}
           </p>
         ) : null}
 
         {kind === "website" ? (
           <p className="mt-6 text-sm text-gray-400">
-            Scrape product pages from {catalog.url || "the competitor website"}.
+            Search {catalog.url || "the competitor website"} for SKUs already in
+            your company catalog. If a store prefix does not match (for example
+            UP-12345), it retries with the part number (12345). The whole
+            competitor site is not scraped.
           </p>
         ) : null}
 
@@ -252,14 +259,28 @@ const CatalogDetail = () => {
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={!kind || saving || ((kind === "excel" || kind === "csv") && !file)}
+            disabled={
+              !kind ||
+              saving ||
+              ((kind === "excel" || kind === "csv") && !file) ||
+              (kind === "website" && !catalog.url) ||
+              (kind === "api" && !isBigCommerce && !catalog.url)
+            }
             className="rounded-md bg-indigo-500 px-4 py-2.5 font-medium text-white hover:bg-indigo-400 disabled:opacity-50"
           >
             {saving
-              ? "Uploading..."
+              ? kind === "website"
+                ? "Searching competitor..."
+                : kind === "api"
+                  ? "Fetching API..."
+                  : "Uploading..."
               : kind === "excel" || kind === "csv"
                 ? "Upload and ingest"
-                : "Run ingest"}
+                : kind === "website"
+                  ? "Search company SKUs"
+                  : kind === "api"
+                    ? "Fetch products"
+                    : "Run ingest"}
           </button>
           <Link
             to="/dashboard/catalogs"
