@@ -1,15 +1,21 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
 const fieldClass =
   "rounded-md border border-white/15 bg-[#1c1f24] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400";
 
+const money = (value) =>
+  typeof value === "number" ? `$${value.toFixed(2)}` : "—";
+
 const Matches = () => {
   const [catalogs, setCatalogs] = useState([]);
   const [against, setAgainst] = useState("manufacturer");
   const [status, setStatus] = useState("all");
-  const [matches] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [running, setRunning] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -27,13 +33,48 @@ const Matches = () => {
     load();
   }, []);
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const params = { against };
+        if (status !== "all") params.status = status;
+        const response = await axios.get("/api/v1/matches", {
+          params,
+          withCredentials: true,
+        });
+        setMatches(Array.isArray(response.data) ? response.data : []);
+      } catch (err) {
+        setError(err.response?.data?.message || "Could not load matches");
+      }
+    };
+
+    load();
+  }, [against, status, reloadKey]);
+
+  const runMatching = async () => {
+    setRunning(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const response = await axios.post(
+        "/api/v1/matches/run",
+        { against },
+        { withCredentials: true }
+      );
+      const { matched, ourProducts, matches: total } = response.data;
+      setMessage(
+        `Matched ${matched} of ${ourProducts} products (${total} candidate matches).`
+      );
+      setReloadKey((key) => key + 1);
+    } catch (err) {
+      setError(err.response?.data?.message || "Matching failed");
+    } finally {
+      setRunning(false);
+    }
+  };
+
   const ours = catalogs.filter((item) => item.type === "our_catalog");
   const other = catalogs.filter((item) => item.type === against);
-
-  const rows = useMemo(() => {
-    if (status === "all") return matches;
-    return matches.filter((item) => item.status === status);
-  }, [matches, status]);
 
   return (
     <div>
@@ -47,12 +88,22 @@ const Matches = () => {
             Compare your catalog to manufacturer or competitor products.
           </p>
         </div>
-        <Link
-          to="/dashboard/reviews"
-          className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
-        >
-          Open review queue
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={runMatching}
+            disabled={running}
+            className="rounded-md border border-indigo-400/60 px-4 py-2.5 font-medium text-indigo-200 hover:bg-indigo-500/10 disabled:opacity-50"
+          >
+            {running ? "Matching…" : "Run matching"}
+          </button>
+          <Link
+            to="/dashboard/reviews"
+            className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
+          >
+            Open review queue
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -73,20 +124,26 @@ const Matches = () => {
           <option value="pending">Pending</option>
           <option value="accepted">Accepted</option>
           <option value="rejected">Rejected</option>
+          <option value="ignored">Ignored</option>
         </select>
       </div>
 
       {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
+      {message ? (
+        <p className="mb-4 rounded-md bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">
+          {message}
+        </p>
+      ) : null}
 
       <p className="mb-4 text-sm text-gray-400">
         {ours.length} of your catalogs · {other.length} {against} sources
       </p>
 
       <div className="overflow-x-auto rounded-2xl border border-indigo-400/30 bg-[#22262d] shadow-[0_0_24px_rgba(99,102,241,0.12)]">
-        {rows.length === 0 ? (
+        {matches.length === 0 ? (
           <p className="px-4 py-6 text-sm text-gray-400">
-            No matches yet. Ingest your catalog and a {against} source, then run
-            matching from the backend.
+            No matches yet. Ingest your catalog and a {against} source, then
+            click Run matching.
           </p>
         ) : (
           <table className="w-full min-w-lg text-left text-sm">
@@ -94,23 +151,49 @@ const Matches = () => {
               <tr>
                 <th className="px-4 py-3 font-medium">Our SKU</th>
                 <th className="px-4 py-3 font-medium">Our name</th>
+                <th className="px-4 py-3 font-medium">Our price</th>
                 <th className="px-4 py-3 font-medium">Candidate SKU</th>
                 <th className="px-4 py-3 font-medium">Candidate name</th>
+                <th className="px-4 py-3 font-medium">Their price</th>
                 <th className="px-4 py-3 font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((match) => (
+              {matches.map((match) => (
                 <tr
                   key={match.id}
                   className="border-b border-white/5 last:border-0"
                 >
                   <td className="px-4 py-3 text-gray-300">{match.ourSku}</td>
                   <td className="px-4 py-3 text-white">{match.ourName}</td>
+                  <td className="px-4 py-3 text-gray-300">
+                    {money(match.ourPrice)}
+                  </td>
                   <td className="px-4 py-3 text-gray-300">{match.theirSku}</td>
-                  <td className="px-4 py-3 text-white">{match.theirName}</td>
-                  <td className="px-4 py-3 text-gray-300">{match.score}</td>
+                  <td className="px-4 py-3 text-white">
+                    {match.theirUrl ? (
+                      <a
+                        href={match.theirUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:text-indigo-300"
+                      >
+                        {match.theirName}
+                      </a>
+                    ) : (
+                      match.theirName
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-300">
+                    {money(match.theirPrice)}
+                  </td>
+                  <td className="px-4 py-3 text-gray-300">
+                    {match.score}
+                    <span className="ml-1 text-xs text-gray-500">
+                      {match.reason}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 capitalize text-gray-300">
                     {match.status}
                   </td>

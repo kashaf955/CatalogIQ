@@ -1,13 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Reviews = () => {
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
-  const decide = (id, status) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-    setMessage(`Marked ${status}. Review API is not connected yet.`);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await axios.get("/api/v1/matches", {
+          params: { status: "pending" },
+          withCredentials: true,
+        });
+        setItems(Array.isArray(response.data) ? response.data : []);
+      } catch (err) {
+        setError(err.response?.data?.message || "Could not load review queue");
+      }
+    };
+
+    load();
+  }, []);
+
+  const decide = async (id, status) => {
+    setError(null);
+    try {
+      await axios.patch(
+        `/api/v1/matches/${id}`,
+        { status },
+        { withCredentials: true }
+      );
+      setItems((current) => current.filter((item) => item.id !== id));
+      setMessage(`Marked ${status}.`);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not update match");
+    }
   };
 
   return (
@@ -30,6 +58,7 @@ const Reviews = () => {
         </Link>
       </div>
 
+      {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
       {message ? (
         <p className="mb-4 rounded-md bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">
           {message}

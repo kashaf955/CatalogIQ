@@ -1,4 +1,5 @@
 const cheerio = require("cheerio");
+const { text, normalize, stripStorePrefix } = require("../utils/productCodes");
 
 const DELAY_MS = 800;
 const MAX_QUERIES = 200;
@@ -12,13 +13,6 @@ const toNumber = (value) => {
   const number = Number(String(value).replace(/[^0-9.-]/g, ""));
   return Number.isFinite(number) ? number : undefined;
 };
-
-const text = (value) => String(value || "").trim();
-
-const normalize = (value) =>
-  text(value)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "");
 
 const assertHttpUrl = (value) => {
   let parsed;
@@ -118,16 +112,6 @@ const searchUrlsFor = (origin, queryText) => {
     `${origin}/search.php?search_query=${q}`,
     `${origin}/catalogsearch/result/?q=${q}`,
   ];
-};
-
-const stripStorePrefix = (value) => {
-  const raw = text(value);
-  if (!raw) return "";
-  const dashed = raw.match(/^([A-Za-z]{1,6})[-_\s]+(.+)$/);
-  if (dashed && text(dashed[2]).length >= 3) return text(dashed[2]);
-  const glued = raw.match(/^([A-Za-z]{2,4})(\d[\w-]*)$/);
-  if (glued && text(glued[2]).length >= 3) return text(glued[2]);
-  return "";
 };
 
 const uniqueTerms = (...values) => {
