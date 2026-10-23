@@ -5,6 +5,11 @@ const { parseExcelProducts } = require("../services/excelService");
 const { fetchWebsiteProducts } = require("../services/websiteScrapeService");
 const { fetchRestProducts } = require("../services/restApiService");
 const { logError } = require("../utils/logger");
+const {
+  encryptToken,
+  isEncrypted,
+  storedToken,
+} = require("../utils/tokenCrypto");
 
 const upsertProducts = async (tenantId, sourceId, items, matchKey) => {
   const ops = items.map((item) => {
@@ -35,13 +40,22 @@ const upsertProducts = async (tenantId, sourceId, items, matchKey) => {
 
 const publicCatalog = (catalog) => {
   if (!catalog) return null;
-  const data = catalog.toObject ? catalog.toObject() : { ...catalog };
+  const data = catalog.toObject
+    ? catalog.toObject({ getters: false })
+    : { ...catalog };
   if (data.connection) {
     data.connection = { ...data.connection };
     data.connection.accessTokenSet = Boolean(data.connection.accessToken);
     delete data.connection.accessToken;
   }
   return data;
+};
+
+const sealStoredToken = async (catalog) => {
+  const stored = storedToken(catalog);
+  if (!stored || isEncrypted(stored)) return;
+  catalog.set("connection.accessToken", stored);
+  await catalog.save();
 };
 
 const catalogController = {
@@ -77,10 +91,14 @@ const catalogController = {
 
   createCatalog: async (req, res) => {
     try {
-      const catalog = await CatalogSource.create({
-        ...req.body,
-        tenantId: req.tenant.id,
-      });
+      const payload = { ...req.body, tenantId: req.tenant.id };
+      if (payload.connection?.accessToken) {
+        payload.connection = {
+          ...payload.connection,
+          accessToken: encryptToken(payload.connection.accessToken),
+        };
+      }
+      const catalog = await CatalogSource.create(payload);
       const created = await CatalogSource.findById(catalog._id).select(
         "+connection.accessToken"
       );
@@ -104,11 +122,17 @@ const catalogController = {
       }
 
       const nextConnection = {
-        ...(existing.connection?.toObject?.() || existing.connection || {}),
+        ...(existing.connection?.toObject?.({ getters: false }) ||
+          existing.connection ||
+          {}),
         ...(req.body.connection || {}),
       };
       if (!req.body.connection?.accessToken) {
-        nextConnection.accessToken = existing.connection?.accessToken;
+        nextConnection.accessToken = encryptToken(storedToken(existing));
+      } else {
+        nextConnection.accessToken = encryptToken(
+          req.body.connection.accessToken
+        );
       }
 
       const catalog = await CatalogSource.findOneAndUpdate(
@@ -149,6 +173,8 @@ const catalogController = {
       if (!catalog) {
         return res.status(404).json({ message: "Catalog not found" });
       }
+
+      await sealStoredToken(catalog);
 
       const kind = catalog.connection?.kind;
       const platform = String(catalog.connection?.platform || "").toLowerCase();
