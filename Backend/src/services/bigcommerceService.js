@@ -41,6 +41,22 @@ const mapCategory = (item, categories) => {
   return names[0] || "";
 };
 
+const mapDescription = (item, fields) => {
+  const candidates = [
+    item.description,
+    item.meta_description,
+    item.warranty,
+    customFieldValue(fields, [
+      "description",
+      "long description",
+      "details",
+      "product description",
+    ]),
+  ];
+  const match = candidates.find((value) => String(value || "").trim());
+  return match ? String(match) : "";
+};
+
 const mapProduct = (item, brands, categories) => {
   const images = [];
   if (item.primary_image?.url_standard) {
@@ -54,6 +70,7 @@ const mapProduct = (item, brands, categories) => {
 
   const fields = item.custom_fields || [];
   const sku = String(item.sku || "").trim() || `bc-${item.id}`;
+  const description = mapDescription(item, fields);
 
   return {
     sku,
@@ -63,7 +80,7 @@ const mapProduct = (item, brands, categories) => {
     brand:
       mapName(brands, item.brand_id) ||
       customFieldValue(fields, ["brand"]),
-    description: item.description || "",
+    description,
     price: toNumber(item.calculated_price ?? item.price),
     currency: "USD",
     weight: toNumber(item.weight),
@@ -160,10 +177,17 @@ const fetchBigCommerceProducts = async ({ storeHash, accessToken }) => {
     const result = await bigcommerceRequest(
       hash,
       token,
-      `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields`
+      `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields&include_fields=name,sku,mpn,gtin,upc,brand_id,description,price,calculated_price,weight,width,height,depth,categories,availability,is_visible,custom_url,warranty,search_keywords,meta_description,page_title`
     );
     for (const item of result.data || []) {
       if (!item?.name) continue;
+      if (products.length === 0) {
+        console.log("[bigcommerce] sample keys", Object.keys(item));
+        console.log(
+          "[bigcommerce] description length",
+          String(item.description || "").length
+        );
+      }
       products.push(mapProduct(item, brands, categories));
     }
     const totalPages = result.meta?.pagination?.total_pages || 1;
