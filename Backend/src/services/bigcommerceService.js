@@ -45,6 +45,8 @@ const mapDescription = (item, fields) => {
   const candidates = [
     item.description,
     item.meta_description,
+    item.open_graph_description,
+    item.availability_description,
     item.warranty,
     customFieldValue(fields, [
       "description",
@@ -177,7 +179,7 @@ const fetchBigCommerceProducts = async ({ storeHash, accessToken }) => {
     const result = await bigcommerceRequest(
       hash,
       token,
-      `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields&include_fields=name,sku,mpn,gtin,upc,brand_id,description,price,calculated_price,weight,width,height,depth,categories,availability,is_visible,custom_url,warranty,search_keywords,meta_description,page_title`
+      `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields&include_fields=name,sku,mpn,gtin,upc,brand_id,description,price,calculated_price,weight,width,height,depth,categories,availability,availability_description,is_visible,custom_url,warranty,search_keywords,meta_description,page_title,open_graph_description`
     );
     for (const item of result.data || []) {
       if (!item?.name) continue;

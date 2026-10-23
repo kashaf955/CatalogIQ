@@ -1,6 +1,31 @@
 const Product = require("../models/productModel");
 const { logError } = require("../utils/logger");
 
+const PAGE_SIZE_DEFAULT = 100;
+const PAGE_SIZE_MAX = 250;
+
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const searchFilter = (query) => {
+  const needle = String(query || "").trim();
+  if (!needle) return {};
+  const pattern = new RegExp(escapeRegex(needle), "i");
+  return {
+    $or: [
+      { name: pattern },
+      { sku: pattern },
+      { mpn: pattern },
+      { gtin: pattern },
+      { brand: pattern },
+      { fitment: pattern },
+      { category: pattern },
+      { description: pattern },
+      { availability: pattern },
+    ],
+  };
+};
+
 const getProducts = async (req, res) => {
   try {
     const filter = {
@@ -11,12 +36,30 @@ const getProducts = async (req, res) => {
       filter.sourceId = req.query.sourceId;
     }
 
-    const products = await Product.find(filter)
-      .sort({ name: 1 })
-      .limit(5000)
-      .lean();
+    Object.assign(filter, searchFilter(req.query.q));
 
-    return res.status(200).json(products);
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(
+      PAGE_SIZE_MAX,
+      Math.max(1, parseInt(req.query.limit, 10) || PAGE_SIZE_DEFAULT)
+    );
+
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .sort({ name: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      products,
+      total,
+      page,
+      limit,
+      pages: Math.max(1, Math.ceil(total / limit) || 1),
+    });
   } catch (error) {
     logError("products.list", error);
     return res.status(500).json({ message: error.message });
@@ -62,6 +105,7 @@ const deleteProductsBulk = async (req, res) => {
       filter._id = { $in: ids };
     } else if (sourceId) {
       filter.sourceId = sourceId;
+      Object.assign(filter, searchFilter(req.query.q || req.body?.q));
     } else {
       return res.status(400).json({
         message: "Select products or a catalog source to remove",
