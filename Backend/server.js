@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { connectDB } = require("./src/config/database");
-const { PORT, FRONTEND_URL } = require("./src/config/env");
+const { PORT, FRONTEND_URL, assertTokenEncryptionKey } = require("./src/config/env");
 const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const tenantRoutes = require("./src/routes/tenantRoutes");
@@ -38,6 +38,8 @@ app.use((err, req, res, _next) => {
 });
 
 const port = PORT || 3000;
+
+assertTokenEncryptionKey();
 
 connectDB()
   .then(() => {

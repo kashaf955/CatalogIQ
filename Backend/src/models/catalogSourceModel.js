@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { encryptToken, decryptToken } = require("../utils/tokenCrypto");
 
 const catalogSourceSchema = new mongoose.Schema(
   {
@@ -49,8 +50,9 @@ const catalogSourceSchema = new mongoose.Schema(
       },
       accessToken: {
         type: String,
-        trim: true,
         select: false,
+        set: encryptToken,
+        get: decryptToken,
       },
       columnMap: {
         type: mongoose.Schema.Types.Mixed,
@@ -74,6 +76,17 @@ const catalogSourceSchema = new mongoose.Schema(
 );
 
 catalogSourceSchema.index({ tenantId: 1, type: 1, name: 1 });
+
+catalogSourceSchema.set("toJSON", {
+  getters: false,
+  transform(_doc, ret) {
+    if (ret.connection) {
+      ret.connection.accessTokenSet = Boolean(ret.connection.accessToken);
+      delete ret.connection.accessToken;
+    }
+    return ret;
+  },
+});
 
 const CatalogSource = mongoose.model("CatalogSource", catalogSourceSchema);
 
