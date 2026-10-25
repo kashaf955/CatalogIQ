@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const Membership = require("../models/membershipModel");
 const User = require("../models/userModel");
+const Tenant = require("../models/tenantModels");
 
 const INVITE_ROLES = ["admin", "reviewer", "member"];
 
@@ -89,6 +90,30 @@ class TenantController {
           : null,
       })),
     });
+  };
+
+  getSettings = async (req, res) => {
+    return res.json({ autoAcceptScore: req.tenant.autoAcceptScore });
+  };
+
+  updateSettings = async (req, res) => {
+    const raw = req.body?.autoAcceptScore;
+    const autoAcceptScore =
+      raw === null || raw === "" || raw === undefined ? null : Number(raw);
+
+    if (
+      autoAcceptScore !== null &&
+      (!Number.isFinite(autoAcceptScore) ||
+        autoAcceptScore < 0 ||
+        autoAcceptScore > 100)
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Auto-accept score must be between 0 and 100" });
+    }
+
+    await Tenant.updateOne({ _id: req.tenant.id }, { autoAcceptScore });
+    return res.json({ autoAcceptScore });
   };
 }
 

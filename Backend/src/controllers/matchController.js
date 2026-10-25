@@ -11,6 +11,7 @@ const toRow = (match) => ({
   score: match.score,
   reason: match.reason,
   status: match.status,
+  autoAccepted: Boolean(match.autoAccepted),
   ourSku: match.ourProductId.sku,
   ourName: match.ourProductId.name,
   ourPrice: match.ourProductId.price,
@@ -29,9 +30,13 @@ const runMatches = async (req, res) => {
         .json({ message: "Choose manufacturer or competitor to match against" });
     }
 
-    const result = await runMatching(req.tenant.id, against);
+    const result = await runMatching(
+      req.tenant.id,
+      against,
+      req.tenant.autoAcceptScore
+    );
     console.log(
-      `[matches] run tenant=${req.tenant.id} against=${against} matched=${result.matched}/${result.ourProducts} matches=${result.matches} removed=${result.removed}`
+      `[matches] run tenant=${req.tenant.id} against=${against} matched=${result.matched}/${result.ourProducts} matches=${result.matches} autoAccepted=${result.autoAccepted} removed=${result.removed}`
     );
     return res.status(200).json({ message: "Matching finished", ...result });
   } catch (error) {
@@ -81,7 +86,7 @@ const updateMatch = async (req, res) => {
 
     const match = await Match.findOneAndUpdate(
       { _id: req.params.id, tenantId: req.tenant.id },
-      { status },
+      { status, autoAccepted: false },
       { returnDocument: "after" }
     );
     if (!match) {

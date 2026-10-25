@@ -47,6 +47,7 @@ const authenticate = async (req, res, next) => {
       slug: tenant.slug,
       plan: tenant.plan,
       status: tenant.status,
+      autoAcceptScore: tenant.autoAcceptScore ?? null,
     };
     req.membership = {
       role: membership.role,

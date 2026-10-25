@@ -37,6 +37,13 @@ const tenantSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Matches scoring at or above this skip the review queue; null = off.
+    autoAcceptScore: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 90,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

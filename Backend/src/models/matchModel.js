@@ -40,6 +40,10 @@ const matchSchema = new mongoose.Schema(
       enum: ["pending", "accepted", "rejected", "ignored"],
       default: "pending",
     },
+    autoAccepted: {
+      type: Boolean,
+      default: false,
+    },
     lastRunAt: {
       type: Date,
     },

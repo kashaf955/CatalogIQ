@@ -94,7 +94,21 @@ const productsOfType = async (tenantId, type) => {
     .lean();
 };
 
-const runMatching = async (tenantId, against) => {
+// Only products with a single candidate qualify; two equally good candidates
+// still need a person to pick one.
+const autoAcceptable = (found, threshold) => {
+  if (typeof threshold !== "number") return [];
+  const candidates = new Map();
+  for (const match of found) {
+    const key = String(match.ourProductId);
+    candidates.set(key, [...(candidates.get(key) || []), match]);
+  }
+  return [...candidates.values()]
+    .filter((list) => list.length === 1 && list[0].score >= threshold)
+    .map((list) => list[0].ourProductId);
+};
+
+const runMatching = async (tenantId, against, autoAcceptScore = null) => {
   const [ours, theirs] = await Promise.all([
     productsOfType(tenantId, "our_catalog"),
     productsOfType(tenantId, against),
@@ -130,6 +144,22 @@ const runMatching = async (tenantId, against) => {
     );
   }
 
+  // Reviewed matches (accepted, rejected, ignored) are never overridden.
+  const autoIds = autoAcceptable(found, autoAcceptScore);
+  const auto =
+    autoIds.length > 0
+      ? await Match.updateMany(
+          {
+            tenantId,
+            against,
+            status: "pending",
+            lastRunAt: runAt,
+            ourProductId: { $in: autoIds },
+          },
+          { status: "accepted", autoAccepted: true }
+        )
+      : { modifiedCount: 0 };
+
   // Pending matches that no longer show up are stale; reviewed ones are kept.
   const stale = await Match.deleteMany({
     tenantId,
@@ -143,6 +173,7 @@ const runMatching = async (tenantId, against) => {
     theirProducts: theirs.length,
     matched: new Set(found.map((match) => String(match.ourProductId))).size,
     matches: found.length,
+    autoAccepted: auto.modifiedCount,
     removed: stale.deletedCount,
   };
 };
