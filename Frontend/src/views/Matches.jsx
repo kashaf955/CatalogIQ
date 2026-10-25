@@ -17,14 +17,21 @@ const Matches = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [autoScore, setAutoScore] = useState("");
+  const [savingAuto, setSavingAuto] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const response = await axios.get("/api/v1/catalogs", {
-          withCredentials: true,
-        });
-        setCatalogs(Array.isArray(response.data) ? response.data : []);
+        const [catalogResponse, settingsResponse] = await Promise.all([
+          axios.get("/api/v1/catalogs", { withCredentials: true }),
+          axios.get("/api/v1/tenants/me/settings", { withCredentials: true }),
+        ]);
+        setCatalogs(
+          Array.isArray(catalogResponse.data) ? catalogResponse.data : []
+        );
+        const score = settingsResponse.data?.autoAcceptScore;
+        setAutoScore(typeof score === "number" ? String(score) : "");
       } catch (err) {
         setError(err.response?.data?.message || "Could not load catalogs");
       }
@@ -32,6 +39,30 @@ const Matches = () => {
 
     load();
   }, []);
+
+  const saveAutoScore = async (event) => {
+    event.preventDefault();
+    setSavingAuto(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const response = await axios.patch(
+        "/api/v1/tenants/me/settings",
+        { autoAcceptScore: autoScore === "" ? null : Number(autoScore) },
+        { withCredentials: true }
+      );
+      const score = response.data?.autoAcceptScore;
+      setMessage(
+        typeof score === "number"
+          ? `Matches scoring ${score}% or higher will be accepted automatically on the next run.`
+          : "Auto-accept is off. Every match goes to the review queue."
+      );
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not save auto-accept score");
+    } finally {
+      setSavingAuto(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -61,9 +92,10 @@ const Matches = () => {
         { against },
         { withCredentials: true }
       );
-      const { matched, ourProducts, matches: total } = response.data;
+      const { matched, ourProducts, matches: total, autoAccepted } =
+        response.data;
       setMessage(
-        `Matched ${matched} of ${ourProducts} products (${total} candidate matches).`
+        `Matched ${matched} of ${ourProducts} products (${total} candidate matches, ${autoAccepted || 0} auto-accepted).`
       );
       setReloadKey((key) => key + 1);
     } catch (err) {
@@ -126,7 +158,38 @@ const Matches = () => {
           <option value="rejected">Rejected</option>
           <option value="ignored">Ignored</option>
         </select>
+        <form
+          onSubmit={saveAutoScore}
+          className="flex items-center gap-2 sm:ml-auto"
+        >
+          <label htmlFor="auto-score" className="text-sm text-gray-400">
+            Auto-accept at ≥
+          </label>
+          <input
+            id="auto-score"
+            type="number"
+            min="0"
+            max="100"
+            placeholder="Off"
+            className={`${fieldClass} w-20`}
+            value={autoScore}
+            onChange={(event) => setAutoScore(event.target.value)}
+          />
+          <span className="text-sm text-gray-400">%</span>
+          <button
+            type="submit"
+            disabled={savingAuto}
+            className="rounded-md border border-indigo-400/60 px-3 py-2 text-sm text-indigo-200 hover:bg-indigo-500/10 disabled:opacity-50"
+          >
+            {savingAuto ? "Saving…" : "Save"}
+          </button>
+        </form>
       </div>
+      <p className="mb-4 text-xs text-gray-500">
+        Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A product with
+        more than one candidate always goes to review. Leave empty to turn
+        auto-accept off.
+      </p>
 
       {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
       {message ? (
@@ -196,6 +259,11 @@ const Matches = () => {
                   </td>
                   <td className="px-4 py-3 capitalize text-gray-300">
                     {match.status}
+                    {match.autoAccepted ? (
+                      <span className="ml-1 text-xs normal-case text-gray-500">
+                        (auto)
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
               ))}
