@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import axios from "axios";
 
 const fieldClass =
@@ -9,6 +10,8 @@ const money = (value) =>
   typeof value === "number" ? `$${value.toFixed(2)}` : "—";
 
 const Matches = () => {
+  const { role } = useSelector((state) => state.auth);
+  const canManage = role === "owner" || role === "admin";
   const [catalogs, setCatalogs] = useState([]);
   const [against, setAgainst] = useState("manufacturer");
   const [status, setStatus] = useState("all");
@@ -121,14 +124,16 @@ const Matches = () => {
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={runMatching}
-            disabled={running}
-            className="rounded-md border border-indigo-400/60 px-4 py-2.5 font-medium text-indigo-200 hover:bg-indigo-500/10 disabled:opacity-50"
-          >
-            {running ? "Matching…" : "Run matching"}
-          </button>
+          {canManage ? (
+            <button
+              type="button"
+              onClick={runMatching}
+              disabled={running}
+              className="rounded-md border border-indigo-400/60 px-4 py-2.5 font-medium text-indigo-200 hover:bg-indigo-500/10 disabled:opacity-50"
+            >
+              {running ? "Matching…" : "Run matching"}
+            </button>
+          ) : null}
           <Link
             to="/dashboard/reviews"
             className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
@@ -158,6 +163,7 @@ const Matches = () => {
           <option value="rejected">Rejected</option>
           <option value="ignored">Ignored</option>
         </select>
+        {canManage ? (
         <form
           onSubmit={saveAutoScore}
           className="flex items-center gap-2 sm:ml-auto"
@@ -184,12 +190,15 @@ const Matches = () => {
             {savingAuto ? "Saving…" : "Save"}
           </button>
         </form>
+        ) : null}
       </div>
-      <p className="mb-4 text-xs text-gray-500">
-        Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A product with
-        more than one candidate always goes to review. Leave empty to turn
-        auto-accept off.
-      </p>
+      {canManage ? (
+        <p className="mb-4 text-xs text-gray-500">
+          Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A product with
+          more than one candidate always goes to review. Leave empty to turn
+          auto-accept off.
+        </p>
+      ) : null}
 
       {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
       {message ? (

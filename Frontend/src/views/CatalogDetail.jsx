@@ -201,6 +201,7 @@ const CatalogDetail = () => {
         </div>
       </div>
 
+      {canManage ? (
       <form
         onSubmit={onIngest}
         className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)]"
@@ -323,6 +324,11 @@ const CatalogDetail = () => {
           </Link>
         </div>
       </form>
+      ) : (
+        <p className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 text-sm text-gray-400">
+          Only an owner or admin can ingest this source.
+        </p>
+      )}
     </div>
   );
 };
