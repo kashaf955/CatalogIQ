@@ -119,7 +119,11 @@ const fetchRestProducts = async ({ url, accessToken } = {}) => {
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
-    console.error(`[restApi] ${response.status} ${endpoint}`, body);
+    console.error(`[restApi] ${response.status} ${endpoint}`, {
+      title: body?.title,
+      message: body?.message,
+      error: body?.error,
+    });
     const detail =
       body?.message || body?.title || body?.error || `API responded ${response.status}`;
     const error = new Error(detail);
