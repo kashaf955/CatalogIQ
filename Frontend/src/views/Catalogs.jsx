@@ -182,16 +182,25 @@ const Catalogs = () => {
                       >
                         View products
                       </Link>
-                      <Link
-                        to={`/dashboard/catalogs/${catalog._id}`}
-                        className="text-indigo-300 hover:text-indigo-200"
-                      >
-                        {catalog.connection?.kind === "excel" ||
-                        catalog.connection?.kind === "csv" ||
-                        !catalog.connection?.kind
-                          ? "Upload"
-                          : "Ingest"}
-                      </Link>
+                      {canManage ? (
+                        <Link
+                          to={`/dashboard/catalogs/${catalog._id}`}
+                          className="text-indigo-300 hover:text-indigo-200"
+                        >
+                          {catalog.connection?.kind === "excel" ||
+                          catalog.connection?.kind === "csv" ||
+                          !catalog.connection?.kind
+                            ? "Upload"
+                            : "Ingest"}
+                        </Link>
+                      ) : (
+                        <Link
+                          to={`/dashboard/catalogs/${catalog._id}`}
+                          className="text-indigo-300 hover:text-indigo-200"
+                        >
+                          View
+                        </Link>
+                      )}
                       {canManage ? (
                         <>
                           <Link

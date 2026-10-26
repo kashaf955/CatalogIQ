@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import axios from "axios";
 
 const Reviews = () => {
+  const { role } = useSelector((state) => state.auth);
+  const canReview =
+    role === "owner" || role === "admin" || role === "reviewer";
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -98,29 +102,33 @@ const Reviews = () => {
                   <td className="px-4 py-3 text-gray-300">{item.score}</td>
                   <td className="px-4 py-3 text-gray-300">{item.reason}</td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => decide(item.id, "accepted")}
-                        className="text-emerald-400 hover:text-emerald-300"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => decide(item.id, "rejected")}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => decide(item.id, "ignored")}
-                        className="text-gray-400 hover:text-gray-200"
-                      >
-                        Ignore
-                      </button>
-                    </div>
+                    {canReview ? (
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => decide(item.id, "accepted")}
+                          className="text-emerald-400 hover:text-emerald-300"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => decide(item.id, "rejected")}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => decide(item.id, "ignored")}
+                          className="text-gray-400 hover:text-gray-200"
+                        >
+                          Ignore
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">View only</span>
+                    )}
                   </td>
                 </tr>
               ))}
