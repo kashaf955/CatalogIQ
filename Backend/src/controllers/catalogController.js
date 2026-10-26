@@ -11,31 +11,82 @@ const {
   storedToken,
 } = require("../utils/tokenCrypto");
 
+const CATALOG_TYPES = ["our_catalog", "manufacturer", "competitor"];
+const CONNECTION_KINDS = ["api", "csv", "excel", "feed", "website"];
+const CATALOG_STATUSES = ["active", "inactive", "error"];
+
 const upsertProducts = async (tenantId, sourceId, items, matchKey) => {
-  const ops = items.map((item) => {
-    const filter = { tenantId, sourceId, isDeleted: false };
-    if (matchKey === "bigcommerceId") {
-      filter["attributes.bigcommerceId"] = item.attributes.bigcommerceId;
-    } else {
-      filter.sku = item.sku;
-    }
-    return {
-      updateOne: {
-        filter,
-        update: {
-          $set: {
-            ...item,
-            tenantId,
-            sourceId,
-            isDeleted: false,
-            deletedAt: null,
+  const ops = items
+    .map((item) => {
+      const filter = { tenantId, sourceId, isDeleted: false };
+      if (matchKey === "bigcommerceId") {
+        const bigcommerceId = item.attributes?.bigcommerceId;
+        if (bigcommerceId == null || bigcommerceId === "") return null;
+        filter["attributes.bigcommerceId"] = bigcommerceId;
+      } else {
+        if (!item.sku) return null;
+        filter.sku = item.sku;
+      }
+      return {
+        updateOne: {
+          filter,
+          update: {
+            $set: {
+              ...item,
+              tenantId,
+              sourceId,
+              isDeleted: false,
+              deletedAt: null,
+            },
           },
+          upsert: true,
         },
-        upsert: true,
-      },
-    };
-  });
+      };
+    })
+    .filter(Boolean);
+  if (ops.length === 0) {
+    return { upsertedCount: 0, modifiedCount: 0 };
+  }
   return Product.bulkWrite(ops);
+};
+
+const connectionFrom = (body, existing) => {
+  const incoming = body?.connection || {};
+  const current =
+    existing?.connection?.toObject?.({ getters: false }) ||
+    existing?.connection ||
+    {};
+  const next = {
+    kind: CONNECTION_KINDS.includes(incoming.kind) ? incoming.kind : current.kind,
+    platform:
+      incoming.platform !== undefined ? incoming.platform : current.platform,
+    storeHash:
+      incoming.storeHash !== undefined ? incoming.storeHash : current.storeHash,
+    columnMap:
+      incoming.columnMap !== undefined ? incoming.columnMap : current.columnMap,
+  };
+  if (incoming.accessToken) {
+    next.accessToken = encryptToken(incoming.accessToken);
+  } else {
+    const stored = storedToken(existing) || current.accessToken;
+    if (stored) next.accessToken = encryptToken(stored);
+  }
+  return next;
+};
+
+const catalogFieldsFrom = (body, existing) => {
+  const fields = {};
+  if (body.name !== undefined) fields.name = body.name;
+  if (body.description !== undefined) fields.description = body.description;
+  if (CATALOG_TYPES.includes(body.type)) fields.type = body.type;
+  if (body.manufacturer !== undefined) fields.manufacturer = body.manufacturer;
+  if (Array.isArray(body.brands)) fields.brands = body.brands;
+  if (body.url !== undefined) fields.url = body.url;
+  if (CATALOG_STATUSES.includes(body.status)) fields.status = body.status;
+  if (body.connection !== undefined || existing) {
+    fields.connection = connectionFrom(body, existing);
+  }
+  return fields;
 };
 
 const publicCatalog = (catalog) => {
@@ -91,13 +142,11 @@ const catalogController = {
 
   createCatalog: async (req, res) => {
     try {
-      const payload = { ...req.body, tenantId: req.tenant.id };
-      if (payload.connection?.accessToken) {
-        payload.connection = {
-          ...payload.connection,
-          accessToken: encryptToken(payload.connection.accessToken),
-        };
+      const payload = catalogFieldsFrom(req.body);
+      if (!payload.name || !payload.type) {
+        return res.status(400).json({ message: "Name and type are required" });
       }
+      payload.tenantId = req.tenant.id;
       const catalog = await CatalogSource.create(payload);
       const created = await CatalogSource.findById(catalog._id).select(
         "+connection.accessToken"
@@ -121,23 +170,9 @@ const catalogController = {
         return res.status(404).json({ message: "Catalog not found" });
       }
 
-      const nextConnection = {
-        ...(existing.connection?.toObject?.({ getters: false }) ||
-          existing.connection ||
-          {}),
-        ...(req.body.connection || {}),
-      };
-      if (!req.body.connection?.accessToken) {
-        nextConnection.accessToken = encryptToken(storedToken(existing));
-      } else {
-        nextConnection.accessToken = encryptToken(
-          req.body.connection.accessToken
-        );
-      }
-
       const catalog = await CatalogSource.findOneAndUpdate(
         { _id: req.params.id, tenantId: req.tenant.id, isDeleted: false },
-        { ...req.body, connection: nextConnection, tenantId: req.tenant.id },
+        catalogFieldsFrom(req.body, existing),
         { new: true }
       ).select("+connection.accessToken");
 
@@ -152,7 +187,11 @@ const catalogController = {
     try {
       const catalog = await CatalogSource.findOneAndUpdate(
         { _id: req.params.id, tenantId: req.tenant.id, isDeleted: false },
-        { isDeleted: true, deletedAt: new Date() },
+        {
+          isDeleted: true,
+          deletedAt: new Date(),
+          "connection.accessToken": "",
+        },
         { new: true }
       );
       return res.status(200).json(publicCatalog(catalog));
