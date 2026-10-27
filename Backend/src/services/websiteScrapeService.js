@@ -133,10 +133,11 @@ const offerOf = (node) => {
 const searchUrlsFor = (origin, queryText) => {
   const q = encodeURIComponent(queryText);
   return [
+    `${origin}/catalogsearch/result/?q=${q}`,
+    `${origin}/search.php?search_query=${q}`,
+    `${origin}/search?search_query=${q}`,
     `${origin}/search?q=${q}`,
     `${origin}/search?query=${q}`,
-    `${origin}/search.php?search_query=${q}`,
-    `${origin}/catalogsearch/result/?q=${q}`,
   ];
 };
 
@@ -179,6 +180,51 @@ const looksLikeMatch = (product, query) => {
   return wanted.some((code) => found.includes(code));
 };
 
+const DESCRIPTION_SELECTORS = [
+  ".product.attribute.description .value",
+  ".product.attribute.description",
+  "[itemprop='description']",
+  "#description .value",
+  "#description",
+  ".product.info.detailed .product.attribute.description",
+  ".product.data.items .description .value",
+  ".product-description",
+  ".product-single__description",
+  ".product__description",
+  "#tab-description",
+  ".woocommerce-Tabs-panel--description",
+  ".woocommerce-product-details__short-description",
+  ".product.attribute.overview .value",
+];
+
+const innerHtml = (node) => {
+  if (!node || !node.length) return "";
+  const clone = node.first().clone();
+  clone.find("script, style, noscript, iframe").remove();
+  return (clone.html() || clone.text() || "").trim();
+};
+
+const plainLength = (value) =>
+  String(value || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim().length;
+
+const extractDescription = ($, productNode) => {
+  const candidates = [
+    text(productNode?.description),
+    ...DESCRIPTION_SELECTORS.map((selector) => innerHtml($(selector))),
+    text($('meta[property="og:description"]').attr("content")),
+    text($('meta[name="description"]').attr("content")),
+  ].filter(Boolean);
+
+  let best = "";
+  for (const candidate of candidates) {
+    if (plainLength(candidate) > plainLength(best)) best = candidate;
+  }
+  return best;
+};
+
 const extractProduct = (html, pageUrl, query) => {
   const $ = cheerio.load(html);
   const productNode = jsonLdNodes($).find((node) => typeOf(node).includes("product"));
@@ -214,9 +260,7 @@ const extractProduct = (html, pageUrl, query) => {
       text(productNode?.brand?.name) ||
       text(productNode?.brand) ||
       text(query.brand),
-    description:
-      text(productNode?.description) ||
-      text($('meta[name="description"]').attr("content")),
+    description: extractDescription($, productNode),
     price: toNumber(offer.price || offer.lowPrice || productNode?.price),
     currency: text(offer.priceCurrency) || "USD",
     images,
@@ -246,11 +290,21 @@ const findResultLinks = (html, pageUrl, origin) => {
     }
   }
 
+  $("a.product-item-link, a.product-item-photo").each((_, el) => {
+    const absolute = toAbsolute(pageUrl, $(el).attr("href"));
+    if (absolute && sameHost(origin, absolute)) links.add(absolute);
+  });
+
   $("a[href]").each((_, el) => {
     const href = $(el).attr("href");
     const absolute = toAbsolute(pageUrl, href);
     if (!absolute || !sameHost(origin, absolute)) return;
-    if (/\/(product|products|p|dp)\b/i.test(absolute)) links.add(absolute);
+    if (
+      /\/(product|products|p|dp|catalog\/product)\b/i.test(absolute) ||
+      /[?&](?:product_id|id_product)=/i.test(absolute)
+    ) {
+      links.add(absolute);
+    }
   });
 
   return [...links];
