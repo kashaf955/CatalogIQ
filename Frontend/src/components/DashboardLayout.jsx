@@ -8,22 +8,22 @@ import { logout } from "../actions/authActions";
 const navClass = ({ isActive }) =>
   `block rounded-lg px-3 py-2.5 text-sm ${
     isActive
-      ? "bg-teal-600 text-white"
-      : "text-slate-300 hover:bg-white/5 hover:text-white"
+      ? "bg-brand text-white"
+      : "text-mute hover:bg-canvas hover:text-ink"
   }`;
 
 const subClass = (active) =>
   `block rounded-lg px-3 py-2 text-sm ${
     active
-      ? "bg-teal-600 text-white"
-      : "text-slate-400 hover:bg-white/5 hover:text-white"
+      ? "bg-brand text-white"
+      : "text-mute hover:bg-canvas hover:text-ink"
   }`;
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { user } = useSelector((state) => state.auth);
   const [catalogs, setCatalogs] = useState([]);
   const catalogIdMatch = pathname.match(/^\/dashboard\/catalogs\/([^/]+)/);
@@ -31,6 +31,9 @@ const DashboardLayout = () => {
     catalogIdMatch && catalogIdMatch[1] !== "new" && catalogIdMatch[1] !== "edit"
       ? catalogIdMatch[1]
       : "";
+  const onCatalogsList = pathname === "/dashboard/catalogs";
+  const catalogsTab =
+    new URLSearchParams(search).get("tab") === "compare" ? "compare" : "company";
   const companyCatalogs = catalogs.filter((item) => item.type === "our_catalog");
   const competitorCatalogs = catalogs.filter((item) => item.type === "competitor");
   const manufacturerCatalogs = catalogs.filter(
@@ -76,33 +79,58 @@ const DashboardLayout = () => {
         >
           Catalogs
         </NavLink>
-        {catalogs.length > 0 ? (
-          <div className="ml-3 mt-1 flex flex-col gap-2 border-l border-white/10 pl-2">
-            {[
-              { label: "Company", rows: companyCatalogs },
-              { label: "Competitor", rows: competitorCatalogs },
-              { label: "Manufacturer", rows: manufacturerCatalogs },
-            ].map((group) =>
-              group.rows.length === 0 ? null : (
-                <div key={group.label} className="flex flex-col gap-1">
-                  <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">
-                    {group.label}
-                  </p>
-                  {group.rows.map((catalog) => (
-                    <Link
-                      key={catalog._id}
-                      to={`/dashboard/catalogs/${catalog._id}`}
-                      className={subClass(activeCatalogId === catalog._id)}
-                      onClick={() => setOpen(false)}
-                    >
-                      <span className="block truncate">{catalog.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
-        ) : null}
+        <div className="ml-3 mt-1 flex flex-col gap-2 border-l border-white/10 pl-2">
+          {[
+            {
+              label: "Company",
+              rows: companyCatalogs,
+              to: "/dashboard/catalogs",
+              tab: "company",
+            },
+            {
+              label: "Competitor",
+              rows: competitorCatalogs,
+              to: "/dashboard/catalogs?tab=compare",
+              tab: "compare",
+            },
+            {
+              label: "Manufacturer",
+              rows: manufacturerCatalogs,
+            },
+          ].map((group) =>
+            !group.to && group.rows.length === 0 ? null : (
+            <div key={group.label} className="flex flex-col gap-1">
+              {group.to ? (
+                <Link
+                  to={group.to}
+                  className={`px-3 pt-1 text-[10px] uppercase tracking-[0.14em] ${
+                    onCatalogsList && catalogsTab === group.tab
+                      ? "text-brand"
+                      : "text-mute hover:text-ink"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  {group.label}
+                </Link>
+              ) : (
+                <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-mute">
+                  {group.label}
+                </p>
+              )}
+              {group.rows.map((catalog) => (
+                <Link
+                  key={catalog._id}
+                  to={`/dashboard/catalogs/${catalog._id}`}
+                  className={subClass(activeCatalogId === catalog._id)}
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="block truncate">{catalog.name}</span>
+                </Link>
+              ))}
+            </div>
+            )
+          )}
+        </div>
       </div>
       <NavLink to="/dashboard/products" className={navClass} onClick={() => setOpen(false)}>
         Products
@@ -123,8 +151,8 @@ const DashboardLayout = () => {
   );
 
   return (
-    <div data-dashboard className="flex min-h-screen bg-[#11181e] text-white">
-      <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-[#1a242b] lg:flex lg:flex-col">
+    <div data-dashboard className="flex min-h-screen bg-canvas text-ink">
+      <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-panel lg:flex lg:flex-col">
         <Link
           to="/dashboard"
           className="flex items-center gap-3 border-b border-white/10 px-5 py-4"
@@ -136,11 +164,11 @@ const DashboardLayout = () => {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-white/10 bg-[#1a242b] px-5 py-3.5">
+        <header className="flex items-center justify-between gap-3 border-b border-white/10 bg-panel px-5 py-3.5">
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 lg:hidden"
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((current) => !current)}
             >
@@ -150,11 +178,11 @@ const DashboardLayout = () => {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <span className="max-w-40 truncate text-sm text-slate-300">{user?.name}</span>
+            <span className="max-w-40 truncate text-sm text-mute">{user?.name}</span>
             <button
               type="button"
               onClick={onLogout}
-              className="rounded-lg bg-teal-600 px-3.5 py-2 text-sm text-white hover:bg-teal-500"
+              className="rounded-lg bg-brand px-3.5 py-2 text-sm text-white hover:bg-brand-hover"
             >
               Logout
             </button>
@@ -162,7 +190,7 @@ const DashboardLayout = () => {
         </header>
 
         {open ? (
-          <div className="border-b border-white/10 bg-[#1a242b] lg:hidden">{sidebar}</div>
+          <div className="border-b border-white/10 bg-panel lg:hidden">{sidebar}</div>
         ) : null}
 
         <main className="flex-1 px-5 py-6 sm:px-8 sm:py-8 lg:px-10">

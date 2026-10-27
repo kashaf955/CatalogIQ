@@ -43,35 +43,35 @@ const Members = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
             Workspace
           </p>
-          <h1 className="text-3xl font-semibold text-white">Members</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-semibold text-ink">Members</h1>
+          <p className="mt-2 text-mute">
             People who belong to this tenant.
           </p>
         </div>
         {canInvite ? (
           <Link
             to="/dashboard/members/invite"
-            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
+            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
           >
             Invite member
           </Link>
         ) : null}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-brand/20 bg-panel shadow-sm">
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
         {loading ? (
-          <p className="px-4 py-6 text-sm text-gray-400">Loading members...</p>
+          <p className="px-4 py-6 text-sm text-mute">Loading members...</p>
         ) : members.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400">No members yet.</p>
+          <p className="px-4 py-6 text-sm text-mute">No members yet.</p>
         ) : (
           <table className="w-full min-w-lg text-left text-sm">
-            <thead className="border-b border-white/10 text-gray-400">
+            <thead className="border-b border-white/10 text-mute">
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Email</th>
@@ -83,14 +83,14 @@ const Members = () => {
             <tbody>
               {members.map((member) => (
                 <tr key={member.id} className="border-b border-white/5 last:border-0">
-                  <td className="px-4 py-3 text-white">
+                  <td className="px-4 py-3 text-ink">
                     {member.user?.name || "—"}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-ink">
                     {member.user?.email || "—"}
                   </td>
-                  <td className="px-4 py-3 capitalize text-gray-300">{member.role}</td>
-                  <td className="px-4 py-3 capitalize text-gray-300">
+                  <td className="px-4 py-3 capitalize text-ink">{member.role}</td>
+                  <td className="px-4 py-3 capitalize text-ink">
                     {member.status}
                   </td>
                   <td className="px-4 py-3">
@@ -98,7 +98,7 @@ const Members = () => {
                       <button
                         type="button"
                         onClick={() => removeMember(member.id)}
-                        className="text-red-500 hover:text-red-400"
+                        className="text-red-500 hover:text-red-300"
                       >
                         Remove
                       </button>

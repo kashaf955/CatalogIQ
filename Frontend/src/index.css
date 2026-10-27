@@ -2,21 +2,27 @@
 
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: #171717;
+  --color-panel: #262626;
+  --color-brand: #f97316;
+  --color-brand-hover: #ea580c;
+  --color-ink: #fafafa;
+  --color-mute: #a3a3a3;
 }
 
 html,
 body {
   min-height: 100%;
   margin: 0;
-  background-color: #11181e;
-  color: #e8eaed;
+  background-color: #171717;
+  color: #fafafa;
   font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
   scroll-behavior: smooth;
 }
 
 ::selection {
-  background: rgba(13, 148, 136, 0.35);
-  color: #fff;
+  background: rgba(249, 115, 22, 0.35);
+  color: #fafafa;
 }
 
 #root {
@@ -24,7 +30,7 @@ body {
   margin-left: auto;
   margin-right: auto;
   min-height: 100vh;
-  background-color: #11181e;
+  background-color: #171717;
 }
 
 #root:has([data-dashboard]) {

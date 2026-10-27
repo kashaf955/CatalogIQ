@@ -7,7 +7,7 @@ import ProcessingBar from "../components/ProcessingBar.jsx";
 const PAGE_SIZE = 100;
 
 const fieldClass =
-  "rounded-md border border-white/15 bg-[#11181e] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
+  "rounded-md border border-white/10 bg-canvas px-3 py-2 text-sm text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const dash = (value) =>
   value === 0 || (value != null && String(value).trim() !== "")
@@ -38,11 +38,11 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
         aria-label="Previous page"
         disabled={disabled || page <= 1}
         onClick={() => onPage(page - 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-lg text-white hover:border-teal-400 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-lg text-ink hover:border-brand disabled:cursor-not-allowed disabled:opacity-40"
       >
         ‹
       </button>
-      <p className="min-w-44 text-center text-sm text-gray-400">
+      <p className="min-w-44 text-center text-sm text-mute">
         {from}–{to} of {total.toLocaleString()}
       </p>
       <button
@@ -50,7 +50,7 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
         aria-label="Next page"
         disabled={disabled || page >= pages}
         onClick={() => onPage(page + 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-lg text-white hover:border-teal-400 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 text-lg text-ink hover:border-brand disabled:cursor-not-allowed disabled:opacity-40"
       >
         ›
       </button>
@@ -295,13 +295,13 @@ const Products = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
             Workspace
           </p>
-          <h1 className="text-3xl font-semibold text-white">
+          <h1 className="text-3xl font-semibold text-ink">
             {sourceCatalog ? sourceCatalog.name : "Products"}
           </h1>
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2 text-mute">
             {loading
               ? "Rows ingested from a catalog source."
               : source
@@ -324,7 +324,7 @@ const Products = () => {
           ) : null}
           <Link
             to="/dashboard/catalogs"
-            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
+            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
           >
             Ingest a catalog
           </Link>
@@ -373,28 +373,28 @@ const Products = () => {
         />
       ) : null}
 
-      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-brand/20 bg-panel shadow-sm">
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
         {loading ? (
-          <p className="px-4 py-6 text-sm text-gray-400">Loading products...</p>
+          <p className="px-4 py-6 text-sm text-mute">Loading products...</p>
         ) : products.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400">
+          <p className="px-4 py-6 text-sm text-mute">
             No products yet. Run ingest on a catalog source.
           </p>
         ) : (
           <table className="w-full min-w-[72rem] text-left text-sm">
-            <thead className="border-b border-white/10 text-gray-400">
+            <thead className="border-b border-white/10 text-mute">
               <tr>
                 {canManage ? (
                   <th className="px-4 py-3 font-medium">
-                    <label className="inline-flex items-center gap-2 text-gray-300">
+                    <label className="inline-flex items-center gap-2 text-ink">
                       <input
                         type="checkbox"
                         checked={allSelected}
                         onChange={toggleAll}
-                        className="h-4 w-4 rounded border-white/30 bg-[#11181e]"
+                        className="h-4 w-4 rounded border-white/20 bg-canvas"
                       />
                       Page
                     </label>
@@ -405,7 +405,7 @@ const Products = () => {
                           setSelectAllMatching(true);
                           setSelected(rowIds);
                         }}
-                        className="mt-1 block text-xs text-teal-300 hover:text-teal-200"
+                        className="mt-1 block text-xs text-brand hover:text-brand-hover"
                       >
                         {selectAllMatching
                           ? `All ${total.toLocaleString()} selected`
@@ -443,7 +443,7 @@ const Products = () => {
                       key={product._id || product.sku}
                       role="link"
                       tabIndex={product._id ? 0 : undefined}
-                      className="cursor-pointer border-b border-white/5 hover:bg-white/[0.04]"
+                      className="cursor-pointer border-b border-white/5 hover:bg-canvas"
                       onClick={openDetail}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
@@ -463,11 +463,11 @@ const Products = () => {
                               selectAllMatching || selected.includes(product._id)
                             }
                             onChange={() => toggleOne(product._id)}
-                            className="h-4 w-4 rounded border-white/30 bg-[#11181e]"
+                            className="h-4 w-4 rounded border-white/20 bg-canvas"
                           />
                         </td>
                       ) : null}
-                      <td className="px-4 py-3 text-gray-400">
+                      <td className="px-4 py-3 text-mute">
                         {(page - 1) * PAGE_SIZE + index + 1}
                       </td>
                       <td className="px-4 py-3">
@@ -478,41 +478,41 @@ const Products = () => {
                             className="h-12 w-12 rounded-md object-cover"
                           />
                         ) : (
-                          <span className="text-gray-500">—</span>
+                          <span className="text-mute">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-white">
+                      <td className="px-4 py-3 text-ink">
                         {dash(product.name)}
                       </td>
                       <td
-                        className="max-w-72 truncate px-4 py-3 text-gray-300"
+                        className="max-w-72 truncate px-4 py-3 text-ink"
                         title={stripHtml(product.description)}
                       >
                         {stripHtml(product.description) || "—"}
                       </td>
-                      <td className="px-4 py-3 text-gray-300">{dash(product.sku)}</td>
-                      <td className="px-4 py-3 text-gray-300">{dash(product.mpn)}</td>
-                      <td className="px-4 py-3 text-gray-300">{dash(product.gtin)}</td>
-                      <td className="px-4 py-3 text-gray-300">{dash(product.brand)}</td>
-                      <td className="px-4 py-3 text-gray-300">
+                      <td className="px-4 py-3 text-ink">{dash(product.sku)}</td>
+                      <td className="px-4 py-3 text-ink">{dash(product.mpn)}</td>
+                      <td className="px-4 py-3 text-ink">{dash(product.gtin)}</td>
+                      <td className="px-4 py-3 text-ink">{dash(product.brand)}</td>
+                      <td className="px-4 py-3 text-ink">
                         {product.price != null
                           ? Number(product.price).toFixed(2)
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 text-gray-300">{dash(product.category)}</td>
-                      <td className="px-4 py-3 text-gray-300">
+                      <td className="px-4 py-3 text-ink">{dash(product.category)}</td>
+                      <td className="px-4 py-3 text-ink">
                         {dash(product.availability)}
                       </td>
-                      <td className="px-4 py-3 capitalize text-gray-300">
+                      <td className="px-4 py-3 capitalize text-ink">
                         {dash(product.status)}
                       </td>
-                      <td className="px-4 py-3 text-gray-300">
+                      <td className="px-4 py-3 text-ink">
                         {catalogName(product.sourceId)}
                       </td>
                       <td className="px-4 py-3">
                         <Link
                           to={`/dashboard/products/${product._id}`}
-                          className="text-teal-300 hover:text-teal-200"
+                          className="text-brand hover:text-brand-hover"
                         >
                           View
                         </Link>
@@ -525,7 +525,7 @@ const Products = () => {
                           <button
                             type="button"
                             onClick={() => removeProduct(product._id)}
-                            className="text-red-500 hover:text-red-400"
+                            className="text-red-500 hover:text-red-300"
                           >
                             Remove
                           </button>

@@ -35,13 +35,13 @@ const Header = () => {
     <>
       <Link
         to="/login"
-        className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
+        className="rounded-md bg-brand px-4 py-2 text-white hover:bg-brand-hover"
       >
         Login
       </Link>
       <Link
         to="/register"
-        className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
+        className="rounded-md bg-brand px-4 py-2 text-white hover:bg-brand-hover"
       >
         Get Started
       </Link>
@@ -50,13 +50,13 @@ const Header = () => {
 
   const sessionButtons = (
     <>
-      <span className="max-w-40 truncate text-sm text-gray-300">
+      <span className="max-w-40 truncate text-sm text-ink">
         {user?.name}
       </span>
       <button
         type="button"
         onClick={onLogout}
-        className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
+        className="rounded-md bg-brand px-4 py-2 text-white hover:bg-brand-hover"
       >
         Logout
       </button>
@@ -64,7 +64,7 @@ const Header = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#11181e]/95 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-canvas/95 backdrop-blur">
       <div className="flex w-full items-center justify-between gap-3 py-3">
         <Link to="/" className="shrink-0" onClick={() => setOpen(false)}>
           <img
@@ -79,7 +79,7 @@ const Header = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="whitespace-nowrap hover:text-teal-300"
+              className="whitespace-nowrap hover:text-brand"
             >
               {link.label}
             </Link>
@@ -95,21 +95,21 @@ const Header = () => {
             <button
               type="button"
               onClick={onLogout}
-              className="rounded-md bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-500"
+              className="rounded-md bg-brand px-3 py-2 text-sm text-white hover:bg-brand-hover"
             >
               Logout
             </button>
           ) : (
             <Link
               to="/login"
-              className="rounded-md bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-500"
+              className="rounded-md bg-brand px-3 py-2 text-sm text-white hover:bg-brand-hover"
             >
               Login
             </Link>
           )}
           <button
             type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/40 text-white"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/20 text-ink"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-nav"
@@ -134,13 +134,13 @@ const Header = () => {
           className="flex flex-col gap-1 border-t border-white/10 py-3 lg:hidden"
         >
           {user ? (
-            <p className="px-3 pb-1 text-sm text-gray-400">{user.name}</p>
+            <p className="px-3 pb-1 text-sm text-mute">{user.name}</p>
           ) : null}
           {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-md px-3 py-2 text-base hover:bg-white/5 hover:text-teal-300"
+              className="rounded-md px-3 py-2 text-base hover:bg-canvas hover:text-brand"
             >
               {link.label}
             </Link>
@@ -149,14 +149,14 @@ const Header = () => {
             <button
               type="button"
               onClick={onLogout}
-              className="mt-2 rounded-md bg-teal-600 px-4 py-2.5 text-center text-white hover:bg-teal-500"
+              className="mt-2 rounded-md bg-brand px-4 py-2.5 text-center text-white hover:bg-brand-hover"
             >
               Logout
             </button>
           ) : (
             <Link
               to="/register"
-              className="mt-2 rounded-md bg-teal-600 px-4 py-2.5 text-center text-white hover:bg-teal-500"
+              className="mt-2 rounded-md bg-brand px-4 py-2.5 text-center text-white hover:bg-brand-hover"
             >
               Get Started
             </Link>
