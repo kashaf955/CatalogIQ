@@ -1,3 +1,5 @@
+const { throwIfAborted, createAbortedError } = require("../utils/ingestJobs");
+
 const STORE_HASH = /^[a-z0-9]+$/i;
 
 const toNumber = (value) => {
@@ -106,16 +108,26 @@ const mapProduct = (item, brands, categories) => {
   };
 };
 
-const bigcommerceRequest = async (storeHash, accessToken, path) => {
-  const response = await fetch(
-    `https://api.bigcommerce.com/stores/${storeHash}${path}`,
-    {
-      headers: {
-        "X-Auth-Token": accessToken,
-        Accept: "application/json",
-      },
+const bigcommerceRequest = async (storeHash, accessToken, path, signal) => {
+  throwIfAborted(signal);
+  let response;
+  try {
+    response = await fetch(
+      `https://api.bigcommerce.com/stores/${storeHash}${path}`,
+      {
+        signal,
+        headers: {
+          "X-Auth-Token": accessToken,
+          Accept: "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    if (signal?.aborted || error?.name === "AbortError") {
+      throw createAbortedError();
     }
-  );
+    throw error;
+  }
 
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -131,16 +143,24 @@ const bigcommerceRequest = async (storeHash, accessToken, path) => {
   return body;
 };
 
-const fetchPagedMap = async (storeHash, accessToken, path, key = "name") => {
+const fetchPagedMap = async (
+  storeHash,
+  accessToken,
+  path,
+  key = "name",
+  signal
+) => {
   const lookup = new Map();
   let page = 1;
 
   while (page <= 20) {
+    throwIfAborted(signal);
     const separator = path.includes("?") ? "&" : "?";
     const result = await bigcommerceRequest(
       storeHash,
       accessToken,
-      `${path}${separator}limit=250&page=${page}`
+      `${path}${separator}limit=250&page=${page}`,
+      signal
     );
     for (const item of result.data || []) {
       lookup.set(Number(item.id), item[key]);
@@ -153,7 +173,7 @@ const fetchPagedMap = async (storeHash, accessToken, path, key = "name") => {
   return lookup;
 };
 
-const fetchBigCommerceProducts = async ({ storeHash, accessToken }) => {
+const fetchBigCommerceProducts = async ({ storeHash, accessToken, signal }) => {
   const hash = String(storeHash || "").trim();
   const token = String(accessToken || "").trim();
 
@@ -169,32 +189,41 @@ const fetchBigCommerceProducts = async ({ storeHash, accessToken }) => {
   }
 
   const [brands, categories] = await Promise.all([
-    fetchPagedMap(hash, token, "/v3/catalog/brands"),
-    fetchPagedMap(hash, token, "/v3/catalog/categories"),
+    fetchPagedMap(hash, token, "/v3/catalog/brands", "name", signal),
+    fetchPagedMap(hash, token, "/v3/catalog/categories", "name", signal),
   ]);
   const products = [];
   let page = 1;
 
-  while (page <= 100) {
-    const result = await bigcommerceRequest(
-      hash,
-      token,
-      `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields&include_fields=name,sku,mpn,gtin,upc,brand_id,description,price,calculated_price,weight,width,height,depth,categories,availability,availability_description,is_visible,custom_url,warranty,search_keywords,meta_description,page_title,open_graph_description`
-    );
-    for (const item of result.data || []) {
-      if (!item?.name) continue;
-      if (products.length === 0) {
-        console.log("[bigcommerce] sample keys", Object.keys(item));
-        console.log(
-          "[bigcommerce] description length",
-          String(item.description || "").length
-        );
+  try {
+    while (page <= 100) {
+      throwIfAborted(signal, products);
+      const result = await bigcommerceRequest(
+        hash,
+        token,
+        `/v3/catalog/products?limit=250&page=${page}&include=images,primary_image,custom_fields&include_fields=name,sku,mpn,gtin,upc,brand_id,description,price,calculated_price,weight,width,height,depth,categories,availability,availability_description,is_visible,custom_url,warranty,search_keywords,meta_description,page_title,open_graph_description`,
+        signal
+      );
+      for (const item of result.data || []) {
+        if (!item?.name) continue;
+        if (products.length === 0) {
+          console.log("[bigcommerce] sample keys", Object.keys(item));
+          console.log(
+            "[bigcommerce] description length",
+            String(item.description || "").length
+          );
+        }
+        products.push(mapProduct(item, brands, categories));
       }
-      products.push(mapProduct(item, brands, categories));
+      const totalPages = result.meta?.pagination?.total_pages || 1;
+      if (page >= totalPages) break;
+      page += 1;
     }
-    const totalPages = result.meta?.pagination?.total_pages || 1;
-    if (page >= totalPages) break;
-    page += 1;
+  } catch (error) {
+    if (error?.code === "INGEST_ABORTED") {
+      error.products = products;
+    }
+    throw error;
   }
 
   return products;
