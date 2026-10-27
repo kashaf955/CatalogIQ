@@ -7,7 +7,7 @@ import ProcessingBar from "../components/ProcessingBar.jsx";
 const PAGE_SIZE = 100;
 
 const fieldClass =
-  "rounded-md border border-white/15 bg-[#1c1f24] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-indigo-400";
+  "rounded-md border border-white/15 bg-[#11181e] px-3 py-2 text-sm text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
 
 const dash = (value) =>
   value === 0 || (value != null && String(value).trim() !== "")
@@ -54,7 +54,7 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
         aria-label="Previous page"
         disabled={disabled || page <= 1}
         onClick={() => onPage(page - 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-lg text-white hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-lg text-white hover:border-teal-400 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ‹
       </button>
@@ -66,7 +66,7 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
         aria-label="Next page"
         disabled={disabled || page >= pages}
         onClick={() => onPage(page + 1)}
-        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-lg text-white hover:border-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-lg text-white hover:border-teal-400 disabled:cursor-not-allowed disabled:opacity-40"
       >
         ›
       </button>
@@ -311,7 +311,7 @@ const Products = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
             Workspace
           </p>
           <h1 className="text-3xl font-semibold text-white">
@@ -340,7 +340,7 @@ const Products = () => {
           ) : null}
           <Link
             to="/dashboard/catalogs"
-            className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
+            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
           >
             Ingest a catalog
           </Link>
@@ -389,7 +389,7 @@ const Products = () => {
         />
       ) : null}
 
-      <div className="overflow-x-auto rounded-2xl border border-indigo-400/30 bg-[#22262d] shadow-[0_0_24px_rgba(99,102,241,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
@@ -410,7 +410,7 @@ const Products = () => {
                         type="checkbox"
                         checked={allSelected}
                         onChange={toggleAll}
-                        className="h-4 w-4 rounded border-white/30 bg-[#1c1f24]"
+                        className="h-4 w-4 rounded border-white/30 bg-[#11181e]"
                       />
                       Page
                     </label>
@@ -421,7 +421,7 @@ const Products = () => {
                           setSelectAllMatching(true);
                           setSelected(rowIds);
                         }}
-                        className="mt-1 block text-xs text-indigo-300 hover:text-indigo-200"
+                        className="mt-1 block text-xs text-teal-300 hover:text-teal-200"
                       >
                         {selectAllMatching
                           ? `All ${total.toLocaleString()} selected`
@@ -466,7 +466,7 @@ const Products = () => {
                               selectAllMatching || selected.includes(product._id)
                             }
                             onChange={() => toggleOne(product._id)}
-                            className="h-4 w-4 rounded border-white/30 bg-[#1c1f24]"
+                            className="h-4 w-4 rounded border-white/30 bg-[#11181e]"
                           />
                         </td>
                       ) : null}
@@ -516,7 +516,7 @@ const Products = () => {
                           onClick={() =>
                             setOpenId(open ? null : product._id)
                           }
-                          className="text-indigo-300 hover:text-indigo-200"
+                          className="text-teal-300 hover:text-teal-200"
                         >
                           {open ? "Hide" : "Details"}
                         </button>
@@ -534,13 +534,13 @@ const Products = () => {
                       ) : null}
                     </tr>
                     {open ? (
-                      <tr className="border-b border-white/5 bg-[#1c1f24]/80">
+                      <tr className="border-b border-white/5 bg-[#11181e]/80">
                         <td colSpan={colSpan} className="px-4 py-5">
                           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             <DetailField label="Description" wide>
                               {product.description ? (
                                 <div
-                                  className="max-h-64 overflow-auto rounded-md border border-white/10 bg-[#22262d] p-3 [&_a]:text-indigo-300 [&_img]:max-h-40 [&_img]:max-w-full"
+                                  className="max-h-64 overflow-auto rounded-md border border-white/10 bg-[#1a242b] p-3 [&_a]:text-teal-300 [&_img]:max-h-40 [&_img]:max-w-full"
                                   dangerouslySetInnerHTML={{
                                     __html: sanitizeHtml(product.description),
                                   }}
@@ -575,7 +575,7 @@ const Products = () => {
                                   }
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="text-indigo-300 hover:text-indigo-200"
+                                  className="text-teal-300 hover:text-teal-200"
                                 >
                                   {product.sourceUrl}
                                 </a>

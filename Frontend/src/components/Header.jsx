@@ -35,13 +35,13 @@ const Header = () => {
     <>
       <Link
         to="/login"
-        className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
+        className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
       >
         Login
       </Link>
       <Link
         to="/register"
-        className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
+        className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
       >
         Get Started
       </Link>
@@ -56,7 +56,7 @@ const Header = () => {
       <button
         type="button"
         onClick={onLogout}
-        className="rounded-md bg-indigo-500 px-4 py-2 text-white hover:bg-indigo-400"
+        className="rounded-md bg-teal-600 px-4 py-2 text-white hover:bg-teal-500"
       >
         Logout
       </button>
@@ -64,8 +64,8 @@ const Header = () => {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-indigo-400/30 bg-[#1c1f24] shadow-[0_0_24px_rgba(99,102,241,0.18)]">
-      <div className="flex w-full items-center justify-between gap-3 py-2 sm:py-3">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#11181e]/95 backdrop-blur">
+      <div className="flex w-full items-center justify-between gap-3 py-3">
         <Link to="/" className="shrink-0" onClick={() => setOpen(false)}>
           <img
             src={logo}
@@ -79,7 +79,7 @@ const Header = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="whitespace-nowrap hover:text-indigo-300"
+              className="whitespace-nowrap hover:text-teal-300"
             >
               {link.label}
             </Link>
@@ -95,14 +95,14 @@ const Header = () => {
             <button
               type="button"
               onClick={onLogout}
-              className="rounded-md bg-indigo-500 px-3 py-2 text-sm text-white hover:bg-indigo-400"
+              className="rounded-md bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-500"
             >
               Logout
             </button>
           ) : (
             <Link
               to="/login"
-              className="rounded-md bg-indigo-500 px-3 py-2 text-sm text-white hover:bg-indigo-400"
+              className="rounded-md bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-500"
             >
               Login
             </Link>
@@ -140,7 +140,7 @@ const Header = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-md px-3 py-2 text-base hover:bg-white/5 hover:text-indigo-300"
+              className="rounded-md px-3 py-2 text-base hover:bg-white/5 hover:text-teal-300"
             >
               {link.label}
             </Link>
@@ -149,14 +149,14 @@ const Header = () => {
             <button
               type="button"
               onClick={onLogout}
-              className="mt-2 rounded-md bg-indigo-500 px-4 py-2.5 text-center text-white hover:bg-indigo-400"
+              className="mt-2 rounded-md bg-teal-600 px-4 py-2.5 text-center text-white hover:bg-teal-500"
             >
               Logout
             </button>
           ) : (
             <Link
               to="/register"
-              className="mt-2 rounded-md bg-indigo-500 px-4 py-2.5 text-center text-white hover:bg-indigo-400"
+              className="mt-2 rounded-md bg-teal-600 px-4 py-2.5 text-center text-white hover:bg-teal-500"
             >
               Get Started
             </Link>

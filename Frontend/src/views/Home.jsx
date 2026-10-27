@@ -54,9 +54,9 @@ const Home = () => {
       <Header />
 
       <section className="relative overflow-hidden px-2 pb-20 pt-10 sm:pt-16">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.18),transparent_60%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(13,148,136,0.18),transparent_60%)]" />
         <div className="relative mx-auto max-w-4xl text-center">
-          <p className="mb-4 text-sm uppercase tracking-[0.2em] text-indigo-300">
+          <p className="mb-4 text-sm uppercase tracking-[0.2em] text-teal-300">
             Catalog matching for parts teams
           </p>
           <h1 className="mb-5 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
@@ -69,13 +69,13 @@ const Home = () => {
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               to="/register"
-              className="w-full rounded-md bg-indigo-500 px-6 py-3 text-center font-medium text-white hover:bg-indigo-400 sm:w-auto"
+              className="w-full rounded-md bg-teal-600 px-6 py-3 text-center font-medium text-white hover:bg-teal-500 sm:w-auto"
             >
               Create workspace
             </Link>
             <a
               href="#pricing"
-              className="w-full rounded-md border border-white/20 px-6 py-3 text-center font-medium text-white hover:border-indigo-400 hover:text-indigo-200 sm:w-auto"
+              className="w-full rounded-md border border-white/20 px-6 py-3 text-center font-medium text-white hover:border-teal-400 hover:text-teal-200 sm:w-auto"
             >
               See pricing
             </a>
@@ -84,7 +84,7 @@ const Home = () => {
       </section>
 
       <section id="about" className="scroll-mt-28 px-2 py-16">
-        <p className="mb-2 text-center text-sm uppercase tracking-[0.18em] text-indigo-300">
+        <p className="mb-2 text-center text-sm uppercase tracking-[0.18em] text-teal-300">
           About
         </p>
         <h2 className="mb-4 text-center text-3xl font-semibold text-white sm:text-4xl">
@@ -111,7 +111,7 @@ const Home = () => {
           ].map((item) => (
             <article
               key={item.title}
-              className="rounded-2xl border border-indigo-400/25 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)]"
+              className="rounded-2xl border border-teal-400/25 bg-[#1a242b] p-6 shadow-[0_0_24px_rgba(13,148,136,0.12)]"
             >
               <h3 className="mb-2 text-xl font-semibold text-white">{item.title}</h3>
               <p className="text-sm leading-relaxed text-gray-400">{item.text}</p>
@@ -121,7 +121,7 @@ const Home = () => {
       </section>
 
       <section id="pricing" className="scroll-mt-28 px-2 py-16">
-        <p className="mb-2 text-center text-sm uppercase tracking-[0.18em] text-indigo-300">
+        <p className="mb-2 text-center text-sm uppercase tracking-[0.18em] text-teal-300">
           Pricing
         </p>
         <h2 className="mb-4 text-center text-3xl font-semibold text-white sm:text-4xl">
@@ -137,12 +137,12 @@ const Home = () => {
               key={plan.name}
               className={`flex flex-col rounded-2xl border p-6 ${
                 plan.featured
-                  ? "border-indigo-400 bg-[#22262d] shadow-[0_0_32px_rgba(99,102,241,0.28)]"
-                  : "border-white/10 bg-[#22262d]"
+                  ? "border-amber-400/70 bg-[#1a242b] shadow-[0_0_32px_rgba(245,158,11,0.16)]"
+                  : "border-white/10 bg-[#1a242b]"
               }`}
             >
               {plan.featured ? (
-                <p className="mb-3 text-xs uppercase tracking-[0.16em] text-indigo-300">
+                <p className="mb-3 text-xs uppercase tracking-[0.16em] text-amber-300">
                   Most teams
                 </p>
               ) : (
@@ -165,8 +165,8 @@ const Home = () => {
                 to="/register"
                 className={`mt-8 rounded-md py-2.5 text-center font-medium ${
                   plan.featured
-                    ? "bg-indigo-500 text-white hover:bg-indigo-400"
-                    : "border border-white/20 text-white hover:border-indigo-400"
+                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
+                    : "border border-white/20 text-white hover:border-teal-400"
                 }`}
               >
                 {plan.cta}

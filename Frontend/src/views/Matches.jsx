@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const fieldClass =
-  "rounded-md border border-white/15 bg-[#1c1f24] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400";
+  "rounded-md border border-white/15 bg-[#11181e] px-3 py-2 text-sm text-white outline-none focus:border-teal-400";
 
 const money = (value) =>
   typeof value === "number" ? `$${value.toFixed(2)}` : "—";
@@ -115,7 +115,7 @@ const Matches = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
             Workspace
           </p>
           <h1 className="text-3xl font-semibold text-white">Matches</h1>
@@ -129,14 +129,14 @@ const Matches = () => {
               type="button"
               onClick={runMatching}
               disabled={running}
-              className="rounded-md border border-indigo-400/60 px-4 py-2.5 font-medium text-indigo-200 hover:bg-indigo-500/10 disabled:opacity-50"
+              className="rounded-md border border-teal-400/60 px-4 py-2.5 font-medium text-teal-200 hover:bg-teal-500/10 disabled:opacity-50"
             >
               {running ? "Matching…" : "Run matching"}
             </button>
           ) : null}
           <Link
             to="/dashboard/reviews"
-            className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
+            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
           >
             Open review queue
           </Link>
@@ -185,7 +185,7 @@ const Matches = () => {
           <button
             type="submit"
             disabled={savingAuto}
-            className="rounded-md border border-indigo-400/60 px-3 py-2 text-sm text-indigo-200 hover:bg-indigo-500/10 disabled:opacity-50"
+            className="rounded-md border border-teal-400/60 px-3 py-2 text-sm text-teal-200 hover:bg-teal-500/10 disabled:opacity-50"
           >
             {savingAuto ? "Saving…" : "Save"}
           </button>
@@ -211,7 +211,7 @@ const Matches = () => {
         {ours.length} of your catalogs · {other.length} {against} sources
       </p>
 
-      <div className="overflow-x-auto rounded-2xl border border-indigo-400/30 bg-[#22262d] shadow-[0_0_24px_rgba(99,102,241,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
         {matches.length === 0 ? (
           <p className="px-4 py-6 text-sm text-gray-400">
             No matches yet. Ingest your catalog and a {against} source, then
@@ -249,7 +249,7 @@ const Matches = () => {
                         href={match.theirUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="hover:text-indigo-300"
+                        className="hover:text-teal-300"
                       >
                         {match.theirName}
                       </a>

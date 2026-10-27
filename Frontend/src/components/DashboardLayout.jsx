@@ -5,10 +5,10 @@ import logo from "../assets/logo.png";
 import { logout } from "../actions/authActions";
 
 const navClass = ({ isActive }) =>
-  `block rounded-md px-3 py-2 text-sm ${
+  `block rounded-lg px-3 py-2.5 text-sm ${
     isActive
-      ? "bg-indigo-500 text-white"
-      : "text-gray-300 hover:bg-white/5 hover:text-white"
+      ? "bg-teal-600 text-white"
+      : "text-slate-300 hover:bg-white/5 hover:text-white"
   }`;
 
 const DashboardLayout = () => {
@@ -50,21 +50,24 @@ const DashboardLayout = () => {
   );
 
   return (
-    <div data-dashboard className="flex min-h-screen bg-[#1c1f24] text-white">
-      <aside className="hidden w-56 shrink-0 border-r border-indigo-400/20 bg-[#22262d] lg:flex lg:flex-col">
-        <Link to="/dashboard" className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-          <img src={logo} alt="CatalogIQ" className="h-10 w-10 object-cover" />
-          <span className="text-sm font-medium">CatalogIQ</span>
+    <div data-dashboard className="flex min-h-screen bg-[#11181e] text-white">
+      <aside className="hidden w-64 shrink-0 border-r border-white/10 bg-[#1a242b] lg:flex lg:flex-col">
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-3 border-b border-white/10 px-5 py-4"
+        >
+          <img src={logo} alt="CatalogIQ" className="h-11 w-11 rounded-md object-cover" />
+          <span className="text-sm font-semibold tracking-wide">CatalogIQ</span>
         </Link>
-        {sidebar}
+        <div className="flex-1">{sidebar}</div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-indigo-400/20 bg-[#22262d] px-4 py-3">
+        <header className="flex items-center justify-between gap-3 border-b border-white/10 bg-[#1a242b] px-5 py-3.5">
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/20 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/15 lg:hidden"
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((current) => !current)}
             >
@@ -74,11 +77,11 @@ const DashboardLayout = () => {
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <span className="max-w-40 truncate text-sm text-gray-300">{user?.name}</span>
+            <span className="max-w-40 truncate text-sm text-slate-300">{user?.name}</span>
             <button
               type="button"
               onClick={onLogout}
-              className="rounded-md bg-indigo-500 px-3 py-2 text-sm text-white hover:bg-indigo-400"
+              className="rounded-lg bg-teal-600 px-3.5 py-2 text-sm text-white hover:bg-teal-500"
             >
               Logout
             </button>
@@ -86,11 +89,13 @@ const DashboardLayout = () => {
         </header>
 
         {open ? (
-          <div className="border-b border-white/10 bg-[#22262d] lg:hidden">{sidebar}</div>
+          <div className="border-b border-white/10 bg-[#1a242b] lg:hidden">{sidebar}</div>
         ) : null}
 
-        <main className="flex-1 p-4 sm:p-6">
-          <Outlet />
+        <main className="flex-1 px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
+          <div className="mx-auto w-full max-w-7xl">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

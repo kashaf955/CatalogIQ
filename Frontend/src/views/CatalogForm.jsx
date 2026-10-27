@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-white/15 bg-[#1c1f24] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-indigo-400";
+  "mt-2 w-full rounded-md border border-white/15 bg-[#11181e] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
 
 const templates = [
   {
@@ -205,9 +205,9 @@ const CatalogForm = () => {
     <div className="flex justify-center py-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl border border-indigo-400/40 bg-[#22262d] p-8 shadow-[0_0_32px_rgba(99,102,241,0.25)]"
+        className="w-full max-w-md rounded-2xl border border-teal-400/40 bg-[#1a242b] p-8 shadow-[0_0_32px_rgba(13,148,136,0.25)]"
       >
-        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
+        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
           {tab === "compare" ? "Compare catalogs" : "Company catalog"}
         </p>
         <h1 className="mb-2 text-3xl font-semibold text-white">
@@ -294,7 +294,7 @@ const CatalogForm = () => {
               type="file"
               accept=".xlsx,.xls,.csv"
               required={!isEdit}
-              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-indigo-500 file:px-3 file:py-1.5 file:text-sm file:text-white`}
+              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-sm file:text-white`}
               onChange={(event) => setFile(event.target.files?.[0] || null)}
             />
             <span className="mt-2 block text-xs text-gray-400">
@@ -394,7 +394,7 @@ const CatalogForm = () => {
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-md bg-indigo-500 py-3 font-medium text-white hover:bg-indigo-400 disabled:opacity-50"
+          className="w-full rounded-md bg-teal-600 py-3 font-medium text-white hover:bg-teal-500 disabled:opacity-50"
         >
           {saving
             ? "Saving..."
@@ -410,7 +410,7 @@ const CatalogForm = () => {
         <p className="mt-6 text-center text-sm text-gray-400">
           <Link
             to={catalogsPath}
-            className="text-indigo-300 hover:text-indigo-200"
+            className="text-teal-300 hover:text-teal-200"
           >
             Back to catalogs
           </Link>

@@ -7,7 +7,7 @@ const Dashboard = () => {
 
   return (
     <div>
-      <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
+      <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
         Workspace
       </p>
       <h1 className="text-3xl font-semibold text-white">
@@ -17,10 +17,10 @@ const Dashboard = () => {
         Ingest sources, review matches, and export a clean file.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         <Link
           to="/dashboard/catalogs"
-          className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)] hover:border-indigo-400"
+          className="rounded-2xl border border-white/10 bg-[#1a242b] p-6 transition-colors hover:border-teal-400/60 hover:bg-[#203039]"
         >
           <h2 className="text-xl font-semibold text-white">Catalogs</h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -29,7 +29,7 @@ const Dashboard = () => {
         </Link>
         <Link
           to="/dashboard/products"
-          className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)] hover:border-indigo-400"
+          className="rounded-2xl border border-white/10 bg-[#1a242b] p-6 transition-colors hover:border-teal-400/60 hover:bg-[#203039]"
         >
           <h2 className="text-xl font-semibold text-white">Products</h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -38,7 +38,7 @@ const Dashboard = () => {
         </Link>
         <Link
           to="/dashboard/matches"
-          className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)] hover:border-indigo-400"
+          className="rounded-2xl border border-white/10 bg-[#1a242b] p-6 transition-colors hover:border-teal-400/60 hover:bg-[#203039]"
         >
           <h2 className="text-xl font-semibold text-white">Matches</h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -47,7 +47,7 @@ const Dashboard = () => {
         </Link>
         <Link
           to="/dashboard/reviews"
-          className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)] hover:border-indigo-400"
+          className="rounded-2xl border border-white/10 bg-[#1a242b] p-6 transition-colors hover:border-teal-400/60 hover:bg-[#203039]"
         >
           <h2 className="text-xl font-semibold text-white">Review</h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -56,7 +56,7 @@ const Dashboard = () => {
         </Link>
         <Link
           to="/dashboard/export"
-          className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)] hover:border-indigo-400"
+          className="rounded-2xl border border-white/10 bg-[#1a242b] p-6 transition-colors hover:border-teal-400/60 hover:bg-[#203039]"
         >
           <h2 className="text-xl font-semibold text-white">Export</h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -65,7 +65,7 @@ const Dashboard = () => {
         </Link>
         <Link
           to="/dashboard/members"
-          className="rounded-2xl border border-indigo-400/30 bg-[#22262d] p-6 shadow-[0_0_24px_rgba(99,102,241,0.12)] hover:border-indigo-400"
+          className="rounded-2xl border border-white/10 bg-[#1a242b] p-6 transition-colors hover:border-teal-400/60 hover:bg-[#203039]"
         >
           <h2 className="text-xl font-semibold text-white">Members</h2>
           <p className="mt-2 text-sm text-gray-400">
