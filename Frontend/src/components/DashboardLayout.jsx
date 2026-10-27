@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import logo from "../assets/logo.png";
 import { logout } from "../actions/authActions";
 
@@ -11,11 +12,50 @@ const navClass = ({ isActive }) =>
       : "text-slate-300 hover:bg-white/5 hover:text-white"
   }`;
 
+const subClass = (active) =>
+  `block rounded-lg px-3 py-2 text-sm ${
+    active
+      ? "bg-teal-600 text-white"
+      : "text-slate-400 hover:bg-white/5 hover:text-white"
+  }`;
+
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { user } = useSelector((state) => state.auth);
+  const [catalogs, setCatalogs] = useState([]);
+  const catalogIdMatch = pathname.match(/^\/dashboard\/catalogs\/([^/]+)/);
+  const activeCatalogId =
+    catalogIdMatch && catalogIdMatch[1] !== "new" && catalogIdMatch[1] !== "edit"
+      ? catalogIdMatch[1]
+      : "";
+  const companyCatalogs = catalogs.filter((item) => item.type === "our_catalog");
+  const competitorCatalogs = catalogs.filter((item) => item.type === "competitor");
+  const manufacturerCatalogs = catalogs.filter(
+    (item) => item.type === "manufacturer"
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await axios.get("/api/v1/catalogs", {
+          withCredentials: true,
+        });
+        if (!cancelled) {
+          setCatalogs(Array.isArray(response.data) ? response.data : []);
+        }
+      } catch {
+        if (!cancelled) setCatalogs([]);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   const onLogout = async () => {
     setOpen(false);
@@ -28,9 +68,42 @@ const DashboardLayout = () => {
       <NavLink to="/dashboard" end className={navClass} onClick={() => setOpen(false)}>
         Overview
       </NavLink>
-      <NavLink to="/dashboard/catalogs" className={navClass} onClick={() => setOpen(false)}>
-        Catalogs
-      </NavLink>
+      <div>
+        <NavLink
+          to="/dashboard/catalogs"
+          className={navClass}
+          onClick={() => setOpen(false)}
+        >
+          Catalogs
+        </NavLink>
+        {catalogs.length > 0 ? (
+          <div className="ml-3 mt-1 flex flex-col gap-2 border-l border-white/10 pl-2">
+            {[
+              { label: "Company", rows: companyCatalogs },
+              { label: "Competitor", rows: competitorCatalogs },
+              { label: "Manufacturer", rows: manufacturerCatalogs },
+            ].map((group) =>
+              group.rows.length === 0 ? null : (
+                <div key={group.label} className="flex flex-col gap-1">
+                  <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                    {group.label}
+                  </p>
+                  {group.rows.map((catalog) => (
+                    <Link
+                      key={catalog._id}
+                      to={`/dashboard/catalogs/${catalog._id}`}
+                      className={subClass(activeCatalogId === catalog._id)}
+                      onClick={() => setOpen(false)}
+                    >
+                      <span className="block truncate">{catalog.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )
+            )}
+          </div>
+        ) : null}
+      </div>
       <NavLink to="/dashboard/products" className={navClass} onClick={() => setOpen(false)}>
         Products
       </NavLink>
