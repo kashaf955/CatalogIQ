@@ -36,7 +36,8 @@ const tabs = [
 
 const Catalogs = () => {
   const { role } = useSelector((state) => state.auth);
-  const canManage = role === "owner" || role === "admin";
+  const canManage =
+    role === "owner" || role === "admin" || role === "manager";
   const [searchParams, setSearchParams] = useSearchParams();
   const tabId = searchParams.get("tab") === "compare" ? "compare" : "company";
   const tab = tabs.find((item) => item.id === tabId) || tabs[0];
