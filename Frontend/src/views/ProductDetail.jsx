@@ -16,8 +16,8 @@ const sanitizeHtml = (html) =>
 
 const Field = ({ label, children, wide }) => (
   <div className={wide ? "sm:col-span-2 lg:col-span-3" : undefined}>
-    <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-    <div className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-200">
+    <p className="text-xs uppercase tracking-wide text-mute">{label}</p>
+    <div className="mt-1 whitespace-pre-wrap break-words text-sm text-ink">
       {children || "—"}
     </div>
   </div>
@@ -66,7 +66,7 @@ const ProductDetail = () => {
   const images = product?.images || [];
 
   if (loading) {
-    return <p className="text-sm text-gray-400">Loading product...</p>;
+    return <p className="text-sm text-mute">Loading product...</p>;
   }
 
   if (!product) {
@@ -75,7 +75,7 @@ const ProductDetail = () => {
         <p className="text-sm text-red-300">{error || "Product not found"}</p>
         <Link
           to="/dashboard/products"
-          className="mt-4 inline-block text-teal-300 hover:text-teal-200"
+          className="mt-4 inline-block text-brand hover:text-brand-hover"
         >
           Back to products
         </Link>
@@ -85,19 +85,19 @@ const ProductDetail = () => {
 
   return (
     <div>
-      <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+      <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
         Product
       </p>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-white">{product.name}</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-semibold text-ink">{product.name}</h1>
+          <p className="mt-2 text-mute">
             {dash(product.sku)} · {catalogName}
           </p>
         </div>
         <Link
           to="/dashboard/products"
-          className="rounded-md border border-white/20 px-4 py-2.5 text-center text-sm text-white hover:border-teal-400"
+          className="rounded-md border border-white/20 px-4 py-2.5 text-center text-sm text-ink hover:border-brand"
         >
           Back to products
         </Link>
@@ -113,7 +113,7 @@ const ProductDetail = () => {
         />
       ) : null}
 
-      <div className="grid gap-4 rounded-2xl border border-teal-400/30 bg-[#1a242b] p-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 rounded-2xl border border-brand/20 bg-panel p-6 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="SKU">{dash(product.sku)}</Field>
         <Field label="MPN">{dash(product.mpn)}</Field>
         <Field label="GTIN">{dash(product.gtin)}</Field>
@@ -148,7 +148,7 @@ const ProductDetail = () => {
               }
               target="_blank"
               rel="noreferrer"
-              className="text-teal-300 hover:text-teal-200"
+              className="text-brand hover:text-brand-hover"
             >
               {product.sourceUrl}
             </a>
@@ -169,7 +169,7 @@ const ProductDetail = () => {
         <Field label="Description" wide>
           {product.description ? (
             <div
-              className="max-h-80 overflow-auto rounded-md border border-white/10 bg-[#11181e] p-3 [&_a]:text-teal-300 [&_img]:max-h-40 [&_img]:max-w-full"
+              className="max-h-80 overflow-auto rounded-md border border-white/10 bg-canvas p-3 [&_a]:text-brand [&_img]:max-h-40 [&_img]:max-w-full"
               dangerouslySetInnerHTML={{
                 __html: sanitizeHtml(product.description),
               }}
@@ -181,8 +181,8 @@ const ProductDetail = () => {
       </div>
 
       {customFields.length > 0 ? (
-        <div className="mt-6 rounded-2xl border border-teal-400/30 bg-[#1a242b] p-6">
-          <p className="mb-3 text-xs uppercase tracking-wide text-gray-500">
+        <div className="mt-6 rounded-2xl border border-brand/20 bg-panel p-6">
+          <p className="mb-3 text-xs uppercase tracking-wide text-mute">
             Custom fields
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

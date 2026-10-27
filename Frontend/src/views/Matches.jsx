@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const fieldClass =
-  "rounded-md border border-white/15 bg-[#11181e] px-3 py-2 text-sm text-white outline-none focus:border-teal-400";
+  "rounded-md border border-white/10 bg-canvas px-3 py-2 text-sm text-ink outline-none focus:border-brand";
 
 const money = (value) =>
   typeof value === "number" ? value.toFixed(2) : "—";
@@ -116,11 +116,11 @@ const Matches = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
             Workspace
           </p>
-          <h1 className="text-3xl font-semibold text-white">Matches</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-semibold text-ink">Matches</h1>
+          <p className="mt-2 text-mute">
             Compare your catalog to manufacturer or competitor products.
           </p>
         </div>
@@ -130,14 +130,14 @@ const Matches = () => {
               type="button"
               onClick={runMatching}
               disabled={running}
-              className="rounded-md border border-teal-400/60 px-4 py-2.5 font-medium text-teal-200 hover:bg-teal-500/10 disabled:opacity-50"
+              className="rounded-md border border-brand/40 px-4 py-2.5 font-medium text-brand hover:bg-brand-hover/10 disabled:opacity-50"
             >
-              {running ? "Matching…" : "Run matching"}
+              {running ? "Matching..." : "Run matching"}
             </button>
           ) : null}
           <Link
             to="/dashboard/reviews"
-            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
+            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
           >
             Open review queue
           </Link>
@@ -169,8 +169,8 @@ const Matches = () => {
           onSubmit={saveAutoScore}
           className="flex items-center gap-2 sm:ml-auto"
         >
-          <label htmlFor="auto-score" className="text-sm text-gray-400">
-            Auto-accept at ≥
+          <label htmlFor="auto-score" className="text-sm text-mute">
+            Auto-accept at =
           </label>
           <input
             id="auto-score"
@@ -182,19 +182,19 @@ const Matches = () => {
             value={autoScore}
             onChange={(event) => setAutoScore(event.target.value)}
           />
-          <span className="text-sm text-gray-400">%</span>
+          <span className="text-sm text-mute">%</span>
           <button
             type="submit"
             disabled={savingAuto}
-            className="rounded-md border border-teal-400/60 px-3 py-2 text-sm text-teal-200 hover:bg-teal-500/10 disabled:opacity-50"
+            className="rounded-md border border-brand/40 px-3 py-2 text-sm text-brand hover:bg-brand-hover/10 disabled:opacity-50"
           >
-            {savingAuto ? "Saving…" : "Save"}
+            {savingAuto ? "Saving..." : "Save"}
           </button>
         </form>
         ) : null}
       </div>
       {canManage ? (
-        <p className="mb-4 text-xs text-gray-500">
+        <p className="mb-4 text-xs text-mute">
           Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A product with
           more than one candidate always goes to review. Leave empty to turn
           auto-accept off.
@@ -208,19 +208,19 @@ const Matches = () => {
         </p>
       ) : null}
 
-      <p className="mb-4 text-sm text-gray-400">
+      <p className="mb-4 text-sm text-mute">
         {ours.length} of your catalogs · {other.length} {against} sources
       </p>
 
-      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-brand/20 bg-panel shadow-sm">
         {matches.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400">
+          <p className="px-4 py-6 text-sm text-mute">
             No matches yet. Ingest your catalog and a {against} source, then
             click Run matching.
           </p>
         ) : (
           <table className="w-full min-w-lg text-left text-sm">
-            <thead className="border-b border-white/10 text-gray-400">
+            <thead className="border-b border-white/10 text-mute">
               <tr>
                 <th className="px-4 py-3 font-medium">Our SKU</th>
                 <th className="px-4 py-3 font-medium">Our name</th>
@@ -238,19 +238,19 @@ const Matches = () => {
                   key={match.id}
                   className="border-b border-white/5 last:border-0"
                 >
-                  <td className="px-4 py-3 text-gray-300">{match.ourSku}</td>
-                  <td className="px-4 py-3 text-white">{match.ourName}</td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-ink">{match.ourSku}</td>
+                  <td className="px-4 py-3 text-ink">{match.ourName}</td>
+                  <td className="px-4 py-3 text-ink">
                     {money(match.ourPrice)}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">{match.theirSku}</td>
-                  <td className="px-4 py-3 text-white">
+                  <td className="px-4 py-3 text-ink">{match.theirSku}</td>
+                  <td className="px-4 py-3 text-ink">
                     {match.theirUrl ? (
                       <a
                         href={match.theirUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="hover:text-teal-300"
+                        className="hover:text-brand"
                       >
                         {match.theirName}
                       </a>
@@ -258,19 +258,19 @@ const Matches = () => {
                       match.theirName
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-ink">
                     {money(match.theirPrice)}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-ink">
                     {match.score}
-                    <span className="ml-1 text-xs text-gray-500">
+                    <span className="ml-1 text-xs text-mute">
                       {match.reason}
                     </span>
                   </td>
-                  <td className="px-4 py-3 capitalize text-gray-300">
+                  <td className="px-4 py-3 capitalize text-ink">
                     {match.status}
                     {match.autoAccepted ? (
-                      <span className="ml-1 text-xs normal-case text-gray-500">
+                      <span className="ml-1 text-xs normal-case text-mute">
                         (auto)
                       </span>
                     ) : null}

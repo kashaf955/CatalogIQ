@@ -89,11 +89,11 @@ const Catalogs = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
             Workspace
           </p>
-          <h1 className="text-3xl font-semibold text-white">Catalogs</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-semibold text-ink">Catalogs</h1>
+          <p className="mt-2 text-mute">
             Your company catalog, then manufacturer and competitor sources to
             compare against.
           </p>
@@ -101,7 +101,7 @@ const Catalogs = () => {
         {canManage ? (
           <Link
             to={`/dashboard/catalogs/new?tab=${tab.id}`}
-            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
+            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
           >
             {tab.addLabel}
           </Link>
@@ -118,8 +118,8 @@ const Catalogs = () => {
               onClick={() => setTab(item.id)}
               className={`-mb-px rounded-t-md px-4 py-2.5 text-sm font-medium ${
                 active
-                  ? "border border-b-transparent border-teal-400/40 bg-[#1a242b] text-white"
-                  : "text-gray-400 hover:text-white"
+                  ? "border border-b-transparent border-brand/25 bg-panel text-ink"
+                  : "text-mute hover:text-ink"
               }`}
             >
               {item.label}
@@ -128,17 +128,17 @@ const Catalogs = () => {
         })}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-brand/20 bg-panel shadow-sm">
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
         {loading ? (
-          <p className="px-4 py-6 text-sm text-gray-400">Loading catalogs...</p>
+          <p className="px-4 py-6 text-sm text-mute">Loading catalogs...</p>
         ) : rows.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400">{tab.empty}</p>
+          <p className="px-4 py-6 text-sm text-mute">{tab.empty}</p>
         ) : (
           <table className="w-full min-w-lg text-left text-sm">
-            <thead className="border-b border-white/10 text-gray-400">
+            <thead className="border-b border-white/10 text-mute">
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Type</th>
@@ -153,18 +153,18 @@ const Catalogs = () => {
                   key={catalog._id}
                   className="border-b border-white/5 last:border-0"
                 >
-                  <td className="px-4 py-3 text-white">
+                  <td className="px-4 py-3 text-ink">
                     <Link
                       to={`/dashboard/catalogs/${catalog._id}`}
-                      className="hover:text-teal-300"
+                      className="hover:text-brand"
                     >
                       {catalog.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-ink">
                     {typeLabel[catalog.type] || catalog.type}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-ink">
                     {kindLabel[catalog.connection?.kind] ||
                       catalog.connection?.kind ||
                       "—"}
@@ -172,21 +172,21 @@ const Catalogs = () => {
                       ? ` · ${catalog.connection.platform}`
                       : ""}
                   </td>
-                  <td className="px-4 py-3 capitalize text-gray-300">
+                  <td className="px-4 py-3 capitalize text-ink">
                     {catalog.status}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-3">
                       <Link
                         to={`/dashboard/products?source=${catalog._id}`}
-                        className="text-teal-300 hover:text-teal-200"
+                        className="text-brand hover:text-brand-hover"
                       >
                         View products
                       </Link>
                       {canManage ? (
                         <Link
                           to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-teal-300 hover:text-teal-200"
+                          className="text-brand hover:text-brand-hover"
                         >
                           {catalog.connection?.kind === "excel" ||
                           catalog.connection?.kind === "csv" ||
@@ -197,7 +197,7 @@ const Catalogs = () => {
                       ) : (
                         <Link
                           to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-teal-300 hover:text-teal-200"
+                          className="text-brand hover:text-brand-hover"
                         >
                           View
                         </Link>
@@ -206,14 +206,14 @@ const Catalogs = () => {
                         <>
                           <Link
                             to={`/dashboard/catalogs/${catalog._id}/edit?tab=${tab.id}`}
-                            className="text-teal-300 hover:text-teal-200"
+                            className="text-brand hover:text-brand-hover"
                           >
                             Edit
                           </Link>
                           <button
                             type="button"
                             onClick={() => removeCatalog(catalog._id)}
-                            className="text-red-500 hover:text-red-400"
+                            className="text-red-500 hover:text-red-300"
                           >
                             Remove
                           </button>

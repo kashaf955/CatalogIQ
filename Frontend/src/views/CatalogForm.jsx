@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-white/15 bg-[#11181e] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
+  "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const templates = [
   {
@@ -199,22 +199,22 @@ const CatalogForm = () => {
   if (!canManage) return null;
 
   if (loading) {
-    return <p className="text-sm text-gray-400">Loading catalog...</p>;
+    return <p className="text-sm text-mute">Loading catalog...</p>;
   }
 
   return (
     <div className="flex justify-center py-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl border border-teal-400/40 bg-[#1a242b] p-8 shadow-[0_0_32px_rgba(13,148,136,0.25)]"
+        className="w-full max-w-md rounded-2xl border border-brand/25 bg-panel p-8 shadow-sm"
       >
-        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
           {tab === "compare" ? "Compare catalogs" : "Company catalog"}
         </p>
-        <h1 className="mb-2 text-3xl font-semibold text-white">
+        <h1 className="mb-2 text-3xl font-semibold text-ink">
           {isEdit ? "Edit catalog" : "Add catalog"}
         </h1>
-        <p className="mb-6 text-gray-400">
+        <p className="mb-6 text-mute">
           {tab === "compare"
             ? "Manufacturer Excel or a competitor website to match against your catalog."
             : "Your store catalog from Excel or an API."}
@@ -226,7 +226,7 @@ const CatalogForm = () => {
           </p>
         ) : null}
 
-        <label className="mb-4 block text-sm text-gray-300">
+        <label className="mb-4 block text-sm text-ink">
           Source type
           <select
             className={fieldClass}
@@ -241,7 +241,7 @@ const CatalogForm = () => {
           </select>
         </label>
 
-        <label className="mb-4 block text-sm text-gray-300">
+        <label className="mb-4 block text-sm text-ink">
           Name
           <input
             type="text"
@@ -253,7 +253,7 @@ const CatalogForm = () => {
           />
         </label>
 
-        <label className="mb-4 block text-sm text-gray-300">
+        <label className="mb-4 block text-sm text-ink">
           Description
           <input
             type="text"
@@ -265,7 +265,7 @@ const CatalogForm = () => {
         </label>
 
         {showManufacturer ? (
-          <label className="mb-4 block text-sm text-gray-300">
+          <label className="mb-4 block text-sm text-ink">
             Manufacturer
             <input
               type="text"
@@ -277,7 +277,7 @@ const CatalogForm = () => {
           </label>
         ) : null}
 
-        <label className="mb-4 block text-sm text-gray-300">
+        <label className="mb-4 block text-sm text-ink">
           Brands
           <input
             type="text"
@@ -289,16 +289,16 @@ const CatalogForm = () => {
         </label>
 
         {showExcel ? (
-          <label className="mb-4 block text-sm text-gray-300">
+          <label className="mb-4 block text-sm text-ink">
             Excel file
             <input
               type="file"
               accept=".xlsx,.xls,.csv"
               required={!isEdit}
-              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-sm file:text-white`}
+              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:text-white`}
               onChange={(event) => setFile(event.target.files?.[0] || null)}
             />
-            <span className="mt-2 block text-xs text-gray-400">
+            <span className="mt-2 block text-xs text-mute">
               {file
                 ? file.name
                 : isEdit
@@ -309,7 +309,7 @@ const CatalogForm = () => {
         ) : null}
 
         {showWebsiteUrl ? (
-          <label className="mb-4 block text-sm text-gray-300">
+          <label className="mb-4 block text-sm text-ink">
             Competitor website
             <input
               type="url"
@@ -324,7 +324,7 @@ const CatalogForm = () => {
 
         {showApi ? (
           <>
-            <label className="mb-4 block text-sm text-gray-300">
+            <label className="mb-4 block text-sm text-ink">
               API platform
               <select
                 className={fieldClass}
@@ -336,7 +336,7 @@ const CatalogForm = () => {
               </select>
             </label>
             {showBigCommerce ? null : (
-              <label className="mb-4 block text-sm text-gray-300">
+              <label className="mb-4 block text-sm text-ink">
                 API URL
                 <input
                   type="url"
@@ -348,7 +348,7 @@ const CatalogForm = () => {
                 />
               </label>
             )}
-            <label className="mb-4 block text-sm text-gray-300">
+            <label className="mb-4 block text-sm text-ink">
               API token
               <input
                 type="password"
@@ -365,7 +365,7 @@ const CatalogForm = () => {
               />
             </label>
             {showBigCommerce ? (
-              <label className="mb-4 block text-sm text-gray-300">
+              <label className="mb-4 block text-sm text-ink">
                 Store hash
                 <input
                   type="text"
@@ -380,7 +380,7 @@ const CatalogForm = () => {
           </>
         ) : null}
 
-        <label className="mb-6 block text-sm text-gray-300">
+        <label className="mb-6 block text-sm text-ink">
           Status
           <select
             className={fieldClass}
@@ -395,7 +395,7 @@ const CatalogForm = () => {
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-md bg-teal-600 py-3 font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+          className="w-full rounded-md bg-brand py-3 font-medium text-white hover:bg-brand-hover disabled:opacity-50"
         >
           {saving
             ? "Saving..."
@@ -408,10 +408,10 @@ const CatalogForm = () => {
                 : "Create catalog"}
         </button>
 
-        <p className="mt-6 text-center text-sm text-gray-400">
+        <p className="mt-6 text-center text-sm text-mute">
           <Link
             to={catalogsPath}
-            className="text-teal-300 hover:text-teal-200"
+            className="text-brand hover:text-brand-hover"
           >
             Back to catalogs
           </Link>

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-white/15 bg-[#11181e] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
+  "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const MembersInvite = () => {
   const [email, setEmail] = useState("");
@@ -35,15 +35,15 @@ const MembersInvite = () => {
     <div className="flex justify-center py-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl border border-teal-400/40 bg-[#1a242b] p-8 shadow-[0_0_32px_rgba(13,148,136,0.25)]"
+        className="w-full max-w-md rounded-2xl border border-brand/25 bg-panel p-8 shadow-sm"
       >
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
             Workspace
           </p>
-          <h1 className="mb-2 text-3xl font-semibold text-white">
+          <h1 className="mb-2 text-3xl font-semibold text-ink">
             Invite a member
           </h1>
-          <p className="mb-6 text-gray-400">
+          <p className="mb-6 text-mute">
             They join this tenant with the role you choose. Owner cannot be
             assigned here.
           </p>
@@ -57,13 +57,13 @@ const MembersInvite = () => {
           {message ? (
             <p className="mb-4 rounded-md bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">
               {message}{" "}
-              <Link to="/dashboard/members" className="text-teal-300 hover:text-teal-200">
+              <Link to="/dashboard/members" className="text-brand hover:text-brand-hover">
                 View members
               </Link>
             </p>
           ) : null}
 
-          <label className="mb-4 block text-sm text-gray-300">
+          <label className="mb-4 block text-sm text-ink">
             Email
             <input
               type="email"
@@ -76,7 +76,7 @@ const MembersInvite = () => {
             />
           </label>
 
-          <label className="mb-4 block text-sm text-gray-300">
+          <label className="mb-4 block text-sm text-ink">
             Name
             <input
               type="text"
@@ -88,7 +88,7 @@ const MembersInvite = () => {
             />
           </label>
 
-          <label className="mb-6 block text-sm text-gray-300">
+          <label className="mb-6 block text-sm text-ink">
             Role
             <select
               name="role"
@@ -104,13 +104,13 @@ const MembersInvite = () => {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-teal-600 py-3 font-medium text-white hover:bg-teal-500"
+            className="w-full rounded-md bg-brand py-3 font-medium text-white hover:bg-brand-hover"
           >
             Send invite
           </button>
 
-          <p className="mt-6 text-center text-sm text-gray-400">
-            <Link to="/dashboard/members" className="text-teal-300 hover:text-teal-200">
+          <p className="mt-6 text-center text-sm text-mute">
+            <Link to="/dashboard/members" className="text-brand hover:text-brand-hover">
               Back to members
             </Link>
           </p>

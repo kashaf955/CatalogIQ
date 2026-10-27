@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-white/15 bg-[#11181e] px-3 py-2.5 text-white outline-none focus:border-teal-400";
+  "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none focus:border-brand";
 
 const Export = () => {
   const [catalogs, setCatalogs] = useState([]);
@@ -42,13 +42,13 @@ const Export = () => {
     <div className="flex justify-center py-4">
       <form
         onSubmit={onExport}
-        className="w-full max-w-md rounded-2xl border border-teal-400/40 bg-[#1a242b] p-8 shadow-[0_0_32px_rgba(13,148,136,0.25)]"
+        className="w-full max-w-md rounded-2xl border border-brand/25 bg-panel p-8 shadow-sm"
       >
-        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
           Workspace
         </p>
-        <h1 className="mb-2 text-3xl font-semibold text-white">Export</h1>
-        <p className="mb-6 text-gray-400">
+        <h1 className="mb-2 text-3xl font-semibold text-ink">Export</h1>
+        <p className="mb-6 text-mute">
           Download a file after matches have been reviewed.
         </p>
 
@@ -63,7 +63,7 @@ const Export = () => {
           </p>
         ) : null}
 
-        <label className="mb-4 block text-sm text-gray-300">
+        <label className="mb-4 block text-sm text-ink">
           Catalog
           <select
             className={fieldClass}
@@ -82,7 +82,7 @@ const Export = () => {
           </select>
         </label>
 
-        <label className="mb-4 block text-sm text-gray-300">
+        <label className="mb-4 block text-sm text-ink">
           Include
           <select
             className={fieldClass}
@@ -95,7 +95,7 @@ const Export = () => {
           </select>
         </label>
 
-        <label className="mb-6 block text-sm text-gray-300">
+        <label className="mb-6 block text-sm text-ink">
           Format
           <select
             className={fieldClass}
@@ -109,15 +109,15 @@ const Export = () => {
 
         <button
           type="submit"
-          className="w-full rounded-md bg-teal-600 py-3 font-medium text-white hover:bg-teal-500"
+          className="w-full rounded-md bg-brand py-3 font-medium text-white hover:bg-brand-hover"
         >
           Download {format.toUpperCase()}
         </button>
 
-        <p className="mt-6 text-center text-sm text-gray-400">
+        <p className="mt-6 text-center text-sm text-mute">
           <Link
             to="/dashboard/reviews"
-            className="text-teal-300 hover:text-teal-200"
+            className="text-brand hover:text-brand-hover"
           >
             Back to review
           </Link>

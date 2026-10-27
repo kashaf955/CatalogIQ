@@ -19,7 +19,7 @@ const kindLabel = {
 };
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-white/15 bg-[#11181e] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
+  "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const CatalogDetail = () => {
   const { id } = useParams();
@@ -159,7 +159,7 @@ const CatalogDetail = () => {
   };
 
   if (loading) {
-    return <p className="text-sm text-gray-400">Loading catalog...</p>;
+    return <p className="text-sm text-mute">Loading catalog...</p>;
   }
 
   if (!catalog) {
@@ -168,7 +168,7 @@ const CatalogDetail = () => {
         <p className="text-sm text-red-300">{error || "Catalog not found"}</p>
         <Link
           to="/dashboard/catalogs"
-          className="mt-4 inline-block text-teal-300 hover:text-teal-200"
+          className="mt-4 inline-block text-brand hover:text-brand-hover"
         >
           Back to catalogs
         </Link>
@@ -180,11 +180,11 @@ const CatalogDetail = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
             Catalog
           </p>
-          <h1 className="text-3xl font-semibold text-white">{catalog.name}</h1>
-          <p className="mt-2 text-gray-400">
+          <h1 className="text-3xl font-semibold text-ink">{catalog.name}</h1>
+          <p className="mt-2 text-mute">
             {typeLabel[catalog.type] || catalog.type}
             {" · "}
             {kindLabel[kind] || kind || "No connection"}
@@ -195,14 +195,14 @@ const CatalogDetail = () => {
           {canManage ? (
             <Link
               to={`/dashboard/catalogs/${catalog._id}/edit`}
-              className="rounded-md border border-white/20 px-4 py-2.5 text-center text-sm text-white hover:border-teal-400"
+              className="rounded-md border border-white/20 px-4 py-2.5 text-center text-sm text-ink hover:border-brand"
             >
               Edit source
             </Link>
           ) : null}
           <Link
             to={`/dashboard/products?source=${catalog._id}`}
-            className="rounded-md bg-teal-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-500"
+            className="rounded-md bg-brand px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-brand-hover"
           >
             View catalog products
           </Link>
@@ -210,23 +210,23 @@ const CatalogDetail = () => {
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-teal-400/30 bg-[#1a242b] p-5">
-          <p className="text-sm text-gray-400">Status</p>
-          <p className="mt-1 capitalize text-white">{catalog.status}</p>
+        <div className="rounded-2xl border border-brand/20 bg-panel p-5">
+          <p className="text-sm text-mute">Status</p>
+          <p className="mt-1 capitalize text-ink">{catalog.status}</p>
         </div>
-        <div className="rounded-2xl border border-teal-400/30 bg-[#1a242b] p-5">
-          <p className="text-sm text-gray-400">
+        <div className="rounded-2xl border border-brand/20 bg-panel p-5">
+          <p className="text-sm text-mute">
             {kind === "api" ? "API" : kind === "excel" ? "File source" : "Website"}
           </p>
-          <p className="mt-1 truncate text-white">
+          <p className="mt-1 truncate text-ink">
             {kind === "api"
               ? catalog.connection?.platform || catalog.url || "Generic API"
               : catalog.url || "Excel upload on ingest"}
           </p>
         </div>
-        <div className="rounded-2xl border border-teal-400/30 bg-[#1a242b] p-5">
-          <p className="text-sm text-gray-400">Brands</p>
-          <p className="mt-1 text-white">
+        <div className="rounded-2xl border border-brand/20 bg-panel p-5">
+          <p className="text-sm text-mute">Brands</p>
+          <p className="mt-1 text-ink">
             {(catalog.brands || []).join(", ") || "—"}
           </p>
         </div>
@@ -235,10 +235,10 @@ const CatalogDetail = () => {
       {canManage ? (
       <form
         onSubmit={onIngest}
-        className="rounded-2xl border border-teal-400/30 bg-[#1a242b] p-6 shadow-[0_0_24px_rgba(13,148,136,0.12)]"
+        className="rounded-2xl border border-brand/20 bg-panel p-6 shadow-sm"
       >
-        <h2 className="text-xl font-semibold text-white">Ingest</h2>
-        <p className="mt-2 text-sm text-gray-400">
+        <h2 className="text-xl font-semibold text-ink">Ingest</h2>
+        <p className="mt-2 text-sm text-mute">
           Pull this source into products. Matching starts after a successful run.
         </p>
 
@@ -256,30 +256,30 @@ const CatalogDetail = () => {
         {imported != null && !saving ? (
           <Link
             to={`/dashboard/products?source=${catalog._id}`}
-            className="mt-4 inline-flex rounded-md bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-500"
+            className="mt-4 inline-flex rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-hover"
           >
             View products
           </Link>
         ) : null}
 
         {kind === "excel" || kind === "csv" ? (
-          <label className="mt-6 block text-sm text-gray-300">
+          <label className="mt-6 block text-sm text-ink">
             File
             <input
               type="file"
               accept=".xlsx,.xls,.csv"
               required
-              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-sm file:text-white`}
+              className={`${fieldClass} file:mr-3 file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:text-white`}
               onChange={(event) => setFile(event.target.files?.[0] || null)}
             />
             {file ? (
-              <span className="mt-2 block text-xs text-gray-400">{file.name}</span>
+              <span className="mt-2 block text-xs text-mute">{file.name}</span>
             ) : null}
           </label>
         ) : null}
 
         {kind === "api" ? (
-          <p className="mt-6 text-sm text-gray-400">
+          <p className="mt-6 text-sm text-mute">
             {isBigCommerce
               ? `Fetch from the BigCommerce adapter (store ${catalog.connection?.storeHash || "hash missing"}).`
               : `GET ${catalog.url || "the saved API URL"} with the stored token. The response should be a JSON product list.`}
@@ -287,7 +287,7 @@ const CatalogDetail = () => {
         ) : null}
 
         {kind === "website" ? (
-          <p className="mt-6 text-sm text-gray-400">
+          <p className="mt-6 text-sm text-mute">
             Search {catalog.url || "the competitor website"} for SKUs already in
             your company catalog. If a store prefix does not match (for example
             UP-12345), it retries with the part number (12345). The whole
@@ -296,7 +296,7 @@ const CatalogDetail = () => {
         ) : null}
 
         {kind === "excel" ? (
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-mute">
             {catalog.type === "manufacturer"
               ? "Upload the manufacturer Excel sheet. First row should be column headers."
               : "Upload the company catalog Excel file. First row should be column headers."}
@@ -304,7 +304,7 @@ const CatalogDetail = () => {
         ) : null}
 
         {!kind ? (
-          <p className="mt-6 text-sm text-gray-400">
+          <p className="mt-6 text-sm text-mute">
             Edit this source and choose a connection before ingesting.
           </p>
         ) : null}
@@ -333,7 +333,7 @@ const CatalogDetail = () => {
               (kind === "website" && !catalog.url) ||
               (kind === "api" && !isBigCommerce && !catalog.url)
             }
-            className="rounded-md bg-teal-600 px-4 py-2.5 font-medium text-white hover:bg-teal-500 disabled:opacity-50"
+            className="rounded-md bg-brand px-4 py-2.5 font-medium text-white hover:bg-brand-hover disabled:opacity-50"
           >
             {saving
               ? kind === "website"
@@ -361,14 +361,14 @@ const CatalogDetail = () => {
           ) : null}
           <Link
             to="/dashboard/catalogs"
-            className="rounded-md px-4 py-2.5 text-sm text-teal-300 hover:text-teal-200"
+            className="rounded-md px-4 py-2.5 text-sm text-brand hover:text-brand-hover"
           >
             Back to catalogs
           </Link>
         </div>
       </form>
       ) : (
-        <p className="rounded-2xl border border-teal-400/30 bg-[#1a242b] p-6 text-sm text-gray-400">
+        <p className="rounded-2xl border border-brand/20 bg-panel p-6 text-sm text-mute">
           Only an owner, admin, or manager can ingest this source.
         </p>
       )}
