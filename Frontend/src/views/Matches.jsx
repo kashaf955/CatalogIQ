@@ -7,11 +7,12 @@ const fieldClass =
   "rounded-md border border-white/15 bg-[#11181e] px-3 py-2 text-sm text-white outline-none focus:border-teal-400";
 
 const money = (value) =>
-  typeof value === "number" ? `$${value.toFixed(2)}` : "—";
+  typeof value === "number" ? value.toFixed(2) : "—";
 
 const Matches = () => {
   const { role } = useSelector((state) => state.auth);
-  const canManage = role === "owner" || role === "admin";
+  const canManage =
+    role === "owner" || role === "admin" || role === "manager";
   const [catalogs, setCatalogs] = useState([]);
   const [against, setAgainst] = useState("manufacturer");
   const [status, setStatus] = useState("all");

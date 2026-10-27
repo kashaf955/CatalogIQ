@@ -69,8 +69,8 @@ const Dashboard = () => {
         >
           <h2 className="text-xl font-semibold text-white">Members</h2>
           <p className="mt-2 text-sm text-gray-400">
-            See who belongs to this workspace and remove people if you are an
-            owner or admin.
+            See who belongs to this workspace. Owners and admins can invite
+            people as admin or manager.
           </p>
         </Link>
       </div>

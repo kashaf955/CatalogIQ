@@ -6,7 +6,10 @@ import axios from "axios";
 const Reviews = () => {
   const { role } = useSelector((state) => state.auth);
   const canReview =
-    role === "owner" || role === "admin" || role === "reviewer";
+    role === "owner" ||
+    role === "admin" ||
+    role === "manager" ||
+    role === "reviewer";
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);

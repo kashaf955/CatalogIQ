@@ -12,6 +12,7 @@ import Catalogs from "./views/Catalogs.jsx";
 import CatalogForm from "./views/CatalogForm.jsx";
 import CatalogDetail from "./views/CatalogDetail.jsx";
 import Products from "./views/Products.jsx";
+import ProductDetail from "./views/ProductDetail.jsx";
 import Matches from "./views/Matches.jsx";
 import Reviews from "./views/Reviews.jsx";
 import Export from "./views/Export.jsx";
@@ -88,6 +89,7 @@ const App = () => {
           <Route path="catalogs/:id" element={<CatalogDetail />} />
           <Route path="catalogs/:id/edit" element={<CatalogForm />} />
           <Route path="products" element={<Products />} />
+          <Route path="products/:id" element={<ProductDetail />} />
           <Route path="matches" element={<Matches />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="export" element={<Export />} />

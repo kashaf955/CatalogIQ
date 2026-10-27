@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import ProcessingBar from "../components/ProcessingBar.jsx";
@@ -26,22 +26,6 @@ const stripHtml = (value) =>
     .replace(/&quot;/gi, '"')
     .replace(/\s+/g, " ")
     .trim();
-
-const sanitizeHtml = (html) =>
-  String(html || "")
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-    .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, "")
-    .replace(/\son\w+="[^"]*"/gi, "")
-    .replace(/\son\w+='[^']*'/gi, "");
-
-const DetailField = ({ label, children, wide }) => (
-  <div className={wide ? "sm:col-span-2 lg:col-span-3" : undefined}>
-    <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-    <div className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-200">
-      {children || "—"}
-    </div>
-  </div>
-);
 
 const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
   if (total <= 0) return null;
@@ -76,7 +60,9 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
 
 const Products = () => {
   const { role } = useSelector((state) => state.auth);
-  const canManage = role === "owner" || role === "admin";
+  const canManage =
+    role === "owner" || role === "admin" || role === "manager";
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [catalogs, setCatalogs] = useState([]);
   const [products, setProducts] = useState([]);
@@ -90,7 +76,6 @@ const Products = () => {
   const [progress, setProgress] = useState(null);
   const [selected, setSelected] = useState([]);
   const [selectAllMatching, setSelectAllMatching] = useState(false);
-  const [openId, setOpenId] = useState(null);
   const source = searchParams.get("source") || "";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
 
@@ -170,7 +155,6 @@ const Products = () => {
         setPages(nextPages);
         setSelected([]);
         setSelectAllMatching(false);
-        setOpenId(null);
         if (page > nextPages) setFilters(source, nextPages);
       } catch (err) {
         if (!cancelled) {
@@ -449,17 +433,30 @@ const Products = () => {
             </thead>
             <tbody>
               {products.map((product, index) => {
-                const open = openId === product._id;
                 const image = (product.images || [])[0];
-                const customFields = Array.isArray(product.attributes?.customFields)
-                  ? product.attributes.customFields
-                  : [];
-                const colSpan = 14 + (canManage ? 2 : 0);
+                const openDetail = () => {
+                  if (!product._id) return;
+                  navigate(`/dashboard/products/${product._id}`);
+                };
                 return (
-                  <React.Fragment key={product._id || product.sku}>
-                    <tr className="border-b border-white/5">
+                    <tr
+                      key={product._id || product.sku}
+                      role="link"
+                      tabIndex={product._id ? 0 : undefined}
+                      className="cursor-pointer border-b border-white/5 hover:bg-white/[0.04]"
+                      onClick={openDetail}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openDetail();
+                        }
+                      }}
+                    >
                       {canManage ? (
-                        <td className="px-4 py-3">
+                        <td
+                          className="px-4 py-3"
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <input
                             type="checkbox"
                             checked={
@@ -484,7 +481,9 @@ const Products = () => {
                           <span className="text-gray-500">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-white">{dash(product.name)}</td>
+                      <td className="px-4 py-3 text-white">
+                        {dash(product.name)}
+                      </td>
                       <td
                         className="max-w-72 truncate px-4 py-3 text-gray-300"
                         title={stripHtml(product.description)}
@@ -497,7 +496,7 @@ const Products = () => {
                       <td className="px-4 py-3 text-gray-300">{dash(product.brand)}</td>
                       <td className="px-4 py-3 text-gray-300">
                         {product.price != null
-                          ? `${product.currency || "USD"} ${Number(product.price).toFixed(2)}`
+                          ? Number(product.price).toFixed(2)
                           : "—"}
                       </td>
                       <td className="px-4 py-3 text-gray-300">{dash(product.category)}</td>
@@ -511,18 +510,18 @@ const Products = () => {
                         {catalogName(product.sourceId)}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenId(open ? null : product._id)
-                          }
+                        <Link
+                          to={`/dashboard/products/${product._id}`}
                           className="text-teal-300 hover:text-teal-200"
                         >
-                          {open ? "Hide" : "Details"}
-                        </button>
+                          View
+                        </Link>
                       </td>
                       {canManage ? (
-                        <td className="px-4 py-3">
+                        <td
+                          className="px-4 py-3"
+                          onClick={(event) => event.stopPropagation()}
+                        >
                           <button
                             type="button"
                             onClick={() => removeProduct(product._id)}
@@ -533,103 +532,6 @@ const Products = () => {
                         </td>
                       ) : null}
                     </tr>
-                    {open ? (
-                      <tr className="border-b border-white/5 bg-[#11181e]/80">
-                        <td colSpan={colSpan} className="px-4 py-5">
-                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            <DetailField label="Description" wide>
-                              {product.description ? (
-                                <div
-                                  className="max-h-64 overflow-auto rounded-md border border-white/10 bg-[#1a242b] p-3 [&_a]:text-teal-300 [&_img]:max-h-40 [&_img]:max-w-full"
-                                  dangerouslySetInnerHTML={{
-                                    __html: sanitizeHtml(product.description),
-                                  }}
-                                />
-                              ) : (
-                                "—"
-                              )}
-                            </DetailField>
-                            <DetailField label="Fitment">
-                              {dash(product.fitment)}
-                            </DetailField>
-                            <DetailField label="Weight">
-                              {dash(product.weight)}
-                            </DetailField>
-                            <DetailField label="Dimensions (W × H × D)">
-                              {product.width || product.height || product.depth
-                                ? [product.width, product.height, product.depth]
-                                    .map((value) => (value != null ? value : "—"))
-                                    .join(" × ")
-                                : "—"}
-                            </DetailField>
-                            <DetailField label="Replacement MPN">
-                              {dash(product.replacementMpn)}
-                            </DetailField>
-                            <DetailField label="Source URL">
-                              {product.sourceUrl ? (
-                                <a
-                                  href={
-                                    product.sourceUrl.startsWith("http")
-                                      ? product.sourceUrl
-                                      : `https://${product.sourceUrl.replace(/^\/+/, "")}`
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-teal-300 hover:text-teal-200"
-                                >
-                                  {product.sourceUrl}
-                                </a>
-                              ) : (
-                                "—"
-                              )}
-                            </DetailField>
-                            <DetailField label="BigCommerce ID">
-                              {dash(product.attributes?.bigcommerceId)}
-                            </DetailField>
-                            <DetailField label="Created">
-                              {product.createdAt
-                                ? new Date(product.createdAt).toLocaleString()
-                                : "—"}
-                            </DetailField>
-                            <DetailField label="Updated">
-                              {product.updatedAt
-                                ? new Date(product.updatedAt).toLocaleString()
-                                : "—"}
-                            </DetailField>
-                          </div>
-                          {customFields.length > 0 ? (
-                            <div className="mt-4">
-                              <p className="mb-2 text-xs uppercase tracking-wide text-gray-500">
-                                Custom fields
-                              </p>
-                              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                {customFields.map((field, fieldIndex) => (
-                                  <DetailField
-                                    key={`${field.name}-${fieldIndex}`}
-                                    label={field.name || "Field"}
-                                  >
-                                    {dash(field.value)}
-                                  </DetailField>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
-                          {(product.images || []).length > 0 ? (
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              {product.images.map((src) => (
-                                <img
-                                  key={src}
-                                  src={src}
-                                  alt=""
-                                  className="h-24 w-24 rounded-md object-cover"
-                                />
-                              ))}
-                            </div>
-                          ) : null}
-                        </td>
-                      </tr>
-                    ) : null}
-                  </React.Fragment>
                 );
               })}
             </tbody>

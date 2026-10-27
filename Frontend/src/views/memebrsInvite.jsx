@@ -7,7 +7,7 @@ const fieldClass =
 
 const MembersInvite = () => {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("manager");
   const [name, setName] = useState("");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -25,7 +25,7 @@ const MembersInvite = () => {
       setMessage(response.data.message || "Member invited");
       setEmail("");
       setName("");
-      setRole("member");
+      setRole("manager");
     } catch (err) {
       setError(err.response?.data?.message || "Invite failed");
     }
@@ -98,8 +98,7 @@ const MembersInvite = () => {
               onChange={(event) => setRole(event.target.value)}
             >
               <option value="admin">Admin</option>
-              <option value="reviewer">Reviewer</option>
-              <option value="member">Member</option>
+              <option value="manager">Manager</option>
             </select>
           </label>
 
