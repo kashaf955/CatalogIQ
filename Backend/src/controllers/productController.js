@@ -66,6 +66,25 @@ const getProducts = async (req, res) => {
   }
 };
 
+const getProduct = async (req, res) => {
+  try {
+    const product = await Product.findOne({
+      _id: req.params.id,
+      tenantId: req.tenant.id,
+      isDeleted: false,
+    }).lean();
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    return res.status(200).json(product);
+  } catch (error) {
+    logError("products.get", error, { id: req.params.id });
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findOneAndUpdate(
@@ -130,4 +149,4 @@ const deleteProductsBulk = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, deleteProduct, deleteProductsBulk };
+module.exports = { getProducts, getProduct, deleteProduct, deleteProductsBulk };

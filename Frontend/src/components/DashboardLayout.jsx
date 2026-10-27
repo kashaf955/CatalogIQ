@@ -105,15 +105,15 @@ const DashboardLayout = () => {
                   to={group.to}
                   className={`px-3 pt-1 text-[10px] uppercase tracking-[0.14em] ${
                     onCatalogsList && catalogsTab === group.tab
-                      ? "text-brand"
-                      : "text-mute hover:text-ink"
+                      ? "text-teal-300"
+                      : "text-slate-500 hover:text-slate-300"
                   }`}
                   onClick={() => setOpen(false)}
                 >
                   {group.label}
                 </Link>
               ) : (
-                <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-mute">
+                <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">
                   {group.label}
                 </p>
               )}

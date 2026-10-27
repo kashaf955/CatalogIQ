@@ -6,11 +6,12 @@ const { upload } = require("../middleware/upload");
 const router = Router();
 router.use(authenticate);
 
-const manage = authorize("owner", "admin");
+const manage = authorize("owner", "admin", "manager");
 
 router.get("/", catalogController.getCatalog);
 router.get("/:id", catalogController.getCatalogById);
 router.post("/", manage, catalogController.createCatalog);
+router.post("/:id/ingest/abort", manage, catalogController.abortIngest);
 router.post(
   "/:id/ingest",
   manage,

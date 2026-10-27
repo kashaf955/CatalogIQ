@@ -92,7 +92,7 @@ const mapProduct = (item, index) => {
   };
 };
 
-const fetchRestProducts = async ({ url, accessToken } = {}) => {
+const fetchRestProducts = async ({ url, accessToken, signal } = {}) => {
   const endpoint = assertHttpUrl(url);
   const token = text(accessToken);
   const headers = { Accept: "application/json" };
@@ -108,8 +108,14 @@ const fetchRestProducts = async ({ url, accessToken } = {}) => {
 
   let response;
   try {
-    response = await fetch(endpoint, { headers, redirect: "follow" });
+    response = await fetch(endpoint, { headers, redirect: "follow", signal });
   } catch (err) {
+    if (signal?.aborted || err?.name === "AbortError") {
+      const error = new Error("Ingest stopped");
+      error.code = "INGEST_ABORTED";
+      error.products = [];
+      throw error;
+    }
     console.error(`[restApi] request failed ${endpoint}: ${err.message}`);
     const error = new Error(`Could not reach API: ${err.message}`);
     error.status = 502;
