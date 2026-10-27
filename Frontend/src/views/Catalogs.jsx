@@ -89,11 +89,11 @@ const Catalogs = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-brand">
             Workspace
           </p>
-          <h1 className="text-3xl font-semibold text-ink">Catalogs</h1>
-          <p className="mt-2 text-mute">
+          <h1 className="text-3xl font-semibold tracking-tight text-ink">Catalogs</h1>
+          <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-mute">
             Your company catalog, then manufacturer and competitor sources to
             compare against.
           </p>
@@ -101,14 +101,14 @@ const Catalogs = () => {
         {canManage ? (
           <Link
             to={`/dashboard/catalogs/new?tab=${tab.id}`}
-            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
+            className="rounded-lg bg-brand px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-brand-hover"
           >
             {tab.addLabel}
           </Link>
         ) : null}
       </div>
 
-      <div className="mb-6 flex gap-2 border-b border-white/10">
+      <div className="mb-5 inline-flex rounded-lg border border-white/10 bg-panel p-1">
         {tabs.map((item) => {
           const active = item.id === tab.id;
           return (
@@ -116,9 +116,9 @@ const Catalogs = () => {
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`-mb-px rounded-t-md px-4 py-2.5 text-sm font-medium ${
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
                 active
-                  ? "border border-b-transparent border-brand/25 bg-panel text-ink"
+                  ? "bg-white/[0.08] text-ink"
                   : "text-mute hover:text-ink"
               }`}
             >
@@ -128,7 +128,7 @@ const Catalogs = () => {
         })}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-brand/20 bg-panel shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-panel">
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
@@ -176,17 +176,17 @@ const Catalogs = () => {
                     {catalog.status}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Link
                         to={`/dashboard/products?source=${catalog._id}`}
-                        className="text-brand hover:text-brand-hover"
+                        className="inline-flex rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-ink hover:border-brand hover:text-brand"
                       >
                         View products
                       </Link>
                       {canManage ? (
                         <Link
                           to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-brand hover:text-brand-hover"
+                          className="inline-flex rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-hover"
                         >
                           {catalog.connection?.kind === "excel" ||
                           catalog.connection?.kind === "csv" ||
@@ -197,7 +197,7 @@ const Catalogs = () => {
                       ) : (
                         <Link
                           to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-brand hover:text-brand-hover"
+                          className="inline-flex rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-ink hover:border-brand hover:text-brand"
                         >
                           View
                         </Link>
@@ -206,14 +206,14 @@ const Catalogs = () => {
                         <>
                           <Link
                             to={`/dashboard/catalogs/${catalog._id}/edit?tab=${tab.id}`}
-                            className="text-brand hover:text-brand-hover"
+                            className="inline-flex rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-mute hover:border-white/20 hover:text-ink"
                           >
                             Edit
                           </Link>
                           <button
                             type="button"
                             onClick={() => removeCatalog(catalog._id)}
-                            className="text-red-500 hover:text-red-300"
+                            className="inline-flex rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-400 hover:border-red-400 hover:text-red-300"
                           >
                             Remove
                           </button>

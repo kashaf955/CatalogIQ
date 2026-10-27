@@ -23,21 +23,21 @@ const Register = () => {
     }
   };
   const fieldClass =
-    "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
+    "mt-2 w-full rounded-lg border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
   return (
-    <div className="pb-16">
+    <div className="min-h-screen pb-16">
       <Header />
 
-      <div className="flex justify-center px-4 py-16">
+      <div className="flex justify-center px-6 py-16 sm:py-24">
         <form
           onSubmit={onSubmit}
-          className="w-full max-w-md rounded-2xl border border-brand/25 bg-panel p-8 shadow-sm"
+          className="w-full max-w-md rounded-2xl border border-white/10 bg-panel p-8 sm:p-10"
         >
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-brand">
             CatalogIQ
           </p>
-          <h1 className="mb-2 text-3xl font-semibold text-ink">
+          <h1 className="mb-2 text-3xl font-semibold tracking-tight text-ink">
             Create workspace
           </h1>
           <p className="mb-6 text-mute">

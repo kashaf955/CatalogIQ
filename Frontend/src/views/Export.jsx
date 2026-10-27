@@ -39,15 +39,15 @@ const Export = () => {
   };
 
   return (
-    <div className="flex justify-center py-4">
+    <div className="flex justify-center py-2">
       <form
         onSubmit={onExport}
-        className="w-full max-w-md rounded-2xl border border-brand/25 bg-panel p-8 shadow-sm"
+        className="w-full max-w-md rounded-2xl border border-white/10 bg-panel p-8 sm:p-10"
       >
-        <p className="mb-1 text-sm uppercase tracking-[0.18em] text-brand">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-brand">
           Workspace
         </p>
-        <h1 className="mb-2 text-3xl font-semibold text-ink">Export</h1>
+        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-ink">Export</h1>
         <p className="mb-6 text-mute">
           Download a file after matches have been reviewed.
         </p>
@@ -109,7 +109,7 @@ const Export = () => {
 
         <button
           type="submit"
-          className="w-full rounded-md bg-brand py-3 font-medium text-white hover:bg-brand-hover"
+          className="w-full rounded-lg bg-brand py-3 font-medium text-white hover:bg-brand-hover"
         >
           Download {format.toUpperCase()}
         </button>
