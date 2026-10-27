@@ -194,6 +194,22 @@ const catalogController = {
         },
         { new: true }
       );
+      if (!catalog) {
+        return res.status(404).json({ message: "Catalog not found" });
+      }
+
+      const products = await Product.updateMany(
+        {
+          tenantId: req.tenant.id,
+          sourceId: catalog._id,
+          isDeleted: false,
+        },
+        { isDeleted: true, deletedAt: new Date() }
+      );
+
+      console.log(
+        `[catalogs] removed ${catalog._id} products=${products.modifiedCount}`
+      );
       return res.status(200).json(publicCatalog(catalog));
     } catch (error) {
       logError("catalogs.delete", error, { id: req.params.id });
