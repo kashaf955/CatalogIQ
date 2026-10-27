@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-white/15 bg-[#1c1f24] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-indigo-400";
+  "mt-2 w-full rounded-md border border-white/15 bg-[#11181e] px-3 py-2.5 text-white outline-none placeholder:text-gray-500 focus:border-teal-400";
 
 const MembersInvite = () => {
   const [email, setEmail] = useState("");
@@ -35,9 +35,9 @@ const MembersInvite = () => {
     <div className="flex justify-center py-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl border border-indigo-400/40 bg-[#22262d] p-8 shadow-[0_0_32px_rgba(99,102,241,0.25)]"
+        className="w-full max-w-md rounded-2xl border border-teal-400/40 bg-[#1a242b] p-8 shadow-[0_0_32px_rgba(13,148,136,0.25)]"
       >
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
             Workspace
           </p>
           <h1 className="mb-2 text-3xl font-semibold text-white">
@@ -57,7 +57,7 @@ const MembersInvite = () => {
           {message ? (
             <p className="mb-4 rounded-md bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">
               {message}{" "}
-              <Link to="/dashboard/members" className="text-indigo-300 hover:text-indigo-200">
+              <Link to="/dashboard/members" className="text-teal-300 hover:text-teal-200">
                 View members
               </Link>
             </p>
@@ -105,13 +105,13 @@ const MembersInvite = () => {
 
           <button
             type="submit"
-            className="w-full rounded-md bg-indigo-500 py-3 font-medium text-white hover:bg-indigo-400"
+            className="w-full rounded-md bg-teal-600 py-3 font-medium text-white hover:bg-teal-500"
           >
             Send invite
           </button>
 
           <p className="mt-6 text-center text-sm text-gray-400">
-            <Link to="/dashboard/members" className="text-indigo-300 hover:text-indigo-200">
+            <Link to="/dashboard/members" className="text-teal-300 hover:text-teal-200">
               Back to members
             </Link>
           </p>

@@ -88,7 +88,7 @@ const Catalogs = () => {
     <div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-indigo-300">
+          <p className="mb-1 text-sm uppercase tracking-[0.18em] text-teal-300">
             Workspace
           </p>
           <h1 className="text-3xl font-semibold text-white">Catalogs</h1>
@@ -100,7 +100,7 @@ const Catalogs = () => {
         {canManage ? (
           <Link
             to={`/dashboard/catalogs/new?tab=${tab.id}`}
-            className="rounded-md bg-indigo-500 px-4 py-2.5 text-center font-medium text-white hover:bg-indigo-400"
+            className="rounded-md bg-teal-600 px-4 py-2.5 text-center font-medium text-white hover:bg-teal-500"
           >
             {tab.addLabel}
           </Link>
@@ -117,7 +117,7 @@ const Catalogs = () => {
               onClick={() => setTab(item.id)}
               className={`-mb-px rounded-t-md px-4 py-2.5 text-sm font-medium ${
                 active
-                  ? "border border-b-transparent border-indigo-400/40 bg-[#22262d] text-white"
+                  ? "border border-b-transparent border-teal-400/40 bg-[#1a242b] text-white"
                   : "text-gray-400 hover:text-white"
               }`}
             >
@@ -127,7 +127,7 @@ const Catalogs = () => {
         })}
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-indigo-400/30 bg-[#22262d] shadow-[0_0_24px_rgba(99,102,241,0.12)]">
+      <div className="overflow-x-auto rounded-2xl border border-teal-400/30 bg-[#1a242b] shadow-[0_0_24px_rgba(13,148,136,0.12)]">
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
@@ -155,7 +155,7 @@ const Catalogs = () => {
                   <td className="px-4 py-3 text-white">
                     <Link
                       to={`/dashboard/catalogs/${catalog._id}`}
-                      className="hover:text-indigo-300"
+                      className="hover:text-teal-300"
                     >
                       {catalog.name}
                     </Link>
@@ -178,14 +178,14 @@ const Catalogs = () => {
                     <div className="flex gap-3">
                       <Link
                         to={`/dashboard/products?source=${catalog._id}`}
-                        className="text-indigo-300 hover:text-indigo-200"
+                        className="text-teal-300 hover:text-teal-200"
                       >
                         View products
                       </Link>
                       {canManage ? (
                         <Link
                           to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-indigo-300 hover:text-indigo-200"
+                          className="text-teal-300 hover:text-teal-200"
                         >
                           {catalog.connection?.kind === "excel" ||
                           catalog.connection?.kind === "csv" ||
@@ -196,7 +196,7 @@ const Catalogs = () => {
                       ) : (
                         <Link
                           to={`/dashboard/catalogs/${catalog._id}`}
-                          className="text-indigo-300 hover:text-indigo-200"
+                          className="text-teal-300 hover:text-teal-200"
                         >
                           View
                         </Link>
@@ -205,7 +205,7 @@ const Catalogs = () => {
                         <>
                           <Link
                             to={`/dashboard/catalogs/${catalog._id}/edit?tab=${tab.id}`}
-                            className="text-indigo-300 hover:text-indigo-200"
+                            className="text-teal-300 hover:text-teal-200"
                           >
                             Edit
                           </Link>
