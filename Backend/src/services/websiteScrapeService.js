@@ -1,12 +1,31 @@
 const cheerio = require("cheerio");
 const { text, normalize, stripStorePrefix } = require("../utils/productCodes");
+const {
+  throwIfAborted,
+  createAbortedError,
+} = require("../utils/ingestJobs");
 
 const DELAY_MS = 800;
 const MAX_QUERIES = 200;
 const MAX_RESULT_LINKS = 5;
 const FETCH_TIMEOUT_MS = 15000;
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms, signal) =>
+  new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(createAbortedError());
+      return;
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(createAbortedError());
+    };
+    signal?.addEventListener("abort", onAbort);
+  });
 
 const toNumber = (value) => {
   if (value === null || value === undefined || value === "") return undefined;
@@ -47,9 +66,12 @@ const sameHost = (base, href) => {
   }
 };
 
-const fetchHtml = async (url) => {
+const fetchHtml = async (url, signal) => {
+  throwIfAborted(signal);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  signal?.addEventListener("abort", onAbort, { once: true });
   try {
     const response = await fetch(url, {
       redirect: "follow",
@@ -59,16 +81,20 @@ const fetchHtml = async (url) => {
         "User-Agent": "CatalogIQ/1.0 (catalog ingest)",
       },
     });
+    throwIfAborted(signal);
     if (!response.ok) return "";
     const type = String(response.headers.get("content-type") || "");
     if (type && !type.includes("html") && !type.includes("xml") && !type.includes("text")) {
       return "";
     }
     return await response.text();
-  } catch {
+  } catch (error) {
+    throwIfAborted(signal);
+    if (error?.code === "INGEST_ABORTED") throw error;
     return "";
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
   }
 };
 
@@ -230,13 +256,14 @@ const findResultLinks = (html, pageUrl, origin) => {
   return [...links];
 };
 
-const searchOne = async (origin, query) => {
+const searchOne = async (origin, query, signal) => {
   const terms = searchTermsFor(query);
   if (terms.length === 0) return null;
 
   for (const term of terms) {
     for (const searchUrl of searchUrlsFor(origin, term)) {
-      const html = await fetchHtml(searchUrl);
+      throwIfAborted(signal);
+      const html = await fetchHtml(searchUrl, signal);
       if (!html) continue;
 
       const direct = extractProduct(html, searchUrl, query);
@@ -247,21 +274,21 @@ const searchOne = async (origin, query) => {
         MAX_RESULT_LINKS
       );
       for (const link of links) {
-        await sleep(DELAY_MS);
-        const pageHtml = await fetchHtml(link);
+        await sleep(DELAY_MS, signal);
+        const pageHtml = await fetchHtml(link, signal);
         if (!pageHtml) continue;
         const product = extractProduct(pageHtml, link, query);
         if (product && looksLikeMatch(product, query)) return product;
       }
 
-      await sleep(DELAY_MS);
+      await sleep(DELAY_MS, signal);
     }
   }
 
   return null;
 };
 
-const fetchWebsiteProducts = async ({ url, queries = [] } = {}) => {
+const fetchWebsiteProducts = async ({ url, queries = [], signal } = {}) => {
   const parsed = assertHttpUrl(url);
   const list = (Array.isArray(queries) ? queries : []).slice(0, MAX_QUERIES);
 
@@ -274,10 +301,18 @@ const fetchWebsiteProducts = async ({ url, queries = [] } = {}) => {
   }
 
   const products = [];
-  for (const query of list) {
-    const found = await searchOne(parsed.origin, query);
-    if (found) products.push(found);
-    await sleep(DELAY_MS);
+  try {
+    for (const query of list) {
+      throwIfAborted(signal, products);
+      const found = await searchOne(parsed.origin, query, signal);
+      if (found) products.push(found);
+      await sleep(DELAY_MS, signal);
+    }
+  } catch (error) {
+    if (error?.code === "INGEST_ABORTED") {
+      error.products = products;
+    }
+    throw error;
   }
 
   return products;

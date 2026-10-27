@@ -23,7 +23,7 @@ const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { user } = useSelector((state) => state.auth);
   const [catalogs, setCatalogs] = useState([]);
   const catalogIdMatch = pathname.match(/^\/dashboard\/catalogs\/([^/]+)/);
@@ -31,6 +31,9 @@ const DashboardLayout = () => {
     catalogIdMatch && catalogIdMatch[1] !== "new" && catalogIdMatch[1] !== "edit"
       ? catalogIdMatch[1]
       : "";
+  const onCatalogsList = pathname === "/dashboard/catalogs";
+  const catalogsTab =
+    new URLSearchParams(search).get("tab") === "compare" ? "compare" : "company";
   const companyCatalogs = catalogs.filter((item) => item.type === "our_catalog");
   const competitorCatalogs = catalogs.filter((item) => item.type === "competitor");
   const manufacturerCatalogs = catalogs.filter(
@@ -76,33 +79,58 @@ const DashboardLayout = () => {
         >
           Catalogs
         </NavLink>
-        {catalogs.length > 0 ? (
-          <div className="ml-3 mt-1 flex flex-col gap-2 border-l border-white/10 pl-2">
-            {[
-              { label: "Company", rows: companyCatalogs },
-              { label: "Competitor", rows: competitorCatalogs },
-              { label: "Manufacturer", rows: manufacturerCatalogs },
-            ].map((group) =>
-              group.rows.length === 0 ? null : (
-                <div key={group.label} className="flex flex-col gap-1">
-                  <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">
-                    {group.label}
-                  </p>
-                  {group.rows.map((catalog) => (
-                    <Link
-                      key={catalog._id}
-                      to={`/dashboard/catalogs/${catalog._id}`}
-                      className={subClass(activeCatalogId === catalog._id)}
-                      onClick={() => setOpen(false)}
-                    >
-                      <span className="block truncate">{catalog.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
-        ) : null}
+        <div className="ml-3 mt-1 flex flex-col gap-2 border-l border-white/10 pl-2">
+          {[
+            {
+              label: "Company",
+              rows: companyCatalogs,
+              to: "/dashboard/catalogs",
+              tab: "company",
+            },
+            {
+              label: "Competitor",
+              rows: competitorCatalogs,
+              to: "/dashboard/catalogs?tab=compare",
+              tab: "compare",
+            },
+            {
+              label: "Manufacturer",
+              rows: manufacturerCatalogs,
+            },
+          ].map((group) =>
+            !group.to && group.rows.length === 0 ? null : (
+            <div key={group.label} className="flex flex-col gap-1">
+              {group.to ? (
+                <Link
+                  to={group.to}
+                  className={`px-3 pt-1 text-[10px] uppercase tracking-[0.14em] ${
+                    onCatalogsList && catalogsTab === group.tab
+                      ? "text-teal-300"
+                      : "text-slate-500 hover:text-slate-300"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  {group.label}
+                </Link>
+              ) : (
+                <p className="px-3 pt-1 text-[10px] uppercase tracking-[0.14em] text-slate-500">
+                  {group.label}
+                </p>
+              )}
+              {group.rows.map((catalog) => (
+                <Link
+                  key={catalog._id}
+                  to={`/dashboard/catalogs/${catalog._id}`}
+                  className={subClass(activeCatalogId === catalog._id)}
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="block truncate">{catalog.name}</span>
+                </Link>
+              ))}
+            </div>
+            )
+          )}
+        </div>
       </div>
       <NavLink to="/dashboard/products" className={navClass} onClick={() => setOpen(false)}>
         Products
