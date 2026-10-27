@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
@@ -32,7 +32,9 @@ const CatalogDetail = () => {
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [imported, setImported] = useState(null);
+  const ingestAbort = useRef(null);
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -88,7 +90,10 @@ const CatalogDetail = () => {
       return;
     }
 
+    const controller = new AbortController();
+    ingestAbort.current = controller;
     setSaving(true);
+    setStopping(false);
     try {
       let response;
       if (isExcel) {
@@ -96,6 +101,7 @@ const CatalogDetail = () => {
         form.append("file", file);
         response = await axios.post(`/api/v1/catalogs/${id}/ingest`, form, {
           withCredentials: true,
+          signal: controller.signal,
         });
       } else {
         response = await axios.post(
@@ -103,6 +109,7 @@ const CatalogDetail = () => {
           {},
           {
             withCredentials: true,
+            signal: controller.signal,
             timeout: kind === "excel" || kind === "csv" ? 60000 : 15 * 60 * 1000,
           }
         );
@@ -110,12 +117,17 @@ const CatalogDetail = () => {
       const count = response.data.imported ?? 0;
       setImported(count);
       setMessage(
-        response.data.message
-          ? `${response.data.message}. Imported ${count} products.`
-          : "Products imported"
+        response.data.stopped
+          ? `Ingest stopped. Saved ${count} product${count === 1 ? "" : "s"} found so far.`
+          : response.data.message
+            ? `${response.data.message}. Imported ${count} products.`
+            : "Products imported"
       );
     } catch (err) {
-      if (err.code === "ECONNABORTED" || err.message === "Network Error" || !err.response) {
+      if (err.code === "ERR_CANCELED" || err.name === "CanceledError") {
+        setImported(0);
+        setMessage("Ingest stopped.");
+      } else if (err.code === "ECONNABORTED" || err.message === "Network Error" || !err.response) {
         setImported(0);
         setError(
           "The request timed out, but the server may still be importing. Open this catalog's products to check."
@@ -124,8 +136,26 @@ const CatalogDetail = () => {
         setError(err.response?.data?.message || "Ingest failed");
       }
     } finally {
+      ingestAbort.current = null;
       setSaving(false);
+      setStopping(false);
     }
+  };
+
+  const onStop = async () => {
+    if (!saving || stopping) return;
+    setStopping(true);
+    setError(null);
+    try {
+      await axios.post(
+        `/api/v1/catalogs/${id}/ingest/abort`,
+        {},
+        { withCredentials: true }
+      );
+    } catch {
+      // still cancel the waiting request
+    }
+    ingestAbort.current?.abort();
   };
 
   if (loading) {
@@ -282,11 +312,13 @@ const CatalogDetail = () => {
         {saving ? (
           <ProcessingBar
             label={
-              kind === "website"
-                ? "Searching competitor site. This can take several minutes."
-                : kind === "api"
-                  ? "Fetching products. Keep this page open."
-                  : "Uploading and importing products..."
+              stopping
+                ? "Stopping ingest..."
+                : kind === "website"
+                  ? "Searching competitor site. This can take several minutes."
+                  : kind === "api"
+                    ? "Fetching products. Keep this page open."
+                    : "Uploading and importing products..."
             }
           />
         ) : null}
@@ -317,6 +349,16 @@ const CatalogDetail = () => {
                     ? "Fetch products"
                     : "Run ingest"}
           </button>
+          {saving ? (
+            <button
+              type="button"
+              onClick={onStop}
+              disabled={stopping}
+              className="rounded-md border border-red-400/50 px-4 py-2.5 font-medium text-red-300 hover:border-red-400 hover:text-red-200 disabled:opacity-50"
+            >
+              {stopping ? "Stopping..." : "Stop"}
+            </button>
+          ) : null}
           <Link
             to="/dashboard/catalogs"
             className="rounded-md px-4 py-2.5 text-sm text-brand hover:text-brand-hover"

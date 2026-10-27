@@ -6,6 +6,11 @@ const { fetchWebsiteProducts } = require("../services/websiteScrapeService");
 const { fetchRestProducts } = require("../services/restApiService");
 const { logError } = require("../utils/logger");
 const {
+  beginIngest,
+  abortIngestJob,
+  endIngest,
+} = require("../utils/ingestJobs");
+const {
   encryptToken,
   isEncrypted,
   storedToken,
@@ -194,6 +199,22 @@ const catalogController = {
         },
         { new: true }
       );
+      if (!catalog) {
+        return res.status(404).json({ message: "Catalog not found" });
+      }
+
+      const products = await Product.updateMany(
+        {
+          tenantId: req.tenant.id,
+          sourceId: catalog._id,
+          isDeleted: false,
+        },
+        { isDeleted: true, deletedAt: new Date() }
+      );
+
+      console.log(
+        `[catalogs] removed ${catalog._id} products=${products.modifiedCount}`
+      );
       return res.status(200).json(publicCatalog(catalog));
     } catch (error) {
       logError("catalogs.delete", error, { id: req.params.id });
@@ -202,31 +223,41 @@ const catalogController = {
   },
 
   ingestCatalog: async (req, res) => {
+    let job;
+    let catalog;
+    let fetched = [];
+    let matchKey = "sku";
+    const reply = (status, body) => {
+      if (res.headersSent) return;
+      return res.status(status).json(body);
+    };
+
     try {
-      const catalog = await CatalogSource.findOne({
+      catalog = await CatalogSource.findOne({
         _id: req.params.id,
         tenantId: req.tenant.id,
         isDeleted: false,
       }).select("+connection.accessToken");
 
       if (!catalog) {
-        return res.status(404).json({ message: "Catalog not found" });
+        return reply(404, { message: "Catalog not found" });
       }
 
       await sealStoredToken(catalog);
+      job = beginIngest(String(catalog._id));
+      const signal = job.signal;
+      req.on("close", () => abortIngestJob(String(catalog._id)));
 
       const kind = catalog.connection?.kind;
       const platform = String(catalog.connection?.platform || "").toLowerCase();
       console.log(
         `[ingest] catalog=${catalog._id} name="${catalog.name}" kind=${kind || "none"} platform=${platform || "none"} url=${catalog.url || "none"}`
       );
-      let fetched = [];
-      let matchKey = "sku";
       let label = "Products imported";
 
       if (kind === "excel" || kind === "csv") {
         if (!req.file?.buffer) {
-          return res.status(400).json({ message: "Upload an Excel or CSV file" });
+          return reply(400, { message: "Upload an Excel or CSV file" });
         }
         fetched = parseExcelProducts(req.file.buffer);
         matchKey = "sku";
@@ -235,12 +266,13 @@ const catalogController = {
         fetched = await fetchBigCommerceProducts({
           storeHash: catalog.connection.storeHash,
           accessToken: catalog.connection.accessToken,
+          signal,
         });
         matchKey = "bigcommerceId";
         label = "BigCommerce products imported";
       } else if (kind === "website") {
         if (!catalog.url) {
-          return res.status(400).json({
+          return reply(400, {
             message: "Add a competitor website URL before ingesting",
           });
         }
@@ -257,23 +289,25 @@ const catalogController = {
         fetched = await fetchWebsiteProducts({
           url: catalog.url,
           queries,
+          signal,
         });
         matchKey = "sku";
         label = "Competitor products imported";
       } else if (kind === "api") {
         if (!catalog.url) {
-          return res.status(400).json({
+          return reply(400, {
             message: "Add an API URL before ingesting",
           });
         }
         fetched = await fetchRestProducts({
           url: catalog.url,
           accessToken: catalog.connection?.accessToken,
+          signal,
         });
         matchKey = "sku";
         label = "API products imported";
       } else {
-        return res.status(400).json({
+        return reply(400, {
           message: "This source has no ingest method",
         });
       }
@@ -281,7 +315,7 @@ const catalogController = {
       if (fetched.length === 0) {
         catalog.status = "active";
         await catalog.save();
-        return res.status(200).json({
+        return reply(200, {
           message: "No products found in this source",
           imported: 0,
         });
@@ -299,15 +333,70 @@ const catalogController = {
       console.log(
         `[ingest] done catalog=${catalog._id} imported=${fetched.length} upserted=${result.upsertedCount} modified=${result.modifiedCount}`
       );
-      return res.status(200).json({
+      return reply(200, {
         message: label,
         imported: fetched.length,
         upserted: result.upsertedCount,
         modified: result.modifiedCount,
       });
     } catch (error) {
+      if (error.code === "INGEST_ABORTED") {
+        const partial = Array.isArray(error.products) ? error.products : fetched;
+        let imported = 0;
+        if (catalog && partial.length > 0) {
+          const result = await upsertProducts(
+            req.tenant.id,
+            catalog._id,
+            partial,
+            matchKey
+          );
+          imported = partial.length;
+          catalog.status = "active";
+          await catalog.save();
+          console.log(
+            `[ingest] stopped catalog=${catalog._id} imported=${imported} upserted=${result.upsertedCount}`
+          );
+        } else {
+          console.log(`[ingest] stopped catalog=${req.params.id} imported=0`);
+        }
+        return reply(200, {
+          message: "Ingest stopped",
+          imported,
+          stopped: true,
+        });
+      }
       logError("ingest", error, { id: req.params.id });
-      return res.status(error.status || 500).json({ message: error.message });
+      return reply(error.status || 500, { message: error.message });
+    } finally {
+      if (job) endIngest(String(req.params.id), job);
+    }
+  },
+
+  abortIngest: async (req, res) => {
+    try {
+      const catalog = await CatalogSource.findOne({
+        _id: req.params.id,
+        tenantId: req.tenant.id,
+        isDeleted: false,
+      }).select("_id");
+
+      if (!catalog) {
+        return res.status(404).json({ message: "Catalog not found" });
+      }
+
+      const stopped = abortIngestJob(String(catalog._id));
+      console.log(
+        `[ingest] abort catalog=${catalog._id} running=${stopped ? "yes" : "no"}`
+      );
+      return res.status(200).json({
+        message: stopped
+          ? "Ingest stop requested"
+          : "No ingest is running for this catalog",
+        stopped,
+      });
+    } catch (error) {
+      logError("ingest.abort", error, { id: req.params.id });
+      return res.status(500).json({ message: error.message });
     }
   },
 };

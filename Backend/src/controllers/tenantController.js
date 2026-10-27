@@ -3,7 +3,7 @@ const Membership = require("../models/membershipModel");
 const User = require("../models/userModel");
 const Tenant = require("../models/tenantModels");
 
-const INVITE_ROLES = ["admin", "reviewer", "member"];
+const INVITE_ROLES = ["admin", "manager"];
 
 class TenantController {
   addMembership = async (req, res) => {
@@ -17,7 +17,7 @@ class TenantController {
 
       if (!INVITE_ROLES.includes(role)) {
         return res.status(400).json({
-          message: "Invalid role. Use admin, reviewer, or member",
+          message: "Invalid role. Use admin or manager",
         });
       }
 
