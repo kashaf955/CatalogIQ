@@ -6,9 +6,9 @@ import { logout } from "../actions/authActions";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/pricing", label: "Pricing" },
-  { to: "/contact-us", label: "Contact Us" },
+  { to: "/#about", label: "About" },
+  { to: "/#pricing", label: "Pricing" },
+  { to: "/#contact-us", label: "Contact" },
 ];
 
 const Header = () => {
@@ -35,92 +35,98 @@ const Header = () => {
     <>
       <Link
         to="/login"
-        className="rounded-md bg-brand px-4 py-2 text-white hover:bg-brand-hover"
+        className="rounded-lg px-4 py-2 text-sm text-mute transition-colors hover:text-ink"
       >
         Login
       </Link>
       <Link
         to="/register"
-        className="rounded-md bg-brand px-4 py-2 text-white hover:bg-brand-hover"
+        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
       >
-        Get Started
+        Get started
       </Link>
     </>
   );
 
   const sessionButtons = (
     <>
-      <span className="max-w-40 truncate text-sm text-ink">
-        {user?.name}
-      </span>
+      <span className="max-w-40 truncate text-sm text-mute">{user?.name}</span>
+      <Link
+        to="/dashboard"
+        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+      >
+        Open app
+      </Link>
       <button
         type="button"
         onClick={onLogout}
-        className="rounded-md bg-brand px-4 py-2 text-white hover:bg-brand-hover"
+        className="rounded-lg border border-white/10 px-4 py-2 text-sm text-mute hover:border-white/20 hover:text-ink"
       >
-        Logout
+        Log out
       </button>
     </>
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-canvas/95 backdrop-blur">
-      <div className="flex w-full items-center justify-between gap-3 py-3">
-        <Link to="/" className="shrink-0" onClick={() => setOpen(false)}>
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-canvas/80 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-6 py-3.5">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5" onClick={() => setOpen(false)}>
           <img
             src={logo}
             alt="CatalogIQ"
-            className="h-12 w-12 object-cover sm:h-16 sm:w-16 lg:h-20 lg:w-20"
+            className="h-9 w-9 rounded-lg object-cover ring-1 ring-white/10"
           />
+          <span className="hidden text-sm font-semibold tracking-tight sm:block">
+            CatalogIQ
+          </span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-base lg:flex xl:gap-10 xl:text-xl">
+        <nav className="hidden items-center gap-7 text-sm text-mute lg:flex">
           {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="whitespace-nowrap hover:text-brand"
+              className="whitespace-nowrap transition-colors hover:text-ink"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {user ? sessionButtons : guestButtons}
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
           {user ? (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="rounded-md bg-brand px-3 py-2 text-sm text-white hover:bg-brand-hover"
+            <Link
+              to="/dashboard"
+              className="rounded-lg bg-brand px-3 py-2 text-sm text-white hover:bg-brand-hover"
             >
-              Logout
-            </button>
+              App
+            </Link>
           ) : (
             <Link
               to="/login"
-              className="rounded-md bg-brand px-3 py-2 text-sm text-white hover:bg-brand-hover"
+              className="rounded-lg px-3 py-2 text-sm text-mute hover:text-ink"
             >
               Login
             </Link>
           )}
           <button
             type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-white/20 text-ink"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-ink"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((current) => !current)}
           >
             {open ? (
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             )}
@@ -131,7 +137,7 @@ const Header = () => {
       {open ? (
         <nav
           id="mobile-nav"
-          className="flex flex-col gap-1 border-t border-white/10 py-3 lg:hidden"
+          className="mx-auto flex w-full max-w-6xl flex-col gap-1 border-t border-white/10 px-4 py-3 lg:hidden"
         >
           {user ? (
             <p className="px-3 pb-1 text-sm text-mute">{user.name}</p>
@@ -140,7 +146,7 @@ const Header = () => {
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-md px-3 py-2 text-base hover:bg-canvas hover:text-brand"
+              className="rounded-lg px-3 py-2 text-base text-mute hover:bg-white/[0.04] hover:text-ink"
             >
               {link.label}
             </Link>
@@ -149,16 +155,16 @@ const Header = () => {
             <button
               type="button"
               onClick={onLogout}
-              className="mt-2 rounded-md bg-brand px-4 py-2.5 text-center text-white hover:bg-brand-hover"
+              className="mt-2 rounded-lg border border-white/10 px-4 py-2.5 text-center text-ink hover:border-white/20"
             >
-              Logout
+              Log out
             </button>
           ) : (
             <Link
               to="/register"
-              className="mt-2 rounded-md bg-brand px-4 py-2.5 text-center text-white hover:bg-brand-hover"
+              className="mt-2 rounded-lg bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
             >
-              Get Started
+              Get started
             </Link>
           )}
         </nav>

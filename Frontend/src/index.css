@@ -2,22 +2,36 @@
 
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --color-canvas: #171717;
-  --color-panel: #262626;
+  --color-canvas: #0f0f10;
+  --color-panel: #18181b;
   --color-brand: #f97316;
   --color-brand-hover: #ea580c;
   --color-ink: #fafafa;
-  --color-mute: #a3a3a3;
+  --color-mute: #a1a1aa;
+}
+
+html {
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html,
-body {
+body,
+#root {
   min-height: 100%;
   margin: 0;
-  background-color: #171717;
+  background-color: #0f0f10;
   color: #fafafa;
   font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
   scroll-behavior: smooth;
+}
+
+#root {
+  max-width: none;
 }
 
 ::selection {
@@ -25,26 +39,19 @@ body {
   color: #fafafa;
 }
 
-#root {
-  max-width: 90%;
-  margin-left: auto;
-  margin-right: auto;
-  min-height: 100vh;
-  background-color: #171717;
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
-#root:has([data-dashboard]) {
-  max-width: 100%;
-  padding-left: 0;
-  padding-right: 0;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-@media (max-width: 767px) {
-  #root {
-    max-width: 100%;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 999px;
+  border: 2px solid #0f0f10;
 }
 
 @keyframes processing-slide {
