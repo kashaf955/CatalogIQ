@@ -276,23 +276,15 @@ const catalogController = {
             message: "Add a competitor website URL before ingesting",
           });
         }
-        const companySources = await CatalogSource.find({
-          tenantId: req.tenant.id,
-          type: "our_catalog",
-          isDeleted: false,
-        }).select("_id");
-        const queries = await Product.find({
-          tenantId: req.tenant.id,
-          sourceId: { $in: companySources.map((source) => source._id) },
-          isDeleted: false,
-        }).select("_id sku mpn name brand");
         fetched = await fetchWebsiteProducts({
           url: catalog.url,
-          queries,
           signal,
+          onBatch: async (chunk) => {
+            await upsertProducts(req.tenant.id, catalog._id, chunk, "sku");
+          },
         });
         matchKey = "sku";
-        label = "Competitor products imported";
+        label = "Competitor catalog imported";
       } else if (kind === "api") {
         if (!catalog.url) {
           return reply(400, {

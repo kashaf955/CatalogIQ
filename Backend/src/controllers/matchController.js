@@ -1,6 +1,7 @@
 const Match = require("../models/matchModel");
 const { runMatching } = require("../services/matchService");
 const { logError } = require("../utils/logger");
+const { isMatchableProduct } = require("../utils/productMatchability");
 
 const AGAINST = ["manufacturer", "competitor"];
 const STATUSES = ["pending", "accepted", "rejected", "ignored"];
@@ -51,7 +52,7 @@ const getMatches = async (req, res) => {
     if (AGAINST.includes(req.query.against)) filter.against = req.query.against;
     if (STATUSES.includes(req.query.status)) filter.status = req.query.status;
 
-    const productFields = "sku name price sourceUrl";
+    const productFields = "sku name price sourceUrl availability status";
     const matches = await Match.find(filter)
       .sort({ score: -1, createdAt: -1 })
       .limit(5000)
@@ -68,7 +69,12 @@ const getMatches = async (req, res) => {
       .lean();
 
     const rows = matches
-      .filter((match) => match.ourProductId && match.theirProductId)
+      .filter(
+        (match) =>
+          match.ourProductId &&
+          match.theirProductId &&
+          isMatchableProduct(match.theirProductId)
+      )
       .map(toRow);
     return res.status(200).json(rows);
   } catch (error) {
