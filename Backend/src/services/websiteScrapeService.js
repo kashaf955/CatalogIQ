@@ -129,6 +129,19 @@ const locTags = (xml) =>
     text(match[1])
   );
 
+const sitemapUrlEntries = (xml) =>
+  [...String(xml).matchAll(/<url>([\s\S]*?)<\/url>/gi)].map((match) => {
+    const block = match[1];
+    return {
+      loc: text((block.match(/<loc>\s*([^<]+)/i) || [])[1]),
+      priority: Number((block.match(/<priority>\s*([^<]+)/i) || [])[1]) || 0,
+      images: (block.match(/<image:image>/gi) || []).length,
+    };
+  });
+
+const isLikelyProductSitemapEntry = (entry) =>
+  Boolean(entry?.loc) && (entry.images > 0 || entry.priority >= 1);
+
 const parseRobots = (body) => {
   const lines = String(body || "").split(/\r?\n/);
   let applies = false;
@@ -244,23 +257,58 @@ const extractDescription = ($, productNode) => {
   return best;
 };
 
-const extractSku = ($, productNode) =>
-  text(productNode?.sku) ||
-  text($('[itemprop="sku"]').first().attr("content")) ||
-  text($('[itemprop="sku"]').first().text()) ||
-  text($(".product.attribute.sku .value").first().text()) ||
-  text($("[data-product-sku]").first().attr("data-product-sku"));
+const isCategoryPage = ($) => {
+  const bodyClass = $("body").attr("class") || "";
+  const ogType = text($('meta[property="og:type"]').attr("content")).toLowerCase();
+  if (/\bcatalog-category-view\b/.test(bodyClass)) return true;
+  if (ogType === "product.group") return true;
+  if (/\bpage-products\b/.test(bodyClass) && !/\bcatalog-product-view\b/.test(bodyClass)) {
+    return true;
+  }
+  return false;
+};
+
+const isProductPage = ($) => {
+  const bodyClass = $("body").attr("class") || "";
+  const ogType = text($('meta[property="og:type"]').attr("content")).toLowerCase();
+  if (/\bcatalog-product-view\b/.test(bodyClass)) return true;
+  if (ogType === "product" || ogType === "product.item") return true;
+  return (
+    $("#product_addtocart_form").length > 0 &&
+    $(".product-info-main").length > 0
+  );
+};
+
+const scoped = ($) => {
+  const root = $(".product-info-main, #product_addtocart_form").first();
+  return root.length ? root : $("body");
+};
+
+const extractSku = ($, productNode) => {
+  if (text(productNode?.sku)) return text(productNode.sku);
+  const $root = scoped($);
+  return (
+    text($root.find('[itemprop="sku"]').first().attr("content")) ||
+    text($root.find('[itemprop="sku"]').first().text()) ||
+    text($root.find(".product.attribute.sku .value").first().text()) ||
+    text($root.find("[data-product-sku]").first().attr("data-product-sku"))
+  );
+};
 
 const extractProduct = (html, pageUrl) => {
   const $ = cheerio.load(html);
-  const productNode = jsonLdNodes($).find((node) =>
-    typeOf(node).includes("product")
-  );
+  if (isCategoryPage($) || !isProductPage($)) return null;
+
+  const productNode = jsonLdNodes($).find((node) => {
+    const types = typeOf(node);
+    return types.includes("product") && !types.includes("itemlist");
+  });
   const offer = offerOf(productNode);
+  const $root = scoped($);
   const name =
     text(productNode?.name) ||
-    text($('meta[property="og:title"]').attr("content")) ||
-    text($("h1.page-title, h1.product-title, h1").first().text());
+    text($root.find("h1.page-title, h1.product-title, h1").first().text()) ||
+    text($('meta[property="og:title"]').attr("content"));
   if (!name || isSearchResultName(name) || isSearchResultUrl(pageUrl)) {
     return null;
   }
@@ -287,7 +335,7 @@ const extractProduct = (html, pageUrl) => {
       productNode?.gtin ||
         productNode?.gtin13 ||
         productNode?.gtin12 ||
-        $('[itemprop="gtin13"], [itemprop="gtin"]').first().text()
+        $root.find('[itemprop="gtin13"], [itemprop="gtin"]').first().text()
     ),
     name,
     brand: text(productNode?.brand?.name) || text(productNode?.brand),
@@ -296,12 +344,15 @@ const extractProduct = (html, pageUrl) => {
       offer.price ||
         offer.lowPrice ||
         productNode?.price ||
-        $('[itemprop="price"]').first().attr("content") ||
-        $(".price-wrapper .price, .product-info-price .price").first().text()
+        $root.find('[itemprop="price"]').first().attr("content") ||
+        $root
+          .find(".product-info-price .price, .price-wrapper .price")
+          .first()
+          .text()
     ),
     currency:
       text(offer.priceCurrency) ||
-      text($('[itemprop="priceCurrency"]').first().attr("content")) ||
+      text($root.find('[itemprop="priceCurrency"]').first().attr("content")) ||
       "USD",
     images,
     category: text(productNode?.category),
@@ -391,23 +442,31 @@ const collectSitemapUrls = async (origin, allowed, signal) => {
     const { html } = await fetchPage(sitemapUrl, signal);
     if (!html) continue;
 
-    const locs = locTags(html).filter(
-      (loc) => sameHost(origin, loc) && allowed(loc)
+    const indexLocs = locTags(html).filter(
+      (loc) => sameHost(origin, loc) && allowed(loc) && isSitemapUrl(loc)
     );
-    const childSitemaps = locs.filter(isSitemapUrl);
-    const pageUrls = locs.filter((loc) => !isSitemapUrl(loc) && !isSkippedUrl(loc));
-
-    if (childSitemaps.length > 0) {
-      const productMaps = childSitemaps.filter((loc) =>
-        /product/i.test(loc)
-      );
-      for (const child of productMaps.length ? productMaps : childSitemaps) {
+    if (indexLocs.length > 0 && /<sitemapindex/i.test(html)) {
+      const productMaps = indexLocs.filter((loc) => /product/i.test(loc));
+      for (const child of productMaps.length ? productMaps : indexLocs) {
         if (!seen.has(child)) queue.push(child);
       }
+      await sleep(DELAY_MS, signal);
+      continue;
     }
 
-    for (const loc of pageUrls) {
-      urls.add(loc.split("#")[0]);
+    const entries = sitemapUrlEntries(html).filter(
+      (entry) =>
+        entry.loc &&
+        sameHost(origin, entry.loc) &&
+        allowed(entry.loc) &&
+        !isSitemapUrl(entry.loc) &&
+        !isSkippedUrl(entry.loc)
+    );
+    const productEntries = entries.filter(isLikelyProductSitemapEntry);
+    const chosen = productEntries.length ? productEntries : entries;
+
+    for (const entry of chosen) {
+      urls.add(entry.loc.split("#")[0]);
       if (urls.size >= MAX_SITEMAP_URLS) break;
     }
 

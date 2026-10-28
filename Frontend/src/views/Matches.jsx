@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
@@ -71,10 +71,8 @@ const Matches = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const params = { against };
-        if (status !== "all") params.status = status;
         const response = await axios.get("/api/v1/matches", {
-          params,
+          params: { against },
           withCredentials: true,
         });
         setMatches(Array.isArray(response.data) ? response.data : []);
@@ -84,7 +82,7 @@ const Matches = () => {
     };
 
     load();
-  }, [against, status, reloadKey]);
+  }, [against, reloadKey]);
 
   const runMatching = async () => {
     setRunning(true);
@@ -111,6 +109,41 @@ const Matches = () => {
 
   const ours = catalogs.filter((item) => item.type === "our_catalog");
   const other = catalogs.filter((item) => item.type === against);
+  const counts = useMemo(() => {
+    const empty = () => ({ matches: 0, products: new Set() });
+    const byStatus = {
+      pending: empty(),
+      accepted: empty(),
+      rejected: empty(),
+      ignored: empty(),
+    };
+    for (const match of matches) {
+      const bucket = byStatus[match.status];
+      if (!bucket) continue;
+      bucket.matches += 1;
+      if (match.ourSku) bucket.products.add(match.ourSku);
+    }
+    return {
+      pending: {
+        matches: byStatus.pending.matches,
+        products: byStatus.pending.products.size,
+      },
+      accepted: {
+        matches: byStatus.accepted.matches,
+        products: byStatus.accepted.products.size,
+      },
+      rejected: {
+        matches: byStatus.rejected.matches,
+        products: byStatus.rejected.products.size,
+      },
+      ignored: {
+        matches: byStatus.ignored.matches,
+        products: byStatus.ignored.products.size,
+      },
+    };
+  }, [matches]);
+  const rows =
+    status === "all" ? matches : matches.filter((match) => match.status === status);
 
   return (
     <div>
@@ -159,10 +192,18 @@ const Matches = () => {
           onChange={(event) => setStatus(event.target.value)}
         >
           <option value="all">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="accepted">Accepted</option>
-          <option value="rejected">Rejected</option>
-          <option value="ignored">Ignored</option>
+          <option value="pending">
+            Pending ({counts.pending.products})
+          </option>
+          <option value="accepted">
+            Accepted ({counts.accepted.products})
+          </option>
+          <option value="rejected">
+            Rejected ({counts.rejected.products})
+          </option>
+          <option value="ignored">
+            Ignored ({counts.ignored.products})
+          </option>
         </select>
         {canManage ? (
         <form
@@ -211,12 +252,37 @@ const Matches = () => {
       <p className="mb-4 text-sm text-mute">
         {ours.length} of your catalogs · {other.length} {against} sources
       </p>
+      <div className="mb-4 flex flex-wrap gap-2 text-sm">
+        <span className="rounded-lg border border-white/10 bg-panel px-3 py-1.5 text-ink">
+          Accepted{" "}
+          <strong>{counts.accepted.products.toLocaleString()}</strong>
+          <span className="text-mute">
+            {" "}
+            products · {counts.accepted.matches.toLocaleString()} matches
+          </span>
+        </span>
+        <span className="rounded-lg border border-white/10 bg-panel px-3 py-1.5 text-ink">
+          Pending{" "}
+          <strong>{counts.pending.products.toLocaleString()}</strong>
+          <span className="text-mute">
+            {" "}
+            products · {counts.pending.matches.toLocaleString()} matches
+          </span>
+        </span>
+        <span className="rounded-lg border border-white/10 bg-panel px-3 py-1.5 text-mute">
+          Rejected {counts.rejected.products.toLocaleString()}
+        </span>
+        <span className="rounded-lg border border-white/10 bg-panel px-3 py-1.5 text-mute">
+          Ignored {counts.ignored.products.toLocaleString()}
+        </span>
+      </div>
 
       <div className="overflow-x-auto rounded-2xl border border-brand/20 bg-panel shadow-sm">
-        {matches.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="px-4 py-6 text-sm text-mute">
-            No matches yet. Ingest your catalog and a {against} source, then
-            click Run matching.
+            {matches.length === 0
+              ? `No matches yet. Ingest your catalog and a ${against} source, then click Run matching.`
+              : `No ${status} matches.`}
           </p>
         ) : (
           <table className="w-full min-w-lg text-left text-sm">
@@ -233,7 +299,7 @@ const Matches = () => {
               </tr>
             </thead>
             <tbody>
-              {matches.map((match) => (
+              {rows.map((match) => (
                 <tr
                   key={match.id}
                   className="border-b border-white/5 last:border-0"

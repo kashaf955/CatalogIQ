@@ -76,6 +76,8 @@ const Products = () => {
   const [progress, setProgress] = useState(null);
   const [selected, setSelected] = useState([]);
   const [selectAllMatching, setSelectAllMatching] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const selectAllRef = useRef(null);
   const source = searchParams.get("source") || "";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
 
@@ -98,6 +100,8 @@ const Products = () => {
       skipPageReset.current = false;
       return;
     }
+    setSelected([]);
+    setSelectAllMatching(false);
     if (page !== 1) setFilters(source, 1);
   }, [source, debouncedQuery]);
 
@@ -153,8 +157,6 @@ const Products = () => {
         setProducts(list);
         setTotal(nextTotal);
         setPages(nextPages);
-        setSelected([]);
-        setSelectAllMatching(false);
         if (page > nextPages) setFilters(source, nextPages);
       } catch (err) {
         if (!cancelled) {
@@ -172,7 +174,7 @@ const Products = () => {
     return () => {
       cancelled = true;
     };
-  }, [source, page, debouncedQuery]);
+  }, [source, page, debouncedQuery, reloadKey]);
 
   const catalogName = (id) =>
     catalogs.find((catalog) => catalog._id === id)?.name || "—";
@@ -182,9 +184,17 @@ const Products = () => {
     () => products.map((product) => product._id).filter(Boolean),
     [products]
   );
+  const pageAllSelected =
+    rowIds.length > 0 && rowIds.every((id) => selected.includes(id));
   const allSelected =
-    selectAllMatching ||
-    (rowIds.length > 0 && rowIds.every((id) => selected.includes(id)));
+    selectAllMatching || (pageAllSelected && total <= rowIds.length);
+  const someSelected = selected.length > 0 || selectAllMatching;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = !allSelected && someSelected;
+    }
+  }, [allSelected, someSelected]);
 
   const toggleOne = (productId) => {
     setSelectAllMatching(false);
@@ -198,10 +208,16 @@ const Products = () => {
   const toggleAll = () => {
     if (selectAllMatching || allSelected) {
       setSelectAllMatching(false);
-      setSelected((current) => current.filter((id) => !rowIds.includes(id)));
+      setSelected([]);
       return;
     }
-    setSelected((current) => [...new Set([...current, ...rowIds])]);
+    if (total > rowIds.length) {
+      setSelectAllMatching(true);
+      setSelected(rowIds);
+      return;
+    }
+    setSelectAllMatching(false);
+    setSelected(rowIds);
   };
 
   const dropIds = (ids) => {
@@ -236,24 +252,25 @@ const Products = () => {
   };
 
   const removeSelected = async () => {
-    const ids = selected.filter((id) => rowIds.includes(id));
-    const removeEntireSource = selectAllMatching && source;
-    if (!removeEntireSource && ids.length === 0) return;
-    const count = removeEntireSource ? total : ids.length;
+    const ids = selected.filter(Boolean);
+    const removeMatching = selectAllMatching;
+    if (!removeMatching && ids.length === 0) return;
+    const count = removeMatching ? total : ids.length;
     const confirmed = window.confirm(
-      `Remove ${count} selected product${count === 1 ? "" : "s"}?`
+      `Remove ${count.toLocaleString()} selected product${count === 1 ? "" : "s"} across all pages?`
     );
     if (!confirmed) return;
 
     setError(null);
     setRemoving(true);
-    setProgress(removeEntireSource ? null : 0);
+    setProgress(removeMatching ? null : 0);
     try {
-      if (removeEntireSource) {
+      if (removeMatching) {
         await axios.delete("/api/v1/products", {
           withCredentials: true,
-          params: {
-            sourceId: source,
+          data: {
+            allMatching: true,
+            ...(source ? { sourceId: source } : {}),
             ...(debouncedQuery ? { q: debouncedQuery } : {}),
           },
         });
@@ -273,11 +290,9 @@ const Products = () => {
           });
           setProgress(Math.round(((i + chunk.length) / ids.length) * 100));
         }
-        if (products.length === ids.length && page > 1) {
-          setFilters(source, page - 1);
-        } else {
-          dropIds(ids);
-        }
+        setSelected([]);
+        setSelectAllMatching(false);
+        setReloadKey((key) => key + 1);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Could not remove products");
@@ -287,9 +302,7 @@ const Products = () => {
     }
   };
 
-  const selectedCount = selectAllMatching
-    ? total
-    : selected.filter((id) => rowIds.includes(id)).length;
+  const selectedCount = selectAllMatching ? total : selected.length;
 
   return (
     <div>
@@ -391,26 +404,20 @@ const Products = () => {
                   <th className="px-4 py-3 font-medium">
                     <label className="inline-flex items-center gap-2 text-ink">
                       <input
+                        ref={selectAllRef}
                         type="checkbox"
-                        checked={allSelected}
+                        checked={allSelected || selectAllMatching}
                         onChange={toggleAll}
                         className="h-4 w-4 rounded border-white/20 bg-canvas"
                       />
-                      Page
+                      All
                     </label>
-                    {source && total > products.length ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectAllMatching(true);
-                          setSelected(rowIds);
-                        }}
-                        className="mt-1 block text-xs text-brand hover:text-brand-hover"
-                      >
-                        {selectAllMatching
-                          ? `All ${total.toLocaleString()} selected`
-                          : `Select all ${total.toLocaleString()}`}
-                      </button>
+                    {selectAllMatching ? (
+                      <p className="mt-1 text-xs text-brand">
+                        {total.toLocaleString()} on all pages
+                      </p>
+                    ) : total > products.length ? (
+                      <p className="mt-1 text-xs text-mute">All pages</p>
                     ) : null}
                   </th>
                 ) : null}
