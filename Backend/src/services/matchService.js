@@ -2,10 +2,12 @@ const CatalogSource = require("../models/catalogSourceModel");
 const Product = require("../models/productModel");
 const Match = require("../models/matchModel");
 const { normalize, stripStorePrefix } = require("../utils/productCodes");
+const { isMatchableProduct } = require("../utils/productMatchability");
 
 const MIN_CODE_LENGTH = 3;
 const MAX_CANDIDATES = 3;
-const PRODUCT_FIELDS = "_id sourceId sku mpn gtin brand";
+const PRODUCT_FIELDS =
+  "_id sourceId sku mpn gtin brand name sourceUrl availability status";
 
 const codes = (...values) => [
   ...new Set(values.map(normalize).filter((code) => code.length >= MIN_CODE_LENGTH)),
@@ -109,17 +111,40 @@ const autoAcceptable = (found, threshold) => {
 };
 
 const runMatching = async (tenantId, against, autoAcceptScore = null) => {
-  const [ours, theirs] = await Promise.all([
+  const [ours, theirsAll] = await Promise.all([
     productsOfType(tenantId, "our_catalog"),
     productsOfType(tenantId, against),
   ]);
+  const skippedIds = theirsAll
+    .filter((product) => !isMatchableProduct(product))
+    .map((product) => product._id);
+  const theirs = theirsAll.filter(isMatchableProduct);
 
-  if (ours.length === 0 || theirs.length === 0) {
+  if (skippedIds.length > 0) {
+    await Match.deleteMany({
+      tenantId,
+      against,
+      theirProductId: { $in: skippedIds },
+    });
+  }
+
+  if (ours.length === 0 || theirsAll.length === 0) {
     const error = new Error(
       `Ingest your catalog and at least one ${against} source before matching`
     );
     error.status = 400;
     throw error;
+  }
+
+  if (theirs.length === 0) {
+    return {
+      ourProducts: ours.length,
+      theirProducts: 0,
+      matched: 0,
+      matches: 0,
+      autoAccepted: 0,
+      removed: skippedIds.length,
+    };
   }
 
   const found = findMatches(ours, theirs);
