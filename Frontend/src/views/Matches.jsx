@@ -151,7 +151,7 @@ const Matches = () => {
           onChange={(event) => setAgainst(event.target.value)}
         >
           <option value="manufacturer">Vs manufacturer Excel</option>
-          <option value="competitor">Vs competitor website</option>
+          <option value="competitor">Vs competitor catalog</option>
         </select>
         <select
           className={fieldClass}

@@ -239,7 +239,8 @@ const CatalogDetail = () => {
       >
         <h2 className="text-xl font-semibold text-ink">Ingest</h2>
         <p className="mt-2 text-sm text-mute">
-          Pull this source into products. Matching starts after a successful run.
+          Pull this source into products. Run matching afterward against your
+          company catalog.
         </p>
 
         {error ? (
@@ -288,10 +289,10 @@ const CatalogDetail = () => {
 
         {kind === "website" ? (
           <p className="mt-6 text-sm text-mute">
-            Search {catalog.url || "the competitor website"} for SKUs already in
-            your company catalog. If a store prefix does not match (for example
-            UP-12345), it retries with the part number (12345). The whole
-            competitor site is not scraped.
+            Crawl {catalog.url || "the competitor website"} from its sitemap and
+            catalog pages, then save their products here. Matching runs locally
+            afterward. Stop anytime — products found so far are saved. A run
+            visits up to 1,500 product pages.
           </p>
         ) : null}
 
@@ -315,7 +316,7 @@ const CatalogDetail = () => {
               stopping
                 ? "Stopping ingest..."
                 : kind === "website"
-                  ? "Searching competitor site. This can take several minutes."
+                  ? "Crawling competitor catalog. Products save as they are found."
                   : kind === "api"
                     ? "Fetching products. Keep this page open."
                     : "Uploading and importing products..."
@@ -337,14 +338,14 @@ const CatalogDetail = () => {
           >
             {saving
               ? kind === "website"
-                ? "Searching competitor..."
+                ? "Crawling catalog..."
                 : kind === "api"
                   ? "Fetching API..."
                   : "Uploading..."
               : kind === "excel" || kind === "csv"
                 ? "Upload and ingest"
                 : kind === "website"
-                  ? "Search company SKUs"
+                  ? "Ingest competitor catalog"
                   : kind === "api"
                     ? "Fetch products"
                     : "Run ingest"}

@@ -319,6 +319,10 @@ const CatalogForm = () => {
               value={url}
               onChange={(event) => setUrl(event.target.value)}
             />
+            <span className="mt-2 block text-xs text-mute">
+              Ingest reads their sitemap and catalog pages. Matching happens
+              locally against your company catalog afterward.
+            </span>
           </label>
         ) : null}
 
