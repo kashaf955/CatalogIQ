@@ -115,6 +115,7 @@ const deleteProductsBulk = async (req, res) => {
       ? req.body.ids.filter(Boolean)
       : [];
     const sourceId = req.query.sourceId || req.body?.sourceId;
+    const allMatching = req.body?.allMatching === true;
     const filter = {
       tenantId: req.tenant.id,
       isDeleted: false,
@@ -122,8 +123,8 @@ const deleteProductsBulk = async (req, res) => {
 
     if (ids.length > 0) {
       filter._id = { $in: ids };
-    } else if (sourceId) {
-      filter.sourceId = sourceId;
+    } else if (allMatching || sourceId) {
+      if (sourceId) filter.sourceId = sourceId;
       Object.assign(filter, searchFilter(req.query.q || req.body?.q));
     } else {
       return res.status(400).json({
