@@ -4,6 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { register } from "../actions/authActions";
 import Header from "../components/Header";
 
+const fieldClass =
+  "mt-2 w-full rounded-lg border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
+
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -12,6 +15,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const loading = status === "loading";
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -19,11 +23,9 @@ const Register = () => {
       await dispatch(register(companyName, name, email, password));
       navigate("/login");
     } catch {
-      
+      // Error is shown from Redux status.
     }
   };
-  const fieldClass =
-    "mt-2 w-full rounded-lg border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
   return (
     <div className="min-h-screen pb-16">
@@ -46,7 +48,7 @@ const Register = () => {
 
           {status === "failed" ? (
             <p className="mb-4 rounded-md bg-red-500/15 px-3 py-2 text-sm text-red-300">
-              {error}
+              {error || "Could not create the workspace."}
             </p>
           ) : null}
 
@@ -54,10 +56,13 @@ const Register = () => {
             Company name
             <input
               type="text"
+              name="organization"
+              autoComplete="organization"
               placeholder="Chrome World Trucks"
               value={companyName}
               onChange={(event) => setCompanyName(event.target.value)}
               required
+              disabled={loading}
               className={fieldClass}
             />
           </label>
@@ -66,10 +71,13 @@ const Register = () => {
             Your name
             <input
               type="text"
+              name="name"
+              autoComplete="name"
               placeholder="Alex Owner"
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
+              disabled={loading}
               className={fieldClass}
             />
           </label>
@@ -78,10 +86,13 @@ const Register = () => {
             Email
             <input
               type="email"
+              name="email"
+              autoComplete="email"
               placeholder="you@company.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
+              disabled={loading}
               className={fieldClass}
             />
           </label>
@@ -90,46 +101,32 @@ const Register = () => {
             Password
             <input
               type="password"
+              name="password"
+              autoComplete="new-password"
               placeholder="At least 8 characters"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               minLength={8}
               required
+              disabled={loading}
               className={fieldClass}
             />
           </label>
 
           <button
             type="submit"
-            disabled={status === "loading"}
-            className="w-full rounded-md bg-brand py-3 font-medium text-white hover:bg-brand-hover disabled:opacity-70"
+            disabled={loading}
+            className="w-full rounded-lg bg-brand py-3 font-medium text-white hover:bg-brand-hover disabled:opacity-70"
           >
-            {status === "loading" ? "Creating..." : status === "succeeded" ? "Workspace created successfully" : "Create workspace"}
+            {loading ? "Creating..." : "Create workspace"}
           </button>
 
-          {status === "succeeded" ? (
-            <p className="mt-6 text-center text-sm text-mute">
-              Workspace created successfully{" "}
-              <Link to="/" className="text-brand hover:text-brand-hover">
-                Go to home
-              </Link>
-            </p>
-          ) : null}
-
-          {status === "failed" ? (
-            <p className="mt-6 text-center text-sm text-mute">
-              Workspace creation failed
-            </p>
-          ) : null}
-
-          {status === "idle" ? (
-            <p className="mt-6 text-center text-sm text-mute">
-              Already have an account?
+          <p className="mt-6 text-center text-sm text-mute">
+            Already have an account?{" "}
             <Link to="/login" className="text-brand hover:text-brand-hover">
-                Sign in
-              </Link>
-            </p>
-          ) : null}
+              Sign in
+            </Link>
+          </p>
         </form>
       </div>
     </div>
