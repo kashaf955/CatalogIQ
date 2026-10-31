@@ -1,7 +1,11 @@
 const CatalogSource = require("../models/catalogSourceModel");
 const Product = require("../models/productModel");
 const Match = require("../models/matchModel");
-const { normalize, stripStorePrefix } = require("../utils/productCodes");
+const {
+  normalize,
+  corePartCode,
+  samePartIdentity,
+} = require("../utils/productCodes");
 const { isMatchableProduct } = require("../utils/productMatchability");
 
 const MIN_CODE_LENGTH = 3;
@@ -20,14 +24,22 @@ const RULES = [
     score: 100,
     keys: (p) => codes(p.gtin).map((code) => code.replace(/^0+/, "")),
   },
-  { reason: "MPN", score: 95, keys: (p) => codes(p.mpn), checkBrand: true },
+  {
+    reason: "MPN",
+    score: 95,
+    keys: (p) => codes(p.mpn),
+    checkBrand: true,
+    // Same MPN with a SKU suffix (20307 vs 20307-BK) is a different sellable SKU.
+    requireSamePart: true,
+  },
   { reason: "SKU", score: 90, keys: (p) => codes(p.sku) },
   {
     reason: "Part number",
     score: 80,
-    keys: (p) =>
-      codes(p.sku, p.mpn, stripStorePrefix(p.sku), stripStorePrefix(p.mpn)),
+    // SKU wins when present so a suffixed SKU is not keyed as the bare MPN.
+    keys: (p) => codes(corePartCode(p.sku) || corePartCode(p.mpn)),
     checkBrand: true,
+    requireSamePart: true,
   },
 ];
 
@@ -60,6 +72,9 @@ const findMatches = (ours, theirs) => {
       for (const key of rule.keys(product)) {
         for (const candidate of indexes[i].get(key) || []) {
           if (rule.checkBrand && brandsConflict(product, candidate)) continue;
+          if (rule.requireSamePart && !samePartIdentity(product, candidate)) {
+            continue;
+          }
           found.set(String(candidate._id), candidate);
         }
       }
