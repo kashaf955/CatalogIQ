@@ -16,4 +16,24 @@ const stripStorePrefix = (value) => {
   return "";
 };
 
-module.exports = { text, normalize, stripStorePrefix };
+// Prefix may differ (store code). Suffix must stay — 20307 and 20307-BK are different SKUs.
+const corePartCode = (value) => normalize(stripStorePrefix(value) || value);
+
+const partIdentity = (product) =>
+  corePartCode(product?.sku) || corePartCode(product?.mpn);
+
+// Same sellable part only when identities are exact after prefix strip.
+const samePartIdentity = (a, b) => {
+  const left = partIdentity(a);
+  const right = partIdentity(b);
+  return Boolean(left && right && left === right);
+};
+
+module.exports = {
+  text,
+  normalize,
+  stripStorePrefix,
+  corePartCode,
+  partIdentity,
+  samePartIdentity,
+};

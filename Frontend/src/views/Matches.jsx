@@ -236,9 +236,10 @@ const Matches = () => {
       </div>
       {canManage ? (
         <p className="mb-4 text-xs text-mute">
-          Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A product with
-          more than one candidate always goes to review. Leave empty to turn
-          auto-accept off.
+          Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A suffix on the
+          part number (20307 vs 20307-BK) is a different SKU; the same number
+          with no suffix is the same SKU. A product with more than one
+          candidate always goes to review. Leave empty to turn auto-accept off.
         </p>
       ) : null}
 
