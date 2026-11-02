@@ -14,6 +14,7 @@ import CatalogDetail from "./views/CatalogDetail.jsx";
 import Products from "./views/Products.jsx";
 import ProductDetail from "./views/ProductDetail.jsx";
 import Matches from "./views/Matches.jsx";
+import Compare from "./views/Compare.jsx";
 import Reviews from "./views/Reviews.jsx";
 import Export from "./views/Export.jsx";
 import { loadUser } from "./actions/authActions";
@@ -91,6 +92,7 @@ const App = () => {
           <Route path="products" element={<Products />} />
           <Route path="products/:id" element={<ProductDetail />} />
           <Route path="matches" element={<Matches />} />
+          <Route path="compare" element={<Compare />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="export" element={<Export />} />
           <Route path="members" element={<Members />} />

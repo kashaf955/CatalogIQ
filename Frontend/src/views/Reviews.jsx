@@ -57,12 +57,20 @@ const Reviews = () => {
             Accept, reject, or ignore suggested matches before export.
           </p>
         </div>
-        <Link
-          to="/dashboard/export"
-          className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
-        >
-          Go to export
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            to="/dashboard/compare"
+            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
+          >
+            Open compare
+          </Link>
+          <Link
+            to="/dashboard/export"
+            className="rounded-md border border-white/10 px-4 py-2.5 text-center font-medium text-ink hover:border-white/25"
+          >
+            Go to export
+          </Link>
+        </div>
       </div>
 
       {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}

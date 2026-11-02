@@ -22,6 +22,7 @@ const icons = {
   catalogs: "M4 7h16M4 12h16M4 17h10",
   products: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01",
   matches: "M16 3h5v5M4 20L21 3M8 21H3v-5",
+  compare: "M10 3H5v18h5V3zM19 3h-5v18h5V3z",
   review: "M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   export: "M12 3v12m0 0l-4-4m4 4l4-4M4 21h16",
   members: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
@@ -46,6 +47,7 @@ const pageLabel = (pathname) => {
   if (pathname.startsWith("/dashboard/catalogs")) return "Catalogs";
   if (pathname.startsWith("/dashboard/products")) return "Products";
   if (pathname.startsWith("/dashboard/matches")) return "Matches";
+  if (pathname.startsWith("/dashboard/compare")) return "Compare";
   if (pathname.startsWith("/dashboard/reviews")) return "Review";
   if (pathname.startsWith("/dashboard/export")) return "Export";
   if (pathname.startsWith("/dashboard/members")) return "Members";
@@ -187,6 +189,10 @@ const DashboardLayout = () => {
             <NavLink to="/dashboard/matches" className={navClass}>
               <Icon path={icons.matches} />
               Matches
+            </NavLink>
+            <NavLink to="/dashboard/compare" className={navClass}>
+              <Icon path={icons.compare} />
+              Compare
             </NavLink>
             <NavLink to="/dashboard/reviews" className={navClass}>
               <Icon path={icons.review} />
