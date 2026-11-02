@@ -169,6 +169,12 @@ const Matches = () => {
             </button>
           ) : null}
           <Link
+            to="/dashboard/compare"
+            className="rounded-md border border-brand/40 px-4 py-2.5 text-center font-medium text-brand hover:bg-brand-hover/10"
+          >
+            Open compare
+          </Link>
+          <Link
             to="/dashboard/reviews"
             className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
           >

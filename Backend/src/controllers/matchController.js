@@ -1,5 +1,11 @@
 const Match = require("../models/matchModel");
 const { runMatching } = require("../services/matchService");
+const {
+  loadAccepted,
+  parsePercent,
+  pricePlan,
+  applyPricePlan,
+} = require("../services/compareService");
 const { logError } = require("../utils/logger");
 const { isMatchableProduct } = require("../utils/productMatchability");
 
@@ -106,4 +112,49 @@ const updateMatch = async (req, res) => {
   }
 };
 
-module.exports = { runMatches, getMatches, updateMatch };
+const getCompare = async (req, res) => {
+  try {
+    const against = AGAINST.includes(req.query.against)
+      ? req.query.against
+      : "competitor";
+    const rows = await loadAccepted(req.tenant.id, against);
+    return res.status(200).json(rows);
+  } catch (error) {
+    logError("matches.compare", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+const updateComparePrices = async (req, res) => {
+  try {
+    const percent = parsePercent(req.body?.percent);
+    const apply = Boolean(req.body?.apply);
+    const rows = await loadAccepted(req.tenant.id, "competitor");
+    const plan = pricePlan(rows, percent);
+
+    if (!apply) {
+      return res.status(200).json({
+        message: `Preview: ${plan.updates.length} prices, ${plan.skipped.length} skipped`,
+        ...plan,
+      });
+    }
+
+    const { modified } = await applyPricePlan(req.tenant.id, plan);
+    return res.status(200).json({
+      message: `Updated ${modified} company prices to ${percent}% below competitor`,
+      modified,
+      ...plan,
+    });
+  } catch (error) {
+    logError("matches.comparePrices", error);
+    return res.status(error.status || 500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  runMatches,
+  getMatches,
+  getCompare,
+  updateComparePrices,
+  updateMatch,
+};

@@ -29,12 +29,18 @@ const steps = [
   },
   {
     n: "05",
+    to: "/dashboard/compare",
+    title: "Compare",
+    text: "See accepted pairs together and set company prices below competitor.",
+  },
+  {
+    n: "06",
     to: "/dashboard/export",
     title: "Export",
     text: "Download CSV or Excel for the rows you approved.",
   },
   {
-    n: "06",
+    n: "07",
     to: "/dashboard/members",
     title: "Members",
     text: "Invite admins and managers to this workspace.",
