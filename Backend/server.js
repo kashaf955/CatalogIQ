@@ -8,6 +8,7 @@ const tenantRoutes = require("./src/routes/tenantRoutes");
 const catalogRoutes = require("./src/routes/CatalogRoutes");
 const productRoutes = require("./src/routes/productRoutes");
 const matchRoutes = require("./src/routes/matchRoutes");
+const exportRoutes = require("./src/routes/exportRoutes");
 const app = express();
 
 app.use(
@@ -29,6 +30,7 @@ app.use("/api/v1/tenants", tenantRoutes);
 app.use("/api/v1/catalogs", catalogRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/matches", matchRoutes);
+app.use("/api/v1/export", exportRoutes);
 app.use((err, req, res, _next) => {
   console.error(`[http] ${req.method} ${req.originalUrl} ${err.status || 500}: ${err.message}`);
   if (err.stack) console.error(err.stack);
