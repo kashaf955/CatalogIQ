@@ -17,6 +17,7 @@ import Matches from "./views/Matches.jsx";
 import Compare from "./views/Compare.jsx";
 import Reviews from "./views/Reviews.jsx";
 import Export from "./views/Export.jsx";
+import AcceptInvite from "./views/AcceptInvite.jsx";
 import { loadUser } from "./actions/authActions";
 
 const GuestOnly = ({ children }) => {
@@ -68,6 +69,14 @@ const App = () => {
           element={
             <GuestOnly>
               <Register />
+            </GuestOnly>
+          }
+        />
+        <Route
+          path="/invite/:token"
+          element={
+            <GuestOnly>
+              <AcceptInvite />
             </GuestOnly>
           }
         />

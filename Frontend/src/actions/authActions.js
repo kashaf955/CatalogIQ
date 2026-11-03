@@ -50,6 +50,30 @@ export const register = (companyName, name, email, password) => async (dispatch)
   }
 };
 
+export const acceptInvite = (token, name, password) => async (dispatch) => {
+  dispatch(setLoading());
+
+  try {
+    const response = await axios.post(
+      `${API}/invite/${token}/accept`,
+      { name, password },
+      { withCredentials: true }
+    );
+
+    dispatch(setSuccess(response.data.message || "Invite accepted"));
+    if (!response.data.signIn) {
+      dispatch(setUser(response.data.user));
+      dispatch(setTenantId(response.data.tenant?.id ?? null));
+      dispatch(setRole(response.data.role));
+      dispatch(setChecked());
+    }
+    return response.data;
+  } catch (err) {
+    dispatch(setFailed(err.response?.data?.message || "Could not accept invite"));
+    throw err;
+  }
+};
+
 export const logout = () => async (dispatch) => {
   try {
     await axios.post(`${API}/logout`, {}, { withCredentials: true });

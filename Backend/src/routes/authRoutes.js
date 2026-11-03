@@ -10,6 +10,8 @@ router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
 router.get("/me", authenticate, authController.me);
+router.get("/invite/:token", authController.getInvite);
+router.post("/invite/:token/accept", authController.acceptInvite);
 
 
 module.exports = router;

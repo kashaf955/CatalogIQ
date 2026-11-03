@@ -5,6 +5,25 @@ const Tenant = require("../models/tenantModels");
 const User = require("../models/userModel");
 const { generateToken } = require("../utils/jwt");
 const { slugify } = require("../utils/slugify");
+const { hashInviteToken } = require("../utils/inviteTokens");
+
+const findInvite = async (token) => {
+  if (!token) return null;
+  const membership = await Membership.findOne({
+    inviteTokenHash: hashInviteToken(token),
+    status: "invited",
+    inviteExpiresAt: { $gt: new Date() },
+  });
+  if (!membership) return null;
+
+  const [user, tenant] = await Promise.all([
+    User.findOne({ _id: membership.userId, isDeleted: false }),
+    Tenant.findOne({ _id: membership.tenantId, isDeleted: false }),
+  ]);
+  if (!user || !tenant || tenant.status !== "active") return null;
+
+  return { membership, user, tenant };
+};
 
 async function uniqueSlug(companyName) {
   const base = slugify(companyName);
@@ -199,6 +218,96 @@ class AuthController {
     });
 
     return res.json({
+      user: {
+        id: String(user._id),
+        name: user.name,
+        email: user.email,
+      },
+      tenant: {
+        id: String(tenant._id),
+        name: tenant.name,
+        slug: tenant.slug,
+        plan: tenant.plan,
+        status: tenant.status,
+      },
+      role: membership.role,
+    });
+  };
+
+  getInvite = async (req, res) => {
+    const invite = await findInvite(req.params.token);
+    if (!invite) {
+      return res
+        .status(404)
+        .json({ message: "This invite link is invalid or has expired" });
+    }
+
+    return res.json({
+      email: invite.user.email,
+      name: invite.user.name,
+      workspace: invite.tenant.name,
+      role: invite.membership.role,
+      needsPassword: !invite.user.passwordSet,
+    });
+  };
+
+  acceptInvite = async (req, res) => {
+    const invite = await findInvite(req.params.token);
+    if (!invite) {
+      return res
+        .status(404)
+        .json({ message: "This invite link is invalid or has expired" });
+    }
+
+    const { membership, user, tenant } = invite;
+
+    // The link is handed out by an admin, so it may only set a password on an
+    // account that never had one; it must not reset someone's real password
+    // or sign them in without it.
+    if (user.passwordSet) {
+      membership.status = "active";
+      membership.inviteTokenHash = undefined;
+      membership.inviteExpiresAt = null;
+      await membership.save();
+      return res.json({
+        message: `You joined ${tenant.name}. Sign in with your existing password.`,
+        signIn: true,
+      });
+    }
+
+    const { name, password } = req.body || {};
+    if (!password || password.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+    if (name && name.trim()) user.name = name.trim();
+    user.password = password;
+    user.passwordSet = true;
+    user.isVerified = true;
+    await user.save();
+
+    membership.status = "active";
+    membership.inviteTokenHash = undefined;
+    membership.inviteExpiresAt = null;
+    await membership.save();
+
+    const token = generateToken(
+      String(user._id),
+      membership.role,
+      String(tenant._id),
+    );
+
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+      path: "/",
+    });
+
+    return res.json({
+      message: `Welcome to ${tenant.name}`,
       user: {
         id: String(user._id),
         name: user.name,

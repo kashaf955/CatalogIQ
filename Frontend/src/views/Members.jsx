@@ -9,6 +9,7 @@ const Members = () => {
   const [members, setMembers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notice, setNotice] = useState(null);
 
   useEffect(() => {
     const loadMembers = async () => {
@@ -27,8 +28,30 @@ const Members = () => {
     loadMembers();
   }, []);
 
+  const copyInviteLink = async (memberId) => {
+    setError(null);
+    setNotice(null);
+    try {
+      const response = await axios.post(
+        `/api/v1/tenants/me/members/${memberId}/invite-link`,
+        {},
+        { withCredentials: true }
+      );
+      const { inviteUrl } = response.data;
+      try {
+        await navigator.clipboard.writeText(inviteUrl);
+        setNotice(`New invite link copied. Older links no longer work. ${inviteUrl}`);
+      } catch {
+        setNotice(`New invite link (older links no longer work): ${inviteUrl}`);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not create invite link");
+    }
+  };
+
   const removeMember = async (memberId) => {
     setError(null);
+    setNotice(null);
     try {
       await axios.delete(`/api/v1/tenants/me/members/${memberId}`, {
         withCredentials: true,
@@ -65,6 +88,9 @@ const Members = () => {
         {error ? (
           <p className="px-4 py-3 text-sm text-red-300">{error}</p>
         ) : null}
+        {notice ? (
+          <p className="break-all px-4 py-3 text-sm text-emerald-300">{notice}</p>
+        ) : null}
         {loading ? (
           <p className="px-4 py-6 text-sm text-mute">Loading members...</p>
         ) : members.length === 0 ? (
@@ -94,7 +120,24 @@ const Members = () => {
                     {member.status}
                   </td>
                   <td className="px-4 py-3">
-                    {canInvite && member.role !== "owner" && member.status === "active" ? (
+                    {canInvite && member.status === "invited" ? (
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => copyInviteLink(member.id)}
+                          className="text-brand hover:text-brand-hover"
+                        >
+                          Copy invite link
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeMember(member.id)}
+                          className="text-red-500 hover:text-red-300"
+                        >
+                          Revoke
+                        </button>
+                      </div>
+                    ) : canInvite && member.role !== "owner" && member.status === "active" ? (
                       <button
                         type="button"
                         onClick={() => removeMember(member.id)}

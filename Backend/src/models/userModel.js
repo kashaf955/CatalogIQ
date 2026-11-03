@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
+    // False for accounts created by an invite until the person picks a password.
+    passwordSet: {
+      type: Boolean,
+      default: true,
+    },
     status: {
       type: String,
       enum: ["active", "inactive"],

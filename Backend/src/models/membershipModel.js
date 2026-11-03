@@ -24,6 +24,15 @@ const membershipSchema = new mongoose.Schema(
       enum: ["active", "invited", "disabled"],
       default: "active",
     },
+    inviteTokenHash: {
+      type: String,
+      select: false,
+      index: true,
+    },
+    inviteExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

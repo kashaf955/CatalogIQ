@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const Membership = require("../models/membershipModel");
 const User = require("../models/userModel");
 const Tenant = require("../models/tenantModels");
+const { createInvite } = require("../utils/inviteTokens");
 
 const INVITE_ROLES = ["admin", "manager"];
 
@@ -26,28 +27,36 @@ class TenantController {
         isDeleted: false,
       });
 
-      let createdUser = false;
-
       if (!user) {
-        const inviteName = name || email.split("@")[0];
         user = new User({
-          name: inviteName,
+          name: name || email.split("@")[0],
           email: email.toLowerCase(),
           password: crypto.randomBytes(32).toString("hex"),
+          passwordSet: false,
         });
         await user.save();
-        createdUser = true;
       }
+
+      // People who already have a password join right away; everyone else
+      // gets a link to choose one.
+      const needsInvite = !user.passwordSet;
+      const invite = needsInvite ? createInvite() : null;
 
       const membership = await Membership.create({
         tenantId,
         userId: user._id,
         role,
-        status: createdUser ? "invited" : "active",
+        status: needsInvite ? "invited" : "active",
+        inviteTokenHash: invite?.hash,
+        inviteExpiresAt: invite?.expiresAt ?? null,
       });
 
       return res.status(201).json({
-        message: createdUser ? "Member invited" : "Member added",
+        message: needsInvite
+          ? "Invite created. Send them the link below."
+          : "Member added. They can sign in with their existing password.",
+        inviteUrl: invite?.url ?? null,
+        inviteExpiresAt: invite?.expiresAt ?? null,
         membership: {
           id: String(membership._id),
           tenantId: String(membership.tenantId),
@@ -80,6 +89,7 @@ class TenantController {
         id: String(item._id),
         role: item.role,
         status: item.status,
+        inviteExpiresAt: item.inviteExpiresAt,
         user: item.userId
           ? {
               id: String(item.userId._id),
@@ -89,6 +99,32 @@ class TenantController {
             }
           : null,
       })),
+    });
+  };
+
+  regenerateInvite = async (req, res) => {
+    const membership = await Membership.findOne({
+      _id: req.params.memberId,
+      tenantId: req.tenant.id,
+    });
+
+    if (!membership) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    if (membership.status !== "invited") {
+      return res.status(400).json({ message: "This member already joined" });
+    }
+
+    const invite = createInvite();
+    membership.inviteTokenHash = invite.hash;
+    membership.inviteExpiresAt = invite.expiresAt;
+    await membership.save();
+
+    return res.json({
+      message: "New invite link created. Older links no longer work.",
+      inviteUrl: invite.url,
+      inviteExpiresAt: invite.expiresAt,
     });
   };
 
@@ -136,7 +172,19 @@ removeMembership = async (req, res) => {
   }
 
   await membership.deleteOne();
-  return res.json({ message: "Member removed" });
+
+  // An account made by this invite that was never used has nothing else to keep.
+  if (membership.status === "invited") {
+    const user = await User.findById(membership.userId);
+    const otherMemberships = await Membership.exists({ userId: membership.userId });
+    if (user && !user.passwordSet && !otherMemberships) {
+      await user.deleteOne();
+    }
+  }
+
+  return res.json({
+    message: membership.status === "invited" ? "Invite revoked" : "Member removed",
+  });
 };     
 
 module.exports = { TenantController, removeMembership };
