@@ -5,11 +5,31 @@ import axios from "axios";
 const fieldClass =
   "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none focus:border-brand";
 
+const filenameFromHeader = (header, format) => {
+  const match = String(header || "").match(/filename="?([^"]+)"?/i);
+  if (match?.[1]) return match[1];
+  return `catalogiq-export.${format === "xlsx" ? "xlsx" : "csv"}`;
+};
+
+const readBlobError = async (data) => {
+  if (!(data instanceof Blob)) {
+    return data?.message || "Export failed";
+  }
+  try {
+    const parsed = JSON.parse(await data.text());
+    return parsed.message || "Export failed";
+  } catch {
+    return "Export failed";
+  }
+};
+
 const Export = () => {
   const [catalogs, setCatalogs] = useState([]);
   const [sourceId, setSourceId] = useState("");
   const [format, setFormat] = useState("csv");
   const [scope, setScope] = useState("accepted");
+  const [against, setAgainst] = useState("competitor");
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
@@ -31,11 +51,44 @@ const Export = () => {
     load();
   }, []);
 
-  const onExport = (event) => {
+  const selected = catalogs.find((item) => item._id === sourceId);
+  const showAgainst =
+    scope !== "all" && selected?.type === "our_catalog";
+
+  const onExport = async (event) => {
     event.preventDefault();
-    setMessage(
-      "Export is UI-only for now. The download will use accepted matches on the next backend pass."
-    );
+    setError(null);
+    setMessage(null);
+    setSaving(true);
+    try {
+      const response = await axios.get("/api/v1/export", {
+        params: {
+          sourceId,
+          scope,
+          format,
+          ...(showAgainst ? { against } : {}),
+        },
+        responseType: "blob",
+        withCredentials: true,
+      });
+      const name = filenameFromHeader(
+        response.headers["content-disposition"],
+        format
+      );
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      setMessage(`Downloaded ${name}`);
+    } catch (err) {
+      setError(await readBlobError(err.response?.data));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -47,9 +100,11 @@ const Export = () => {
         <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-brand">
           Workspace
         </p>
-        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-ink">Export</h1>
+        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-ink">
+          Export
+        </h1>
         <p className="mb-6 text-mute">
-          Download a file after matches have been reviewed.
+          Download CSV or Excel after matches have been reviewed.
         </p>
 
         {error ? (
@@ -90,10 +145,24 @@ const Export = () => {
             onChange={(event) => setScope(event.target.value)}
           >
             <option value="accepted">Accepted matches only</option>
-            <option value="all">All products</option>
             <option value="pending">Pending review</option>
+            <option value="all">All products in this catalog</option>
           </select>
         </label>
+
+        {showAgainst ? (
+          <label className="mb-4 block text-sm text-ink">
+            Compare against
+            <select
+              className={fieldClass}
+              value={against}
+              onChange={(event) => setAgainst(event.target.value)}
+            >
+              <option value="competitor">Competitor catalog</option>
+              <option value="manufacturer">Manufacturer Excel</option>
+            </select>
+          </label>
+        ) : null}
 
         <label className="mb-6 block text-sm text-ink">
           Format
@@ -109,17 +178,18 @@ const Export = () => {
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-brand py-3 font-medium text-white hover:bg-brand-hover"
+          disabled={saving || !sourceId}
+          className="w-full rounded-lg bg-brand py-3 font-medium text-white hover:bg-brand-hover disabled:opacity-70"
         >
-          Download {format.toUpperCase()}
+          {saving ? "Preparing file..." : `Download ${format.toUpperCase()}`}
         </button>
 
         <p className="mt-6 text-center text-sm text-mute">
           <Link
-            to="/dashboard/reviews"
+            to="/dashboard/compare"
             className="text-brand hover:text-brand-hover"
           >
-            Back to review
+            Back to compare
           </Link>
         </p>
       </form>
