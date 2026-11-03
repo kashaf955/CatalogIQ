@@ -93,12 +93,20 @@ const Compare = () => {
             gaps. Price rule writes your catalog only.
           </p>
         </div>
-        <Link
-          to="/dashboard/matches"
-          className="rounded-md border border-white/10 px-4 py-2.5 text-center font-medium text-ink hover:border-white/25"
-        >
-          Back to matches
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            to="/dashboard/matches"
+            className="rounded-md border border-white/10 px-4 py-2.5 text-center font-medium text-ink hover:border-white/25"
+          >
+            Back to matches
+          </Link>
+          <Link
+            to="/dashboard/export"
+            className="rounded-md bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-hover"
+          >
+            Export file
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end">
