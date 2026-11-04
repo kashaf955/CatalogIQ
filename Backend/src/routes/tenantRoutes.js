@@ -5,12 +5,14 @@ const { authenticate, authorize } = require("../middleware/auth");
 const router = Router();
 const tenantController = new TenantController();
 
+const owner = authorize("owner");
+
 router.use(authenticate);
 router.get("/me/members", tenantController.listMembers);
 router.get("/me/settings", tenantController.getSettings);
-router.patch("/me/settings", authorize("owner", "admin"), tenantController.updateSettings);
-router.post("/me/members", authorize("owner", "admin"), tenantController.addMembership);
-router.post("/me/members/:memberId/invite-link", authorize("owner", "admin"), tenantController.regenerateInvite);
-router.delete("/me/members/:memberId", authorize("owner", "admin"), removeMembership);
+router.patch("/me/settings", owner, tenantController.updateSettings);
+router.post("/me/members", owner, tenantController.addMembership);
+router.post("/me/members/:memberId/invite-link", owner, tenantController.regenerateInvite);
+router.delete("/me/members/:memberId", owner, removeMembership);
     
 module.exports = router;
