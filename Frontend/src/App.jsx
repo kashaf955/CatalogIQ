@@ -36,7 +36,7 @@ const RequireAuth = ({ children }) => {
 
 const RequireInvite = ({ children }) => {
   const { role } = useSelector((state) => state.auth);
-  if (role !== "owner" && role !== "admin") {
+  if (role !== "owner") {
     return <Navigate to="/dashboard/members" replace />;
   }
   return children;

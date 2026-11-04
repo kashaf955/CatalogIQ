@@ -25,7 +25,7 @@ const CatalogDetail = () => {
   const { id } = useParams();
   const { role } = useSelector((state) => state.auth);
   const canManage =
-    role === "owner" || role === "admin" || role === "manager";
+    role === "owner" || role === "manager";
   const [catalog, setCatalog] = useState(null);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
@@ -370,7 +370,7 @@ const CatalogDetail = () => {
       </form>
       ) : (
         <p className="rounded-2xl border border-brand/20 bg-panel p-6 text-sm text-mute">
-          Only an owner, admin, or manager can ingest this source.
+          Only an owner or manager can ingest this source.
         </p>
       )}
     </div>

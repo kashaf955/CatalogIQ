@@ -61,7 +61,7 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
 const Products = () => {
   const { role } = useSelector((state) => state.auth);
   const canManage =
-    role === "owner" || role === "admin" || role === "manager";
+    role === "owner" || role === "manager";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [catalogs, setCatalogs] = useState([]);

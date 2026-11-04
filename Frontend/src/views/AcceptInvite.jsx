@@ -68,7 +68,7 @@ const AcceptInvite = () => {
                 Invite unavailable
               </h1>
               <p className="mb-6 text-mute">
-                {loadError}. Ask your workspace admin for a new link.
+                {loadError}. Ask the workspace owner for a new link.
               </p>
               <Link to="/login" className="text-brand hover:text-brand-hover">
                 Go to sign in

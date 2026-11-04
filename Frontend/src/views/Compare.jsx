@@ -15,7 +15,7 @@ const dash = (value) =>
 const Compare = () => {
   const { role } = useSelector((state) => state.auth);
   const canManage =
-    role === "owner" || role === "admin" || role === "manager";
+    role === "owner" || role === "manager";
   const [against, setAgainst] = useState("competitor");
   const [rows, setRows] = useState([]);
   const [percent, setPercent] = useState("5");

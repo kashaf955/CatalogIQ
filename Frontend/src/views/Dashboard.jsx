@@ -43,7 +43,7 @@ const steps = [
     n: "07",
     to: "/dashboard/members",
     title: "Members",
-    text: "Invite admins and managers to this workspace.",
+    text: "Invite managers to this workspace.",
   },
 ];
 

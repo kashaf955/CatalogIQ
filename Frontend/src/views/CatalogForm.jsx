@@ -55,7 +55,7 @@ const CatalogForm = () => {
   const navigate = useNavigate();
   const { role } = useSelector((state) => state.auth);
   const canManage =
-    role === "owner" || role === "admin" || role === "manager";
+    role === "owner" || role === "manager";
 
   const [templateId, setTemplateId] = useState(visibleTemplates[0].id);
   const [name, setName] = useState("");
