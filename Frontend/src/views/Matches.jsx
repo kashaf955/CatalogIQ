@@ -12,7 +12,8 @@ const money = (value) =>
 const Matches = () => {
   const { role } = useSelector((state) => state.auth);
   const canManage =
-    role === "owner" || role === "admin" || role === "manager";
+    role === "owner" || role === "manager";
+  const isOwner = role === "owner";
   const [catalogs, setCatalogs] = useState([]);
   const [against, setAgainst] = useState("manufacturer");
   const [status, setStatus] = useState("all");
@@ -211,7 +212,7 @@ const Matches = () => {
             Ignored ({counts.ignored.products})
           </option>
         </select>
-        {canManage ? (
+        {isOwner ? (
         <form
           onSubmit={saveAutoScore}
           className="flex items-center gap-2 sm:ml-auto"
@@ -240,7 +241,7 @@ const Matches = () => {
         </form>
         ) : null}
       </div>
-      {canManage ? (
+      {isOwner ? (
         <p className="mb-4 text-xs text-mute">
           Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A suffix on the
           part number (20307 vs 20307-BK) is a different SKU; the same number

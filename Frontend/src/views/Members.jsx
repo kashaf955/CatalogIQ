@@ -5,7 +5,7 @@ import axios from "axios";
 
 const Members = () => {
   const { role } = useSelector((state) => state.auth);
-  const canInvite = role === "owner" || role === "admin";
+  const canInvite = role === "owner";
   const [members, setMembers] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,12 +37,16 @@ const Members = () => {
         {},
         { withCredentials: true }
       );
-      const { inviteUrl } = response.data;
+      const { inviteUrl, emailSent, message } = response.data;
+      if (emailSent) {
+        setNotice(message);
+        return;
+      }
       try {
         await navigator.clipboard.writeText(inviteUrl);
-        setNotice(`New invite link copied. Older links no longer work. ${inviteUrl}`);
+        setNotice(`${message} The link was copied: ${inviteUrl}`);
       } catch {
-        setNotice(`New invite link (older links no longer work): ${inviteUrl}`);
+        setNotice(`${message} ${inviteUrl}`);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Could not create invite link");
@@ -127,7 +131,7 @@ const Members = () => {
                           onClick={() => copyInviteLink(member.id)}
                           className="text-brand hover:text-brand-hover"
                         >
-                          Copy invite link
+                          Resend invite
                         </button>
                         <button
                           type="button"
