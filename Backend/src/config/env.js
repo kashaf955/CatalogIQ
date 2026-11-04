@@ -10,6 +10,11 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 const TOKEN_ENCRYPTION_KEY = process.env.TOKEN_ENCRYPTION_KEY;
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
 
 const assertTokenEncryptionKey = () => {
   if (!TOKEN_ENCRYPTION_KEY) {
@@ -30,5 +35,10 @@ module.exports = {
   JWT_REFRESH_EXPIRES_IN,
   FRONTEND_URL,
   TOKEN_ENCRYPTION_KEY,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  MAIL_FROM,
   assertTokenEncryptionKey,
 };

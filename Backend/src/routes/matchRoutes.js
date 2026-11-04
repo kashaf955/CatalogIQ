@@ -10,15 +10,11 @@ const { authenticate, authorize } = require("../middleware/auth");
 
 const router = Router();
 router.use(authenticate);
-const manage = authorize("owner", "admin", "manager");
+const manage = authorize("owner", "manager");
 router.get("/", getMatches);
 router.get("/compare", getCompare);
 router.post("/run", manage, runMatches);
 router.post("/compare/prices", manage, updateComparePrices);
-router.patch(
-  "/:id",
-  authorize("owner", "admin", "manager", "reviewer"),
-  updateMatch
-);
+router.patch("/:id", manage, updateMatch);
 
 module.exports = router;

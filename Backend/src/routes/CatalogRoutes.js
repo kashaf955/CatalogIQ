@@ -6,7 +6,7 @@ const { upload } = require("../middleware/upload");
 const router = Router();
 router.use(authenticate);
 
-const manage = authorize("owner", "admin", "manager");
+const manage = authorize("owner", "manager");
 
 router.get("/", catalogController.getCatalog);
 router.get("/:id", catalogController.getCatalogById);

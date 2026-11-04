@@ -261,7 +261,7 @@ class AuthController {
 
     const { membership, user, tenant } = invite;
 
-    // The link is handed out by an admin, so it may only set a password on an
+    // The link is handed out by the owner, so it may only set a password on an
     // account that never had one; it must not reset someone's real password
     // or sign them in without it.
     if (user.passwordSet) {

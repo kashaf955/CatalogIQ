@@ -3,8 +3,10 @@ const Membership = require("../models/membershipModel");
 const User = require("../models/userModel");
 const Tenant = require("../models/tenantModels");
 const { createInvite } = require("../utils/inviteTokens");
+const { sendInviteEmail, sendAddedEmail } = require("../services/mailService");
 
-const INVITE_ROLES = ["admin", "manager"];
+// Owner is set at sign-up and cannot be handed out through an invite.
+const INVITE_ROLES = ["manager"];
 
 class TenantController {
   addMembership = async (req, res) => {
@@ -18,7 +20,7 @@ class TenantController {
 
       if (!INVITE_ROLES.includes(role)) {
         return res.status(400).json({
-          message: "Invalid role. Use admin or manager",
+          message: "Invalid role. Invite people as manager",
         });
       }
 
@@ -51,10 +53,30 @@ class TenantController {
         inviteExpiresAt: invite?.expiresAt ?? null,
       });
 
+      const mail = {
+        to: user.email,
+        inviterName: req.user.name,
+        workspace: req.tenant.name,
+        role,
+      };
+      const emailSent = needsInvite
+        ? await sendInviteEmail({ ...mail, inviteUrl: invite.url })
+        : await sendAddedEmail(mail);
+
+      let message;
+      if (needsInvite) {
+        message = emailSent
+          ? `Invite emailed to ${user.email}.`
+          : "Invite created, but the email could not be sent. Share the link below.";
+      } else {
+        message = emailSent
+          ? `Member added and notified at ${user.email}.`
+          : "Member added. They can sign in with their existing password.";
+      }
+
       return res.status(201).json({
-        message: needsInvite
-          ? "Invite created. Send them the link below."
-          : "Member added. They can sign in with their existing password.",
+        message,
+        emailSent,
         inviteUrl: invite?.url ?? null,
         inviteExpiresAt: invite?.expiresAt ?? null,
         membership: {
@@ -121,8 +143,22 @@ class TenantController {
     membership.inviteExpiresAt = invite.expiresAt;
     await membership.save();
 
+    const user = await User.findById(membership.userId);
+    const emailSent = user
+      ? await sendInviteEmail({
+          to: user.email,
+          inviterName: req.user.name,
+          workspace: req.tenant.name,
+          role: membership.role,
+          inviteUrl: invite.url,
+        })
+      : false;
+
     return res.json({
-      message: "New invite link created. Older links no longer work.",
+      message: emailSent
+        ? `Invite re-sent to ${user.email}. Older links no longer work.`
+        : "New invite link created, but the email could not be sent. Older links no longer work.",
+      emailSent,
       inviteUrl: invite.url,
       inviteExpiresAt: invite.expiresAt,
     });
