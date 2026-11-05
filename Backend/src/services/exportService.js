@@ -3,6 +3,7 @@ const CatalogSource = require("../models/catalogSourceModel");
 const Product = require("../models/productModel");
 const Match = require("../models/matchModel");
 const { isMatchableProduct } = require("../utils/productMatchability");
+const { realSku } = require("../utils/productCodes");
 
 const SCOPES = ["accepted", "pending", "all"];
 const FORMATS = ["csv", "xlsx"];
@@ -28,8 +29,18 @@ const fileSlug = (name) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "catalog";
 
+// Spreadsheet apps run CSV cells starting with these as formulas, and these
+// values can come from scraped competitor pages.
+const safeCsvCell = (value) =>
+  typeof value === "string" && /^\s*[=+\-@]/.test(value) ? `'${value}` : value;
+
+const safeCsvRow = (row) =>
+  Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [key, safeCsvCell(value)])
+  );
+
 const toProductRow = (product) => ({
-  SKU: product.sku || "",
+  SKU: realSku(product),
   MPN: product.mpn || "",
   GTIN: product.gtin || "",
   Name: product.name || "",
@@ -54,13 +65,13 @@ const toMatchRow = (match) => {
       : "";
 
   return {
-    "Our SKU": ours.sku || "",
+    "Our SKU": realSku(ours),
     "Our name": ours.name || "",
     "Our MPN": ours.mpn || "",
     "Our brand": ours.brand || "",
     "Our price": ourPrice,
     "Our availability": ours.availability || "",
-    "Their SKU": theirs.sku || "",
+    "Their SKU": realSku(theirs),
     "Their name": theirs.name || "",
     "Their price": theirPrice,
     "Their availability": theirs.availability || "",
@@ -73,17 +84,18 @@ const toMatchRow = (match) => {
 };
 
 const encodeWorkbook = (rows, format, filename) => {
-  const sheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, "Export");
-
   if (format === "csv") {
+    const sheet = XLSX.utils.json_to_sheet(rows.map(safeCsvRow));
     return {
       filename: `${filename}.csv`,
       contentType: "text/csv; charset=utf-8",
       body: XLSX.utils.sheet_to_csv(sheet),
     };
   }
+
+  const sheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, "Export");
 
   return {
     filename: `${filename}.xlsx`,

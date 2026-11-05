@@ -1,4 +1,5 @@
 const XLSX = require("xlsx");
+const { generatedSku } = require("../utils/productCodes");
 
 const HEADER_ALIASES = {
   name: ["name", "product", "product name", "title", "item name", "description name"],
@@ -57,7 +58,14 @@ const mapRow = (raw, index) => {
   const name = aliased.name || aliased.description;
   if (!name) return null;
 
-  const sku = aliased.sku || `xls-${index + 1}`;
+  const sku =
+    aliased.sku ||
+    generatedSku({
+      name,
+      brand: aliased.brand || aliased.manufacturer,
+      mpn: aliased.mpn,
+      gtin: aliased.gtin,
+    });
   const fitment =
     aliased.fitment ||
     [aliased.year, aliased.manufacturer || aliased.brand, aliased.model, aliased.trim]

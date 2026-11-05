@@ -5,12 +5,13 @@ const Tenant = require("../models/tenantModels");
 const User = require("../models/userModel");
 const { generateToken } = require("../utils/jwt");
 const { slugify } = require("../utils/slugify");
-const { hashInviteToken } = require("../utils/inviteTokens");
+const { createPasswordReset, hashToken } = require("../utils/inviteTokens");
+const { sendPasswordResetEmail } = require("../services/mailService");
 
 const findInvite = async (token) => {
   if (!token) return null;
   const membership = await Membership.findOne({
-    inviteTokenHash: hashInviteToken(token),
+    inviteTokenHash: hashToken(token),
     status: "invited",
     inviteExpiresAt: { $gt: new Date() },
   });
@@ -144,10 +145,14 @@ class AuthController {
   login = async (req, res) => {
     const { email, password, tenantId } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
       return res
         .status(400)
         .json({ message: "email and password are required" });
+    }
+
+    if (tenantId && !mongoose.isValidObjectId(tenantId)) {
+      return res.status(400).json({ message: "Invalid workspace" });
     }
 
     const user = await User.findOne({
@@ -172,7 +177,7 @@ class AuthController {
       membershipQuery.tenantId = tenantId;
     }
 
-    const memberships = await Membership.find(membershipQuery);
+    let memberships = await Membership.find(membershipQuery);
 
     if (memberships.length === 0) {
       return res.status(403).json({ message: "No active workspace found" });
@@ -182,18 +187,29 @@ class AuthController {
       const tenants = await Tenant.find({
         _id: { $in: memberships.map((item) => item.tenantId) },
         isDeleted: false,
+        status: "active",
       }).select("name slug plan status");
 
-      return res.status(409).json({
-        message: "Select a workspace",
-        tenants: tenants.map((tenant) => ({
-          id: String(tenant._id),
-          name: tenant.name,
-          slug: tenant.slug,
-          plan: tenant.plan,
-          status: tenant.status,
-        })),
-      });
+      if (tenants.length === 0) {
+        return res.status(403).json({ message: "Workspace is not active" });
+      }
+
+      if (tenants.length > 1) {
+        return res.status(409).json({
+          message: "Select a workspace",
+          tenants: tenants.map((tenant) => ({
+            id: String(tenant._id),
+            name: tenant.name,
+            slug: tenant.slug,
+            plan: tenant.plan,
+            status: tenant.status,
+          })),
+        });
+      }
+
+      memberships = memberships.filter(
+        (item) => String(item.tenantId) === String(tenants[0]._id)
+      );
     }
 
     const membership = memberships[0];
@@ -276,12 +292,12 @@ class AuthController {
     }
 
     const { name, password } = req.body || {};
-    if (!password || password.length < 8) {
+    if (typeof password !== "string" || password.length < 8) {
       return res
         .status(400)
         .json({ message: "Password must be at least 8 characters" });
     }
-    if (name && name.trim()) user.name = name.trim();
+    if (typeof name === "string" && name.trim()) user.name = name.trim();
     user.password = password;
     user.passwordSet = true;
     user.isVerified = true;
@@ -322,6 +338,65 @@ class AuthController {
       },
       role: membership.role,
     });
+  };
+
+  forgotPassword = async (req, res) => {
+    const email =
+      typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    if (!email) {
+      return res.status(400).json({ message: "Enter your email" });
+    }
+
+    const user = await User.findOne({
+      email,
+      isDeleted: false,
+      status: "active",
+    });
+
+    if (user) {
+      const reset = createPasswordReset();
+      await User.updateOne(
+        { _id: user._id },
+        { passwordResetHash: reset.hash, passwordResetExpires: reset.expiresAt }
+      );
+      // Not awaited, so response time does not reveal whether the account exists.
+      sendPasswordResetEmail({ to: user.email, resetUrl: reset.url });
+    }
+
+    return res.json({
+      message: "If that email has an account, we sent a link to reset the password.",
+    });
+  };
+
+  resetPassword = async (req, res) => {
+    const { password } = req.body || {};
+    if (typeof password !== "string" || password.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+
+    const user = await User.findOne({
+      passwordResetHash: hashToken(req.params.token),
+      passwordResetExpires: { $gt: new Date() },
+      isDeleted: false,
+    }).select("+passwordResetHash");
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "This reset link is invalid or has expired" });
+    }
+
+    user.password = password;
+    user.passwordSet = true;
+    user.isVerified = true;
+    user.passwordChangedAt = new Date();
+    user.passwordResetHash = undefined;
+    user.passwordResetExpires = null;
+    await user.save();
+
+    return res.json({ message: "Password updated. Sign in with your new password." });
   };
 
   logout = async (_req, res) => {

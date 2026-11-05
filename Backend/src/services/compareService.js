@@ -17,6 +17,9 @@ const pickList = (ours, theirs) => {
   return [];
 };
 
+// Share of the current price; bigger cuts are flagged before anyone applies them.
+const LARGE_DROP = 0.3;
+
 const roundMoney = (value) => Math.round(Number(value) * 100) / 100;
 
 const parsePercent = (value) => {
@@ -33,11 +36,12 @@ const targetPrice = (theirPrice, percent) => {
   if (
     typeof theirPrice !== "number" ||
     !Number.isFinite(theirPrice) ||
-    theirPrice < 0
+    theirPrice <= 0
   ) {
     return null;
   }
-  return roundMoney(theirPrice * (1 - percent / 100));
+  const price = roundMoney(theirPrice * (1 - percent / 100));
+  return price > 0 ? price : null;
 };
 
 const toCombined = (match) => {
@@ -54,6 +58,7 @@ const toCombined = (match) => {
     id: String(match._id),
     ourProductId: String(ours._id),
     theirProductId: String(theirs._id),
+    theirSourceId: String(match.theirSourceId || theirs._id),
     sku: ours.sku || "",
     theirSku: theirs.sku || "",
     name: pickText(ours.name, theirs.name),
@@ -117,28 +122,49 @@ const pricePlan = (rows, percent) => {
   const skipped = [];
   for (const [, list] of byProduct) {
     const row = list[0];
-    if (list.length > 1) {
+    const sources = new Set(list.map((item) => item.theirSourceId));
+    if (sources.size < list.length) {
       skipped.push({
         sku: row.sku,
-        reason: "multiple accepted competitors",
+        reason: "several accepted matches from one competitor",
       });
       continue;
     }
-    const nextPrice = targetPrice(row.theirPrice, percent);
+
+    // Undercut the cheapest competitor that has a usable price.
+    let theirPrice = null;
+    let nextPrice = null;
+    for (const item of list) {
+      const target = targetPrice(item.theirPrice, percent);
+      if (target != null && (nextPrice == null || target < nextPrice)) {
+        nextPrice = target;
+        theirPrice = item.theirPrice;
+      }
+    }
     if (nextPrice == null) {
       skipped.push({ sku: row.sku, reason: "no competitor price" });
       continue;
     }
+
     updates.push({
       ourProductId: row.ourProductId,
       sku: row.sku,
       ourPrice: row.ourPrice,
-      theirPrice: row.theirPrice,
+      theirPrice,
       nextPrice,
+      largeDrop:
+        typeof row.ourPrice === "number" &&
+        row.ourPrice > 0 &&
+        nextPrice < row.ourPrice * (1 - LARGE_DROP),
     });
   }
 
-  return { percent, updates, skipped };
+  return {
+    percent,
+    updates,
+    skipped,
+    largeDrops: updates.filter((item) => item.largeDrop).length,
+  };
 };
 
 const applyPricePlan = async (tenantId, plan) => {

@@ -28,6 +28,14 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
+    // Sessions from before a password reset stop working. JWT times are in seconds.
+    if (
+      account.passwordChangedAt &&
+      decoded.issuedAt < Math.floor(account.passwordChangedAt.getTime() / 1000)
+    ) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     if (!tenant || tenant.status !== "active" || tenant.isDeleted) {
       return res.status(403).json({ message: "Workspace is not active" });
     }

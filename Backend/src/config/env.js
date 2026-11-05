@@ -15,6 +15,7 @@ const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
+const TRUST_PROXY = Number(process.env.TRUST_PROXY) || 0;
 
 const assertTokenEncryptionKey = () => {
   if (!TOKEN_ENCRYPTION_KEY) {
@@ -40,5 +41,6 @@ module.exports = {
   SMTP_USER,
   SMTP_PASS,
   MAIL_FROM,
+  TRUST_PROXY,
   assertTokenEncryptionKey,
 };
