@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { acceptInvite } from "../actions/authActions";
+import { acceptInvite, logout } from "../actions/authActions";
 import Header from "../components/Header";
 
 const fieldClass =
@@ -12,7 +12,7 @@ const AcceptInvite = () => {
   const { token } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error } = useSelector((state) => state.auth);
+  const { status, error, user } = useSelector((state) => state.auth);
   const [invite, setInvite] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [name, setName] = useState("");
@@ -46,7 +46,13 @@ const AcceptInvite = () => {
     }
     try {
       const data = await dispatch(acceptInvite(token, name, password));
-      navigate(data.signIn ? "/login" : "/dashboard");
+      if (!data.signIn) {
+        navigate("/dashboard");
+        return;
+      }
+      // They sign in again to reach the workspace they just joined.
+      if (user) await dispatch(logout());
+      navigate("/login", { state: { notice: data.message } });
     } catch {
       // Error is shown from Redux status.
     }

@@ -12,7 +12,6 @@ const MembersInvite = () => {
   const [message, setMessage] = useState(null);
   const [inviteUrl, setInviteUrl] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -28,7 +27,6 @@ const MembersInvite = () => {
       );
       setMessage(response.data.message || "Member invited");
       setInviteUrl(response.data.inviteUrl || null);
-      setEmailSent(Boolean(response.data.emailSent));
       setEmail("");
       setName("");
     } catch (err) {
@@ -58,8 +56,8 @@ const MembersInvite = () => {
             Invite a member
           </h1>
           <p className="mb-6 text-mute">
-            We email new teammates a link to set their password. People who
-            already have a CatalogIQ account are added right away.
+            We email them a link. They join this workspace after they accept
+            it.
           </p>
 
           {error ? (
@@ -80,9 +78,8 @@ const MembersInvite = () => {
           {inviteUrl ? (
             <div className="mb-4 rounded-md border border-brand/25 bg-canvas p-3">
               <p className="mb-2 text-xs text-mute">
-                {emailSent
-                  ? "We emailed this link. You can also copy it. It works once and expires in 7 days."
-                  : "Send this link to your teammate. It works once and expires in 7 days."}
+                Send this link to your teammate. It works once and expires in 7
+                days.
               </p>
               <div className="flex gap-2">
                 <input
