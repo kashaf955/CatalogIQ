@@ -3,7 +3,7 @@ const Membership = require("../models/membershipModel");
 const User = require("../models/userModel");
 const Tenant = require("../models/tenantModels");
 const { createInvite } = require("../utils/inviteTokens");
-const { sendInviteEmail, sendAddedEmail } = require("../services/mailService");
+const { sendInviteEmail } = require("../services/mailService");
 
 // Owner is set at sign-up and cannot be handed out through an invite.
 const INVITE_ROLES = ["manager"];
@@ -14,7 +14,7 @@ class TenantController {
       const { email, name, role } = req.body;
       const tenantId = req.tenant.id;
 
-      if (!email || !role) {
+      if (typeof email !== "string" || !email.includes("@") || !role) {
         return res.status(400).json({ message: "email and role are required" });
       }
 
@@ -39,57 +39,41 @@ class TenantController {
         await user.save();
       }
 
-      // People who already have a password join right away; everyone else
-      // gets a link to choose one.
-      const needsInvite = !user.passwordSet;
-      const invite = needsInvite ? createInvite() : null;
-
+      // Everyone has to accept, so nobody is added to a workspace without
+      // agreeing to it. The reply is the same whether or not the email already
+      // has an account, so this cannot be used to find out who has one.
+      const invite = createInvite();
       const membership = await Membership.create({
         tenantId,
         userId: user._id,
         role,
-        status: needsInvite ? "invited" : "active",
-        inviteTokenHash: invite?.hash,
-        inviteExpiresAt: invite?.expiresAt ?? null,
+        status: "invited",
+        inviteTokenHash: invite.hash,
+        inviteExpiresAt: invite.expiresAt,
       });
 
-      const mail = {
+      const emailSent = await sendInviteEmail({
         to: user.email,
         inviterName: req.user.name,
         workspace: req.tenant.name,
         role,
-      };
-      const emailSent = needsInvite
-        ? await sendInviteEmail({ ...mail, inviteUrl: invite.url })
-        : await sendAddedEmail(mail);
-
-      let message;
-      if (needsInvite) {
-        message = emailSent
-          ? `Invite emailed to ${user.email}.`
-          : "Invite created, but the email could not be sent. Share the link below.";
-      } else {
-        message = emailSent
-          ? `Member added and notified at ${user.email}.`
-          : "Member added. They can sign in with their existing password.";
-      }
+        inviteUrl: invite.url,
+        hasAccount: user.passwordSet,
+      });
 
       return res.status(201).json({
-        message,
+        message: emailSent
+          ? `Invite emailed to ${user.email}.`
+          : "Invite created, but the email could not be sent. Share the link below.",
         emailSent,
-        inviteUrl: invite?.url ?? null,
-        inviteExpiresAt: invite?.expiresAt ?? null,
+        // Only handed back when email failed: the link page shows whether the
+        // person already has an account.
+        inviteUrl: emailSent ? null : invite.url,
+        inviteExpiresAt: invite.expiresAt,
         membership: {
           id: String(membership._id),
-          tenantId: String(membership.tenantId),
-          userId: String(membership.userId),
           role: membership.role,
           status: membership.status,
-        },
-        user: {
-          id: String(user._id),
-          name: user.name,
-          email: user.email,
         },
       });
     } catch (error) {
@@ -112,14 +96,17 @@ class TenantController {
         role: item.role,
         status: item.status,
         inviteExpiresAt: item.inviteExpiresAt,
-        user: item.userId
-          ? {
-              id: String(item.userId._id),
-              name: item.userId.name,
-              email: item.userId.email,
-              status: item.userId.status,
-            }
-          : null,
+        // Until they accept, only the email the owner typed is shown.
+        user: !item.userId
+          ? null
+          : item.status === "invited"
+            ? { email: item.userId.email }
+            : {
+                id: String(item.userId._id),
+                name: item.userId.name,
+                email: item.userId.email,
+                status: item.userId.status,
+              },
       })),
     });
   };
@@ -151,6 +138,7 @@ class TenantController {
           workspace: req.tenant.name,
           role: membership.role,
           inviteUrl: invite.url,
+          hasAccount: user.passwordSet,
         })
       : false;
 
@@ -159,7 +147,7 @@ class TenantController {
         ? `Invite re-sent to ${user.email}. Older links no longer work.`
         : "New invite link created, but the email could not be sent. Older links no longer work.",
       emailSent,
-      inviteUrl: invite.url,
+      inviteUrl: emailSent ? null : invite.url,
       inviteExpiresAt: invite.expiresAt,
     });
   };

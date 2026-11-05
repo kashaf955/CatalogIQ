@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 const text = (value) => String(value || "").trim();
 
 const normalize = (value) =>
@@ -19,8 +21,25 @@ const stripStorePrefix = (value) => {
 // Prefix may differ (store code). Suffix must stay — 20307 and 20307-BK are different SKUs.
 const corePartCode = (value) => normalize(stripStorePrefix(value) || value);
 
+// A row with no SKU still needs a stable key for re-imports. It comes from what
+// the row describes, not its position, so reordering a file changes nothing.
+const generatedSku = ({ name, brand, mpn, gtin }) =>
+  `gen-${crypto
+    .createHash("sha256")
+    .update([name, brand, mpn, gtin].map(normalize).join("|"))
+    .digest("hex")
+    .slice(0, 16)}`;
+
+// xls-N and api-N are the row-number keys used by earlier imports.
+const isGeneratedSku = (value) =>
+  /^(gen-[0-9a-f]{16}|xls-\d+|api-\d+)$/i.test(text(value));
+
+// Generated keys identify nothing outside their own source, so they never match.
+const realSku = (product) =>
+  isGeneratedSku(product?.sku) ? "" : text(product?.sku);
+
 const partIdentity = (product) =>
-  corePartCode(product?.sku) || corePartCode(product?.mpn);
+  corePartCode(realSku(product)) || corePartCode(product?.mpn);
 
 // Same sellable part only when identities are exact after prefix strip.
 const samePartIdentity = (a, b) => {
@@ -34,6 +53,9 @@ module.exports = {
   normalize,
   stripStorePrefix,
   corePartCode,
+  generatedSku,
+  isGeneratedSku,
+  realSku,
   partIdentity,
   samePartIdentity,
 };

@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { connectDB } = require("./src/config/database");
-const { PORT, FRONTEND_URL, assertTokenEncryptionKey } = require("./src/config/env");
+const { PORT, FRONTEND_URL, TRUST_PROXY, assertTokenEncryptionKey } = require("./src/config/env");
 const authRoutes = require("./src/routes/authRoutes");
 const cookieParser = require("cookie-parser");
 const tenantRoutes = require("./src/routes/tenantRoutes");
@@ -10,6 +10,9 @@ const productRoutes = require("./src/routes/productRoutes");
 const matchRoutes = require("./src/routes/matchRoutes");
 const exportRoutes = require("./src/routes/exportRoutes");
 const app = express();
+
+// Number of proxies in front of the API, so rate limits see the real client IP.
+app.set("trust proxy", TRUST_PROXY);
 
 app.use(
   cors({

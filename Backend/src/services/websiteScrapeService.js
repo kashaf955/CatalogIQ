@@ -1,4 +1,5 @@
 const cheerio = require("cheerio");
+const { assertPublicUrl, safeFetch } = require("../utils/safeFetch");
 const { text, normalize } = require("../utils/productCodes");
 const {
   throwIfAborted,
@@ -91,10 +92,9 @@ const fetchPage = async (url, signal) => {
   const onAbort = () => controller.abort();
   signal?.addEventListener("abort", onAbort, { once: true });
   try {
-    const response = await fetch(url, {
-      redirect: "follow",
+    const response = await safeFetch(url, {
       signal: controller.signal,
-      headers: {
+      publicHeaders: {
         Accept: "text/html,application/xhtml+xml,application/xml,text/xml",
         "User-Agent": "CatalogIQ/1.0 (catalog ingest)",
       },
@@ -517,6 +517,7 @@ const fetchWebsiteProducts = async ({
   onBatch,
 } = {}) => {
   const parsed = assertHttpUrl(url);
+  await assertPublicUrl(parsed.toString());
   const origin = parsed.origin;
   const startUrl = parsed.toString();
   const allowed = await loadRobots(origin, signal);

@@ -134,7 +134,7 @@ const updateComparePrices = async (req, res) => {
 
     if (!apply) {
       return res.status(200).json({
-        message: `Preview: ${plan.updates.length} prices, ${plan.skipped.length} skipped`,
+        message: `Preview: ${plan.updates.length} prices, ${plan.skipped.length} skipped, ${plan.largeDrops} down more than 30%`,
         ...plan,
       });
     }

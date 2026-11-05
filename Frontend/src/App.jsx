@@ -18,6 +18,8 @@ import Compare from "./views/Compare.jsx";
 import Reviews from "./views/Reviews.jsx";
 import Export from "./views/Export.jsx";
 import AcceptInvite from "./views/AcceptInvite.jsx";
+import ForgotPassword from "./views/ForgotPassword.jsx";
+import ResetPassword from "./views/ResetPassword.jsx";
 import { loadUser } from "./actions/authActions";
 
 const GuestOnly = ({ children }) => {
@@ -73,13 +75,22 @@ const App = () => {
           }
         />
         <Route
-          path="/invite/:token"
+          path="/forgot-password"
           element={
             <GuestOnly>
-              <AcceptInvite />
+              <ForgotPassword />
             </GuestOnly>
           }
         />
+        <Route
+          path="/reset-password/:token"
+          element={
+            <GuestOnly>
+              <ResetPassword />
+            </GuestOnly>
+          }
+        />
+        <Route path="/invite/:token" element={<AcceptInvite />} />
         <Route path="/members" element={<Navigate to="/dashboard/members" replace />} />
         <Route
           path="/members/invite"

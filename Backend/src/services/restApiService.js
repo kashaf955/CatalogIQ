@@ -1,3 +1,6 @@
+const { safeFetch } = require("../utils/safeFetch");
+const { generatedSku } = require("../utils/productCodes");
+
 const toNumber = (value) => {
   if (value === null || value === undefined || value === "") return undefined;
   const number = Number(String(value).replace(/[^0-9.-]/g, ""));
@@ -53,9 +56,12 @@ const mapProduct = (item, index) => {
   const name = text(first(item, ["name", "title", "product", "product_name", "productName"]));
   if (!name) return null;
 
+  const mpn = text(first(item, ["mpn", "part_number", "partNumber", "manufacturer_part"]));
+  const gtin = text(first(item, ["gtin", "upc", "ean", "barcode"]));
+  const brand = text(first(item, ["brand", "make", "manufacturer", "brand_name"]));
   const sku =
     text(first(item, ["sku", "item", "item_number", "itemNumber", "part_number"])) ||
-    `api-${index + 1}`;
+    generatedSku({ name, brand, mpn, gtin });
 
   const images = [];
   const image = first(item, ["image", "image_url", "imageUrl", "thumbnail"]);
@@ -69,10 +75,10 @@ const mapProduct = (item, index) => {
 
   return {
     sku,
-    mpn: text(first(item, ["mpn", "part_number", "partNumber", "manufacturer_part"])),
-    gtin: text(first(item, ["gtin", "upc", "ean", "barcode"])),
+    mpn,
+    gtin,
     name,
-    brand: text(first(item, ["brand", "make", "manufacturer", "brand_name"])),
+    brand,
     description: text(first(item, ["description", "details", "body"])),
     price: toNumber(first(item, ["price", "sale_price", "calculated_price", "cost"])),
     currency: text(first(item, ["currency", "currency_code"])) || "USD",
@@ -95,7 +101,7 @@ const mapProduct = (item, index) => {
 const fetchRestProducts = async ({ url, accessToken, signal } = {}) => {
   const endpoint = assertHttpUrl(url);
   const token = text(accessToken);
-  const headers = { Accept: "application/json" };
+  const headers = {};
   if (token) {
     if (/bigcommerce\.com/i.test(endpoint)) {
       headers["X-Auth-Token"] = token;
@@ -108,8 +114,13 @@ const fetchRestProducts = async ({ url, accessToken, signal } = {}) => {
 
   let response;
   try {
-    response = await fetch(endpoint, { headers, redirect: "follow", signal });
+    response = await safeFetch(endpoint, {
+      headers,
+      publicHeaders: { Accept: "application/json" },
+      signal,
+    });
   } catch (err) {
+    if (err.status) throw err;
     if (signal?.aborted || err?.name === "AbortError") {
       const error = new Error("Ingest stopped");
       error.code = "INGEST_ABORTED";

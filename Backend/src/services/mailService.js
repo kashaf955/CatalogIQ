@@ -5,7 +5,6 @@ const {
   SMTP_USER,
   SMTP_PASS,
   MAIL_FROM,
-  FRONTEND_URL,
 } = require("../config/env");
 const { logError } = require("../utils/logger");
 
@@ -66,34 +65,43 @@ const send = async ({ to, subject, text, html }) => {
   }
 };
 
-const sendInviteEmail = ({ to, inviterName, workspace, role, inviteUrl }) =>
-  send({
+const sendInviteEmail = ({
+  to,
+  inviterName,
+  workspace,
+  role,
+  inviteUrl,
+  hasAccount,
+}) => {
+  const nextStep = hasAccount
+    ? "Accept the invite to join, then sign in with your existing password."
+    : "Choose your password to join.";
+  return send({
     to,
     subject: `You're invited to ${workspace} on CatalogIQ`,
-    text: `${inviterName} invited you to join ${workspace} on CatalogIQ as ${role}.\n\nSet your password and join here (link expires in 7 days):\n${inviteUrl}`,
+    text: `${inviterName} invited you to join ${workspace} on CatalogIQ as ${role}.\n\n${nextStep} This link expires in 7 days:\n${inviteUrl}\n\nIf you were not expecting this, you can ignore this email.`,
     html: layout(
       `Join ${workspace} on CatalogIQ`,
       `<p>${escapeHtml(inviterName)} invited you to join <strong>${escapeHtml(workspace)}</strong> as <strong>${escapeHtml(role)}</strong>.</p>
-       <p>Click below to choose your password. The link expires in 7 days and works once.</p>`,
+       <p>${escapeHtml(nextStep)} The link expires in 7 days and works once. If you were not expecting this, you can ignore this email.</p>`,
       "Accept invite",
       inviteUrl
     ),
   });
-
-const sendAddedEmail = ({ to, inviterName, workspace, role }) => {
-  const loginUrl = `${FRONTEND_URL}/login`;
-  return send({
-    to,
-    subject: `You were added to ${workspace} on CatalogIQ`,
-    text: `${inviterName} added you to ${workspace} on CatalogIQ as ${role}.\n\nSign in with your existing password:\n${loginUrl}`,
-    html: layout(
-      `You now have access to ${workspace}`,
-      `<p>${escapeHtml(inviterName)} added you to <strong>${escapeHtml(workspace)}</strong> as <strong>${escapeHtml(role)}</strong>.</p>
-       <p>Sign in with your existing CatalogIQ password.</p>`,
-      "Sign in",
-      loginUrl
-    ),
-  });
 };
 
-module.exports = { isMailConfigured, sendInviteEmail, sendAddedEmail };
+const sendPasswordResetEmail = ({ to, resetUrl }) =>
+  send({
+    to,
+    subject: "Reset your CatalogIQ password",
+    text: `Use this link to choose a new CatalogIQ password. It expires in 1 hour:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email and your password will not change.`,
+    html: layout(
+      "Reset your password",
+      `<p>Click below to choose a new CatalogIQ password. The link expires in 1 hour.</p>
+       <p>If you did not ask for this, you can ignore this email and your password will not change.</p>`,
+      "Reset password",
+      resetUrl
+    ),
+  });
+
+module.exports = { isMailConfigured, sendInviteEmail, sendPasswordResetEmail };

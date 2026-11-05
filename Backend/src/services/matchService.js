@@ -4,6 +4,7 @@ const Match = require("../models/matchModel");
 const {
   normalize,
   corePartCode,
+  realSku,
   samePartIdentity,
 } = require("../utils/productCodes");
 const { isMatchableProduct } = require("../utils/productMatchability");
@@ -17,7 +18,7 @@ const codes = (...values) => [
   ...new Set(values.map(normalize).filter((code) => code.length >= MIN_CODE_LENGTH)),
 ];
 
-// Checked in order; the first rule that finds candidates wins for that product.
+// Checked in order; for each source, the first rule that finds candidates wins.
 const RULES = [
   {
     reason: "GTIN",
@@ -32,12 +33,12 @@ const RULES = [
     // Same MPN with a SKU suffix (20307 vs 20307-BK) is a different sellable SKU.
     requireSamePart: true,
   },
-  { reason: "SKU", score: 90, keys: (p) => codes(p.sku) },
+  { reason: "SKU", score: 90, keys: (p) => codes(realSku(p)) },
   {
     reason: "Part number",
     score: 80,
     // SKU wins when present so a suffixed SKU is not keyed as the bare MPN.
-    keys: (p) => codes(corePartCode(p.sku) || corePartCode(p.mpn)),
+    keys: (p) => codes(corePartCode(realSku(p)) || corePartCode(p.mpn)),
     checkBrand: true,
     requireSamePart: true,
   },
@@ -66,30 +67,37 @@ const findMatches = (ours, theirs) => {
   const results = [];
 
   for (const product of ours) {
+    // Each competitor or manufacturer is its own decision: the same part sold by
+    // two competitors is two good matches, not two rival candidates.
+    const settledSources = new Set();
     for (let i = 0; i < RULES.length; i += 1) {
       const rule = RULES[i];
-      const found = new Map();
+      const foundBySource = new Map();
       for (const key of rule.keys(product)) {
         for (const candidate of indexes[i].get(key) || []) {
+          const source = String(candidate.sourceId);
+          if (settledSources.has(source)) continue;
           if (rule.checkBrand && brandsConflict(product, candidate)) continue;
           if (rule.requireSamePart && !samePartIdentity(product, candidate)) {
             continue;
           }
-          found.set(String(candidate._id), candidate);
+          if (!foundBySource.has(source)) foundBySource.set(source, new Map());
+          foundBySource.get(source).set(String(candidate._id), candidate);
         }
       }
-      if (found.size === 0) continue;
 
-      for (const candidate of [...found.values()].slice(0, MAX_CANDIDATES)) {
-        results.push({
-          ourProductId: product._id,
-          theirProductId: candidate._id,
-          theirSourceId: candidate.sourceId,
-          score: rule.score,
-          reason: rule.reason,
-        });
+      for (const [source, found] of foundBySource) {
+        settledSources.add(source);
+        for (const candidate of [...found.values()].slice(0, MAX_CANDIDATES)) {
+          results.push({
+            ourProductId: product._id,
+            theirProductId: candidate._id,
+            theirSourceId: candidate.sourceId,
+            score: rule.score,
+            reason: rule.reason,
+          });
+        }
       }
-      break;
     }
   }
 
@@ -111,18 +119,18 @@ const productsOfType = async (tenantId, type) => {
     .lean();
 };
 
-// Only products with a single candidate qualify; two equally good candidates
-// still need a person to pick one.
+// Only a single candidate from a source qualifies; two candidates from the same
+// source still need a person to pick one.
 const autoAcceptable = (found, threshold) => {
   if (typeof threshold !== "number") return [];
   const candidates = new Map();
   for (const match of found) {
-    const key = String(match.ourProductId);
+    const key = `${match.ourProductId}|${match.theirSourceId}`;
     candidates.set(key, [...(candidates.get(key) || []), match]);
   }
   return [...candidates.values()]
     .filter((list) => list.length === 1 && list[0].score >= threshold)
-    .map((list) => list[0].ourProductId);
+    .map((list) => list[0]);
 };
 
 const runMatching = async (tenantId, against, autoAcceptScore = null) => {
@@ -185,18 +193,23 @@ const runMatching = async (tenantId, against, autoAcceptScore = null) => {
   }
 
   // Reviewed matches (accepted, rejected, ignored) are never overridden.
-  const autoIds = autoAcceptable(found, autoAcceptScore);
+  const autoMatches = autoAcceptable(found, autoAcceptScore);
   const auto =
-    autoIds.length > 0
-      ? await Match.updateMany(
-          {
-            tenantId,
-            against,
-            status: "pending",
-            lastRunAt: runAt,
-            ourProductId: { $in: autoIds },
-          },
-          { status: "accepted", autoAccepted: true }
+    autoMatches.length > 0
+      ? await Match.bulkWrite(
+          autoMatches.map((match) => ({
+            updateOne: {
+              filter: {
+                tenantId,
+                against,
+                status: "pending",
+                lastRunAt: runAt,
+                ourProductId: match.ourProductId,
+                theirProductId: match.theirProductId,
+              },
+              update: { $set: { status: "accepted", autoAccepted: true } },
+            },
+          }))
         )
       : { modifiedCount: 0 };
 
@@ -218,4 +231,4 @@ const runMatching = async (tenantId, against, autoAcceptScore = null) => {
   };
 };
 
-module.exports = { runMatching, findMatches };
+module.exports = { runMatching, findMatches, autoAcceptable };

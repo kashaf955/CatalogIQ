@@ -50,10 +50,23 @@ const Compare = () => {
   const previewByProduct = useMemo(() => {
     const map = new Map();
     for (const item of preview?.updates || []) {
-      map.set(item.ourProductId, item.nextPrice);
+      map.set(item.ourProductId, item);
     }
     return map;
   }, [preview]);
+
+  const onApply = () => {
+    const drops = preview?.largeDrops || 0;
+    if (
+      drops > 0 &&
+      !window.confirm(
+        `${drops} ${drops === 1 ? "price drops" : "prices drop"} by more than 30%. Apply anyway?`
+      )
+    ) {
+      return;
+    }
+    runPrices(true);
+  };
 
   const runPrices = async (apply) => {
     setSaving(true);
@@ -155,7 +168,7 @@ const Compare = () => {
             <button
               type="button"
               disabled={saving || !preview}
-              onClick={() => runPrices(true)}
+              onClick={onApply}
               className="rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
             >
               Apply to company catalog
@@ -167,7 +180,8 @@ const Compare = () => {
       {canManage && against === "competitor" ? (
         <p className="mb-4 text-xs text-mute">
           5% on a $100 competitor price sets your SKU to $95. Preview first.
-          SKUs with two accepted competitors or no competitor price are skipped.
+          With several accepted competitors, the lowest price is used. SKUs with
+          no competitor price are skipped, and drops over 30% need confirming.
         </p>
       ) : null}
 
@@ -256,8 +270,10 @@ const Compare = () => {
                         : `${row.gap > 0 ? "+" : ""}${money(row.gap)}`}
                     </td>
                     {preview ? (
-                      <td className="px-4 py-3 text-ink">
-                        {typeof next === "number" ? money(next) : "—"}
+                      <td
+                        className={`px-4 py-3 ${next?.largeDrop ? "text-red-300" : "text-ink"}`}
+                      >
+                        {next ? money(next.nextPrice) : "—"}
                       </td>
                     ) : null}
                     <td className="px-4 py-3 text-xs text-mute">

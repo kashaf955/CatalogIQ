@@ -30,6 +30,7 @@ const verifyToken = (token) => {
       userId: String(decoded.userId),
       tenantId: String(decoded.tenantId),
       role: String(decoded.role || ""),
+      issuedAt: decoded.iat,
     };
   } catch {
     return null;

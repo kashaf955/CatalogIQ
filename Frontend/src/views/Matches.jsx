@@ -218,7 +218,7 @@ const Matches = () => {
           className="flex items-center gap-2 sm:ml-auto"
         >
           <label htmlFor="auto-score" className="text-sm text-mute">
-            Auto-accept at =
+            Auto-accept at or above
           </label>
           <input
             id="auto-score"
@@ -246,7 +246,8 @@ const Matches = () => {
           Scores: GTIN 100 · MPN 95 · SKU 90 · part number 80. A suffix on the
           part number (20307 vs 20307-BK) is a different SKU; the same number
           with no suffix is the same SKU. A product with more than one
-          candidate always goes to review. Leave empty to turn auto-accept off.
+          candidate from the same source goes to review. Leave empty to turn
+          auto-accept off.
         </p>
       ) : null}
 
