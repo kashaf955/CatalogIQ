@@ -20,6 +20,20 @@ const pickList = (ours, theirs) => {
 // Share of the current price; bigger cuts are flagged before anyone applies them.
 const LARGE_DROP = 0.3;
 
+// Store descriptions are often HTML; the Compare table shows the words.
+const plainDescription = (value) =>
+  String(value || "")
+    .replace(/<(style|script)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const roundMoney = (value) => Math.round(Number(value) * 100) / 100;
 
 const parsePercent = (value) => {
@@ -65,7 +79,8 @@ const toCombined = (match) => {
     brand: pickText(ours.brand, theirs.brand),
     mpn: pickText(ours.mpn, theirs.mpn),
     gtin: pickText(ours.gtin, theirs.gtin),
-    description: pickText(ours.description, theirs.description),
+    ourDescription: plainDescription(ours.description),
+    theirDescription: plainDescription(theirs.description),
     images: pickList(ours.images, theirs.images),
     fitment: pickText(ours.fitment, theirs.fitment),
     category: pickText(ours.category, theirs.category),

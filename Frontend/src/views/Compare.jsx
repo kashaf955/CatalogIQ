@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import ProductDescriptions from "../components/ProductDescriptions";
 
 const fieldClass =
   "rounded-md border border-white/10 bg-canvas px-3 py-2 text-sm text-ink outline-none focus:border-brand";
@@ -222,6 +223,7 @@ const Compare = () => {
                 {preview ? (
                   <th className="px-4 py-3 font-medium">New price</th>
                 ) : null}
+                <th className="px-4 py-3 font-medium">Description</th>
                 <th className="px-4 py-3 font-medium">Stock</th>
               </tr>
             </thead>
@@ -276,6 +278,12 @@ const Compare = () => {
                         {next ? money(next.nextPrice) : "—"}
                       </td>
                     ) : null}
+                    <td className="px-4 py-3 align-top">
+                      <ProductDescriptions
+                        ours={row.ourDescription}
+                        theirs={row.theirDescription}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-xs text-mute">
                       {dash(row.ourAvailability)} / {dash(row.theirAvailability)}
                     </td>
