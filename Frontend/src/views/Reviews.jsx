@@ -1,7 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
+
+const fetchQueue = async () => {
+  const response = await axios.get("/api/v1/matches", {
+    params: { status: "pending" },
+    withCredentials: true,
+  });
+  return Array.isArray(response.data) ? response.data : [];
+};
+
+const fetchAiStatus = async () => {
+  try {
+    const response = await axios.get("/api/v1/matches/ai-check", {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch {
+    return null;
+  }
+};
 
 const Reviews = () => {
   const { role } = useSelector((state) => state.auth);
@@ -9,22 +28,49 @@ const Reviews = () => {
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [aiAgainst, setAiAgainst] = useState("competitor");
+  const [ai, setAi] = useState(null);
+
+  const showQueue = useCallback((request) => {
+    request
+      .then(setItems)
+      .catch((err) =>
+        setError(err.response?.data?.message || "Could not load review queue")
+      );
+  }, []);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const response = await axios.get("/api/v1/matches", {
-          params: { status: "pending" },
-          withCredentials: true,
-        });
-        setItems(Array.isArray(response.data) ? response.data : []);
-      } catch (err) {
-        setError(err.response?.data?.message || "Could not load review queue");
-      }
-    };
+    showQueue(fetchQueue());
+    fetchAiStatus().then(setAi);
+  }, [showQueue]);
 
-    load();
-  }, []);
+  const aiRunning = ai?.job?.status === "running";
+
+  // While a check runs, poll its progress and refresh the queue when it ends.
+  useEffect(() => {
+    if (!aiRunning) return undefined;
+    const timer = setInterval(async () => {
+      const data = await fetchAiStatus();
+      setAi(data);
+      if (data?.job?.status !== "running") showQueue(fetchQueue());
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [aiRunning, showQueue]);
+
+  const runAiCheck = async () => {
+    setError(null);
+    setMessage(null);
+    try {
+      await axios.post(
+        "/api/v1/matches/ai-check",
+        { against: aiAgainst },
+        { withCredentials: true }
+      );
+      setAi(await fetchAiStatus());
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not start AI check");
+    }
+  };
 
   const decide = async (id, status) => {
     setError(null);
@@ -69,6 +115,65 @@ const Reviews = () => {
         </div>
       </div>
 
+      <div className="mb-6 rounded-2xl border border-brand/20 bg-panel p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-medium text-ink">AI check</p>
+            <p className="text-sm text-mute">
+              Asks AI about matches the rules could not settle. It only
+              suggests; you still accept or reject.
+            </p>
+          </div>
+          {canReview ? (
+            <div className="flex gap-2">
+              <select
+                value={aiAgainst}
+                onChange={(event) => setAiAgainst(event.target.value)}
+                disabled={aiRunning}
+                className="rounded-md border border-white/10 bg-transparent px-3 py-2 text-sm text-ink"
+              >
+                <option value="competitor">Competitors</option>
+                <option value="manufacturer">Manufacturers</option>
+              </select>
+              <button
+                type="button"
+                onClick={runAiCheck}
+                disabled={aiRunning || ai?.configured === false}
+                className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
+              >
+                {aiRunning ? "Checking…" : "Run AI check"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+        {ai?.configured === false ? (
+          <p className="mt-3 text-sm text-amber-300">
+            AI is not set up yet: add ANTHROPIC_API_KEY to the server .env.
+          </p>
+        ) : null}
+        {ai?.job ? (
+          <p className="mt-3 text-sm text-mute">
+            {ai.job.status === "running" ? "Running" : "Last run"} (
+            {ai.job.against}): {ai.job.done}/{ai.job.planned} checked,{" "}
+            {ai.job.matched} matches found, {ai.job.aiCalls} AI calls,{" "}
+            {ai.job.cached} reused from cache
+            {ai.job.skipped
+              ? `, ${ai.job.skipped} left for the next run (limit ${ai.job.limit})`
+              : ""}
+            {ai.job.errors ? `, ${ai.job.errors} errors` : ""}
+            {ai.job.stopReason ? ` — ${ai.job.stopReason}` : ""}
+          </p>
+        ) : null}
+        {ai?.usageLast30Days?.calls ? (
+          <p className="mt-1 text-xs text-mute">
+            Last 30 days: {ai.usageLast30Days.calls} calls,{" "}
+            {ai.usageLast30Days.inputTokens.toLocaleString()} input +{" "}
+            {ai.usageLast30Days.cacheReadTokens.toLocaleString()} cached +{" "}
+            {ai.usageLast30Days.outputTokens.toLocaleString()} output tokens
+          </p>
+        ) : null}
+      </div>
+
       {error ? <p className="mb-4 text-sm text-red-300">{error}</p> : null}
       {message ? (
         <p className="mb-4 rounded-md bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">
@@ -89,6 +194,7 @@ const Reviews = () => {
                 <th className="px-4 py-3 font-medium">Suggested match</th>
                 <th className="px-4 py-3 font-medium">Score</th>
                 <th className="px-4 py-3 font-medium">Reason</th>
+                <th className="px-4 py-3 font-medium">AI</th>
                 <th className="px-4 py-3 font-medium"> </th>
               </tr>
             </thead>
@@ -108,6 +214,31 @@ const Reviews = () => {
                   </td>
                   <td className="px-4 py-3 text-ink">{item.score}</td>
                   <td className="px-4 py-3 text-ink">{item.reason}</td>
+                  <td className="max-w-xs px-4 py-3">
+                    {item.aiVerdict ? (
+                      <>
+                        <span
+                          className={`rounded px-2 py-0.5 text-xs font-medium ${
+                            item.aiVerdict === "match"
+                              ? "bg-emerald-500/15 text-emerald-300"
+                              : "bg-red-500/15 text-red-300"
+                          }`}
+                        >
+                          {item.aiVerdict === "match" ? "Same part" : "Not same"}
+                          {item.aiConfidence != null
+                            ? ` · ${Math.round(item.aiConfidence * 100)}%`
+                            : ""}
+                        </span>
+                        {item.aiReason ? (
+                          <p className="mt-1 text-xs text-mute">
+                            {item.aiReason}
+                          </p>
+                        ) : null}
+                      </>
+                    ) : (
+                      <span className="text-mute">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     {canReview ? (
                       <div className="flex flex-wrap gap-3">
