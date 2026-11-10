@@ -190,13 +190,13 @@ const DashboardLayout = () => {
               <Icon path={icons.matches} />
               Matches
             </NavLink>
-            <NavLink to="/dashboard/compare" className={navClass}>
-              <Icon path={icons.compare} />
-              Compare
-            </NavLink>
             <NavLink to="/dashboard/reviews" className={navClass}>
               <Icon path={icons.review} />
               Review
+            </NavLink>
+            <NavLink to="/dashboard/compare" className={navClass}>
+              <Icon path={icons.compare} />
+              Compare
             </NavLink>
             <NavLink to="/dashboard/export" className={navClass}>
               <Icon path={icons.export} />
