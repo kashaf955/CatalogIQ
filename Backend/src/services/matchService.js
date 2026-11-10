@@ -214,10 +214,12 @@ const runMatching = async (tenantId, against, autoAcceptScore = null) => {
       : { modifiedCount: 0 };
 
   // Pending matches that no longer show up are stale; reviewed ones are kept.
+  // AI suggestions are not produced by the rules, so a rules run keeps them.
   const stale = await Match.deleteMany({
     tenantId,
     against,
     status: "pending",
+    reason: { $ne: "AI" },
     lastRunAt: { $ne: runAt },
   });
 

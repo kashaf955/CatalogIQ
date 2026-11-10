@@ -5,6 +5,8 @@ const {
   getCompare,
   updateComparePrices,
   updateMatch,
+  runAiCheck,
+  getAiCheck,
 } = require("../controllers/matchController");
 const { authenticate, authorize } = require("../middleware/auth");
 
@@ -14,6 +16,8 @@ const manage = authorize("owner", "manager");
 router.get("/", getMatches);
 router.get("/compare", getCompare);
 router.post("/run", manage, runMatches);
+router.get("/ai-check", getAiCheck);
+router.post("/ai-check", manage, runAiCheck);
 router.post("/compare/prices", manage, updateComparePrices);
 router.patch("/:id", manage, updateMatch);
 
