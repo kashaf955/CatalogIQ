@@ -6,6 +6,8 @@ const {
   pricePlan,
   applyPricePlan,
 } = require("../services/compareService");
+const { startAiCheck, getAiCheckJob } = require("../services/aiMatchService");
+const { isAiConfigured, usageSummary } = require("../services/aiService");
 const { logError } = require("../utils/logger");
 const { isMatchableProduct } = require("../utils/productMatchability");
 
@@ -26,6 +28,9 @@ const toRow = (match) => ({
   theirName: match.theirProductId.name,
   theirPrice: match.theirProductId.price,
   theirUrl: match.theirProductId.sourceUrl,
+  aiVerdict: match.aiVerdict || null,
+  aiConfidence: match.aiConfidence ?? null,
+  aiReason: match.aiReason || null,
 });
 
 const runMatches = async (req, res) => {
@@ -151,7 +156,45 @@ const updateComparePrices = async (req, res) => {
   }
 };
 
+const runAiCheck = async (req, res) => {
+  try {
+    const against = req.body?.against;
+    if (!AGAINST.includes(against)) {
+      return res
+        .status(400)
+        .json({ message: "Choose manufacturer or competitor to check against" });
+    }
+    if (!isAiConfigured()) {
+      return res
+        .status(503)
+        .json({ message: "AI is not set up: add ANTHROPIC_API_KEY to the server .env" });
+    }
+    const job = startAiCheck(req.tenant.id, against);
+    return res.status(202).json({ message: "AI check started", ...job });
+  } catch (error) {
+    logError("matches.aiCheck", error);
+    return res.status(error.status || 500).json({ message: error.message });
+  }
+};
+
+const getAiCheck = async (req, res) => {
+  try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const usage = await usageSummary(req.tenant.id, since);
+    return res.status(200).json({
+      configured: isAiConfigured(),
+      job: getAiCheckJob(req.tenant.id),
+      usageLast30Days: usage,
+    });
+  } catch (error) {
+    logError("matches.aiCheckStatus", error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
+  runAiCheck,
+  getAiCheck,
   runMatches,
   getMatches,
   getCompare,

@@ -16,6 +16,11 @@ const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
 const TRUST_PROXY = Number(process.env.TRUST_PROXY) || 0;
+// ANTHROPIC_API_KEY is read by the Claude SDK itself.
+const AI_MODEL = process.env.AI_MODEL || "claude-opus-5-5";
+// Most new AI calls one "AI check" run may make; cached answers are free.
+const AI_MAX_CHECKS = Number(process.env.AI_MAX_CHECKS) || 100;
+const AI_CONCURRENCY = Number(process.env.AI_CONCURRENCY) || 3;
 
 const assertTokenEncryptionKey = () => {
   if (!TOKEN_ENCRYPTION_KEY) {
@@ -42,5 +47,8 @@ module.exports = {
   SMTP_PASS,
   MAIL_FROM,
   TRUST_PROXY,
+  AI_MODEL,
+  AI_MAX_CHECKS,
+  AI_CONCURRENCY,
   assertTokenEncryptionKey,
 };

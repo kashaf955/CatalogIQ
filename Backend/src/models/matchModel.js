@@ -47,6 +47,22 @@ const matchSchema = new mongoose.Schema(
     lastRunAt: {
       type: Date,
     },
+    // Set by the AI check. It only advises; a person still accepts or rejects.
+    aiVerdict: {
+      type: String,
+      enum: ["match", "no_match", null],
+      default: null,
+    },
+    aiConfidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+      default: null,
+    },
+    aiReason: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
