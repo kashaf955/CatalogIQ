@@ -1,35 +1,45 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState, type FormEvent } from "react";
+import { useAppDispatch, useAppSelector } from "../hooks";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { acceptInvite, logout } from "../actions/authActions";
 import Header from "../components/Header";
+import { apiMessage } from "../utils/apiError";
+import type { Role } from "../types/api";
+
+interface InviteDetails {
+  workspace: string;
+  role: Role;
+  email: string;
+  name?: string;
+  needsPassword: boolean;
+}
 
 const fieldClass =
   "mt-2 w-full rounded-lg border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const AcceptInvite = () => {
   const { token } = useParams();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { status, error, user } = useSelector((state) => state.auth);
-  const [invite, setInvite] = useState(null);
-  const [loadError, setLoadError] = useState(null);
+  const { status, error, user } = useAppSelector((state) => state.auth);
+  const [invite, setInvite] = useState<InviteDetails | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const loading = status === "loading";
 
   useEffect(() => {
     const load = async () => {
       try {
-        const response = await axios.get(`/api/v1/auth/invite/${token}`);
+        const response = await axios.get<InviteDetails>(`/api/v1/auth/invite/${token}`);
         setInvite(response.data);
         setName(response.data.name || "");
       } catch (err) {
         setLoadError(
-          err.response?.data?.message || "This invite link is invalid or has expired"
+          apiMessage(err, "This invite link is invalid or has expired")
         );
       }
     };
@@ -37,9 +47,10 @@ const AcceptInvite = () => {
     load();
   }, [token]);
 
-  const onSubmit = async (event) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
+    if (!invite || !token) return;
     if (invite.needsPassword && password !== confirm) {
       setFormError("Passwords do not match");
       return;

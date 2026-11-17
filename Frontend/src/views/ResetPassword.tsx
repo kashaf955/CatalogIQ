@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import Header from "../components/Header";
+import { apiMessage } from "../utils/apiError";
 
 const fieldClass =
   "mt-2 w-full rounded-lg border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
@@ -12,9 +13,9 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = async (event) => {
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     if (password !== confirm) {
@@ -28,7 +29,7 @@ const ResetPassword = () => {
       });
       navigate("/login", { state: { notice: response.data.message } });
     } catch (err) {
-      setError(err.response?.data?.message || "Could not reset the password");
+      setError(apiMessage(err, "Could not reset the password"));
       setLoading(false);
     }
   };

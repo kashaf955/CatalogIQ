@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
 
 const fieldClass =
   "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
@@ -33,7 +34,7 @@ const templates = [
   },
 ];
 
-const templateIdFor = (type, kind) => {
+const templateIdFor = (type?: string, kind?: string) => {
   const match = templates.find((item) => item.type === type && item.kind === kind);
   return match?.id || "our_excel";
 };
@@ -53,7 +54,7 @@ const CatalogForm = () => {
           : item.type === "our_catalog"
       );
   const navigate = useNavigate();
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canManage =
     role === "owner" || role === "manager";
 
@@ -68,8 +69,8 @@ const CatalogForm = () => {
   const [accessToken, setAccessToken] = useState("");
   const [accessTokenSet, setAccessTokenSet] = useState(false);
   const [status, setStatus] = useState("active");
-  const [file, setFile] = useState(null);
-  const [error, setError] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
 
@@ -120,7 +121,7 @@ const CatalogForm = () => {
         setAccessTokenSet(Boolean(catalog.connection?.accessTokenSet));
         setStatus(catalog.status || "active");
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load catalog");
+        setError(apiMessage(err, "Could not load catalog"));
       } finally {
         setLoading(false);
       }
@@ -129,11 +130,11 @@ const CatalogForm = () => {
     loadCatalog();
   }, [id, isEdit]);
 
-  const handleTemplate = (nextId) => {
+  const handleTemplate = (nextId: string) => {
     setTemplateId(nextId);
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
@@ -190,7 +191,7 @@ const CatalogForm = () => {
 
       navigate(catalogId ? `/dashboard/catalogs/${catalogId}` : catalogsPath);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not save catalog");
+      setError(apiMessage(err, "Could not save catalog"));
     } finally {
       setSaving(false);
     }

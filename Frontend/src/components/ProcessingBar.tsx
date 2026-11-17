@@ -1,6 +1,11 @@
-import React from "react";
 
-const ProcessingBar = ({ label, percent }) => {
+interface ProcessingBarProps {
+  label: string;
+  // Leave out for a moving bar when progress is unknown.
+  percent?: number | null;
+}
+
+const ProcessingBar = ({ label, percent }: ProcessingBarProps) => {
   const determinate = typeof percent === "number";
 
   return (

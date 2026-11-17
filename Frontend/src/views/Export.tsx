@@ -1,19 +1,23 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
+import type { Catalog } from "../types/api";
 
 const fieldClass =
   "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none focus:border-brand";
 
-const filenameFromHeader = (header, format) => {
+const filenameFromHeader = (header: unknown, format: string) => {
   const match = String(header || "").match(/filename="?([^"]+)"?/i);
   if (match?.[1]) return match[1];
   return `catalogiq-export.${format === "xlsx" ? "xlsx" : "csv"}`;
 };
 
-const readBlobError = async (data) => {
+// Downloads are requested as a Blob, so an error body arrives as a Blob too.
+const readBlobError = async (error: unknown) => {
+  const data: unknown = axios.isAxiosError(error) ? error.response?.data : undefined;
   if (!(data instanceof Blob)) {
-    return data?.message || "Export failed";
+    return apiMessage(error, "Export failed");
   }
   try {
     const parsed = JSON.parse(await data.text());
@@ -24,19 +28,19 @@ const readBlobError = async (data) => {
 };
 
 const Export = () => {
-  const [catalogs, setCatalogs] = useState([]);
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [sourceId, setSourceId] = useState("");
   const [format, setFormat] = useState("csv");
   const [scope, setScope] = useState("accepted");
   const [against, setAgainst] = useState("competitor");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const response = await axios.get("/api/v1/catalogs", {
+        const response = await axios.get<Catalog[]>("/api/v1/catalogs", {
           withCredentials: true,
         });
         const list = Array.isArray(response.data) ? response.data : [];
@@ -44,7 +48,7 @@ const Export = () => {
         const ours = list.find((item) => item.type === "our_catalog");
         if (ours) setSourceId(ours._id);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load catalogs");
+        setError(apiMessage(err, "Could not load catalogs"));
       }
     };
 
@@ -55,7 +59,7 @@ const Export = () => {
   const showAgainst =
     scope !== "all" && selected?.type === "our_catalog";
 
-  const onExport = async (event) => {
+  const onExport = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
@@ -85,7 +89,7 @@ const Export = () => {
       window.URL.revokeObjectURL(url);
       setMessage(`Downloaded ${name}`);
     } catch (err) {
-      setError(await readBlobError(err.response?.data));
+      setError(await readBlobError(err));
     } finally {
       setSaving(false);
     }

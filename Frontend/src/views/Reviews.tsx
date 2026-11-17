@@ -1,19 +1,21 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
+import type { AiCheckStatus, MatchAgainst, MatchRow, MatchStatus } from "../types/api";
 
-const fetchQueue = async () => {
-  const response = await axios.get("/api/v1/matches", {
+const fetchQueue = async (): Promise<MatchRow[]> => {
+  const response = await axios.get<MatchRow[]>("/api/v1/matches", {
     params: { status: "pending" },
     withCredentials: true,
   });
   return Array.isArray(response.data) ? response.data : [];
 };
 
-const fetchAiStatus = async () => {
+const fetchAiStatus = async (): Promise<AiCheckStatus | null> => {
   try {
-    const response = await axios.get("/api/v1/matches/ai-check", {
+    const response = await axios.get<AiCheckStatus>("/api/v1/matches/ai-check", {
       withCredentials: true,
     });
     return response.data;
@@ -23,19 +25,19 @@ const fetchAiStatus = async () => {
 };
 
 const Reviews = () => {
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canReview = role === "owner" || role === "manager";
-  const [items, setItems] = useState([]);
-  const [message, setMessage] = useState(null);
-  const [error, setError] = useState(null);
-  const [aiAgainst, setAiAgainst] = useState("competitor");
-  const [ai, setAi] = useState(null);
+  const [items, setItems] = useState<MatchRow[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [aiAgainst, setAiAgainst] = useState<MatchAgainst>("competitor");
+  const [ai, setAi] = useState<AiCheckStatus | null>(null);
 
-  const showQueue = useCallback((request) => {
+  const showQueue = useCallback((request: Promise<MatchRow[]>) => {
     request
       .then(setItems)
-      .catch((err) =>
-        setError(err.response?.data?.message || "Could not load review queue")
+      .catch((err: unknown) =>
+        setError(apiMessage(err, "Could not load review queue"))
       );
   }, []);
 
@@ -68,11 +70,11 @@ const Reviews = () => {
       );
       setAi(await fetchAiStatus());
     } catch (err) {
-      setError(err.response?.data?.message || "Could not start AI check");
+      setError(apiMessage(err, "Could not start AI check"));
     }
   };
 
-  const decide = async (id, status) => {
+  const decide = async (id: string, status: MatchStatus) => {
     setError(null);
     try {
       await axios.patch(
@@ -83,7 +85,7 @@ const Reviews = () => {
       setItems((current) => current.filter((item) => item.id !== id));
       setMessage(`Marked ${status}.`);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not update match");
+      setError(apiMessage(err, "Could not update match"));
     }
   };
 
@@ -128,7 +130,7 @@ const Reviews = () => {
             <div className="flex gap-2">
               <select
                 value={aiAgainst}
-                onChange={(event) => setAiAgainst(event.target.value)}
+                onChange={(event) => setAiAgainst(event.target.value as MatchAgainst)}
                 disabled={aiRunning}
                 className="rounded-md border border-white/10 bg-transparent px-3 py-2 text-sm text-ink"
               >
