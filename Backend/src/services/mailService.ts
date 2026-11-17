@@ -1,0 +1,123 @@
+import nodemailer, { type Transporter } from "nodemailer";
+import {
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASS,
+  MAIL_FROM,
+} from "../config/env";
+import { logError } from "../utils/logger";
+
+let transporter: Transporter | null = null;
+
+const isMailConfigured = () => Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS);
+
+const getTransporter = () => {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST ?? "",
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+  }
+  return transporter;
+};
+
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+const escapeHtml = (value: unknown) =>
+  String(value ?? "").replace(/[&<>"']/g, (char) => HTML_ESCAPES[char] ?? char);
+
+const layout = (heading: string, body: string, buttonLabel: string, buttonUrl: string) => `
+  <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1f2937">
+    <h2 style="margin:0 0 16px">${escapeHtml(heading)}</h2>
+    ${body}
+    <p style="margin:24px 0">
+      <a href="${escapeHtml(buttonUrl)}"
+         style="background:#4f46e5;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block">
+        ${escapeHtml(buttonLabel)}
+      </a>
+    </p>
+    <p style="font-size:12px;color:#6b7280">
+      If the button does not work, copy this link into your browser:<br>${escapeHtml(buttonUrl)}
+    </p>
+  </div>`;
+
+// Returns true when the message was handed to the SMTP server. Never throws,
+// so a mail outage cannot break the invite itself.
+interface Message {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
+const send = async ({ to, subject, text, html }: Message) => {
+  if (!isMailConfigured()) {
+    console.warn(`[mail] SMTP is not configured; not sending "${subject}" to ${to}`);
+    return false;
+  }
+  try {
+    await getTransporter().sendMail({ from: MAIL_FROM, to, subject, text, html });
+    console.log(`[mail] sent "${subject}" to ${to}`);
+    return true;
+  } catch (error) {
+    logError("mail.send", error, { to, subject });
+    return false;
+  }
+};
+
+const sendInviteEmail = ({
+  to,
+  inviterName,
+  workspace,
+  role,
+  inviteUrl,
+  hasAccount,
+}: {
+  to: string;
+  inviterName: string;
+  workspace: string;
+  role: string;
+  inviteUrl: string;
+  hasAccount: boolean;
+}) => {
+  const nextStep = hasAccount
+    ? "Accept the invite to join, then sign in with your existing password."
+    : "Choose your password to join.";
+  return send({
+    to,
+    subject: `You're invited to ${workspace} on CatalogIQ`,
+    text: `${inviterName} invited you to join ${workspace} on CatalogIQ as ${role}.\n\n${nextStep} This link expires in 7 days:\n${inviteUrl}\n\nIf you were not expecting this, you can ignore this email.`,
+    html: layout(
+      `Join ${workspace} on CatalogIQ`,
+      `<p>${escapeHtml(inviterName)} invited you to join <strong>${escapeHtml(workspace)}</strong> as <strong>${escapeHtml(role)}</strong>.</p>
+       <p>${escapeHtml(nextStep)} The link expires in 7 days and works once. If you were not expecting this, you can ignore this email.</p>`,
+      "Accept invite",
+      inviteUrl
+    ),
+  });
+};
+
+const sendPasswordResetEmail = ({ to, resetUrl }: { to: string; resetUrl: string }) =>
+  send({
+    to,
+    subject: "Reset your CatalogIQ password",
+    text: `Use this link to choose a new CatalogIQ password. It expires in 1 hour:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email and your password will not change.`,
+    html: layout(
+      "Reset your password",
+      `<p>Click below to choose a new CatalogIQ password. The link expires in 1 hour.</p>
+       <p>If you did not ask for this, you can ignore this email and your password will not change.</p>`,
+      "Reset password",
+      resetUrl
+    ),
+  });
+
+export { isMailConfigured, sendInviteEmail, sendPasswordResetEmail };
