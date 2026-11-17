@@ -1,13 +1,19 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const PREVIEW_LENGTH = 160;
 
-const shorten = (text) =>
+const shorten = (text: string) =>
   text.length > PREVIEW_LENGTH
     ? `${text.slice(0, PREVIEW_LENGTH).trimEnd()}...`
     : text;
 
-const Side = ({ title, text, expanded }) => (
+interface SideProps {
+  title: string;
+  text: string;
+  expanded: boolean;
+}
+
+const Side = ({ title, text, expanded }: SideProps) => (
   <div>
     <p className="mb-1 text-xs font-medium text-mute">{title}</p>
     <p className="text-xs leading-relaxed text-ink">
@@ -16,7 +22,12 @@ const Side = ({ title, text, expanded }) => (
   </div>
 );
 
-const ProductDescriptions = ({ ours, theirs }) => {
+interface ProductDescriptionsProps {
+  ours: string;
+  theirs: string;
+}
+
+const ProductDescriptions = ({ ours, theirs }: ProductDescriptionsProps) => {
   const [expanded, setExpanded] = useState(false);
   const isLong = ours.length > PREVIEW_LENGTH || theirs.length > PREVIEW_LENGTH;
 

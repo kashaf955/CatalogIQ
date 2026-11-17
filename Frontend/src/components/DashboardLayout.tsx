@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "../hooks";
 import axios from "axios";
+import type { Catalog } from "../types/api";
 import logo from "../assets/logo.png";
 import { logout } from "../actions/authActions";
 
-const Icon = ({ path }) => (
+const Icon = ({ path }: { path: string }) => (
   <svg
     viewBox="0 0 24 24"
     className="h-4 w-4 shrink-0"
@@ -28,21 +29,21 @@ const icons = {
   members: "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75",
 };
 
-const navClass = ({ isActive }) =>
+const navClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
     isActive
       ? "bg-white/[0.07] text-ink"
       : "text-mute hover:bg-white/[0.04] hover:text-ink"
   }`;
 
-const subClass = (active) =>
+const subClass = (active: boolean) =>
   `block rounded-md px-2.5 py-1.5 text-[13px] transition-colors ${
     active
       ? "bg-white/[0.07] text-ink"
       : "text-mute hover:bg-white/[0.04] hover:text-ink"
   }`;
 
-const pageLabel = (pathname) => {
+const pageLabel = (pathname: string) => {
   if (pathname === "/dashboard") return "Overview";
   if (pathname.startsWith("/dashboard/catalogs")) return "Catalogs";
   if (pathname.startsWith("/dashboard/products")) return "Products";
@@ -56,11 +57,11 @@ const pageLabel = (pathname) => {
 
 const DashboardLayout = () => {
   const [open, setOpen] = useState(false);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
-  const { user, role } = useSelector((state) => state.auth);
-  const [catalogs, setCatalogs] = useState([]);
+  const { user, role } = useAppSelector((state) => state.auth);
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const catalogIdMatch = pathname.match(/^\/dashboard\/catalogs\/([^/]+)/);
   const activeCatalogId =
     catalogIdMatch && catalogIdMatch[1] !== "new" && catalogIdMatch[1] !== "edit"
@@ -80,7 +81,7 @@ const DashboardLayout = () => {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await axios.get("/api/v1/catalogs", {
+        const response = await axios.get<Catalog[]>("/api/v1/catalogs", {
           withCredentials: true,
         });
         if (!cancelled) {

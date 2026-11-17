@@ -1,42 +1,44 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
 import ProductDescriptions from "../components/ProductDescriptions";
+import { apiMessage } from "../utils/apiError";
+import type { CompareRow, MatchAgainst, PricePlan, PriceUpdate } from "../types/api";
 
 const fieldClass =
   "rounded-md border border-white/10 bg-canvas px-3 py-2 text-sm text-ink outline-none focus:border-brand";
 
-const money = (value) =>
+const money = (value?: number | null) =>
   typeof value === "number" ? value.toFixed(2) : "—";
 
-const dash = (value) =>
+const dash = (value?: string | null) =>
   value && String(value).trim() !== "" ? String(value) : "—";
 
 const Compare = () => {
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canManage =
     role === "owner" || role === "manager";
-  const [against, setAgainst] = useState("competitor");
-  const [rows, setRows] = useState([]);
+  const [against, setAgainst] = useState<MatchAgainst>("competitor");
+  const [rows, setRows] = useState<CompareRow[]>([]);
   const [percent, setPercent] = useState("5");
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState<PricePlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("/api/v1/matches/compare", {
+      const response = await axios.get<CompareRow[]>("/api/v1/matches/compare", {
         params: { against },
         withCredentials: true,
       });
       setRows(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not load compare");
+      setError(apiMessage(err, "Could not load compare"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ const Compare = () => {
   }, [against]);
 
   const previewByProduct = useMemo(() => {
-    const map = new Map();
+    const map = new Map<string, PriceUpdate>();
     for (const item of preview?.updates || []) {
       map.set(item.ourProductId, item);
     }
@@ -69,12 +71,12 @@ const Compare = () => {
     runPrices(true);
   };
 
-  const runPrices = async (apply) => {
+  const runPrices = async (apply: boolean) => {
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const response = await axios.post(
+      const response = await axios.post<PricePlan>(
         "/api/v1/matches/compare/prices",
         { percent: Number(percent), apply },
         { withCredentials: true }
@@ -83,13 +85,13 @@ const Compare = () => {
       setMessage(response.data.message);
       if (apply) await load();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not update prices");
+      setError(apiMessage(err, "Could not update prices"));
     } finally {
       setSaving(false);
     }
   };
 
-  const onPreview = (event) => {
+  const onPreview = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     runPrices(false);
   };
@@ -129,7 +131,7 @@ const Compare = () => {
           <select
             className={`${fieldClass} mt-2 block`}
             value={against}
-            onChange={(event) => setAgainst(event.target.value)}
+            onChange={(event) => setAgainst(event.target.value as MatchAgainst)}
           >
             <option value="competitor">Vs competitor catalog</option>
             <option value="manufacturer">Vs manufacturer Excel</option>

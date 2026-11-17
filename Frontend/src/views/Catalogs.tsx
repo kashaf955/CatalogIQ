@@ -1,23 +1,20 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
+import type { Catalog, CatalogType } from "../types/api";
+import { connectionLabel, typeLabel } from "../utils/labels";
 
-const typeLabel = {
-  our_catalog: "Company catalog",
-  manufacturer: "Manufacturer",
-  competitor: "Competitor",
-};
+type TabId = "company" | "compare";
 
-const kindLabel = {
-  api: "API",
-  csv: "CSV",
-  excel: "Excel",
-  feed: "Feed",
-  website: "Website",
-};
-
-const tabs = [
+const tabs: {
+  id: TabId;
+  label: string;
+  types: CatalogType[];
+  empty: string;
+  addLabel: string;
+}[] = [
   {
     id: "company",
     label: "Company catalog",
@@ -35,25 +32,25 @@ const tabs = [
 ];
 
 const Catalogs = () => {
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canManage =
     role === "owner" || role === "manager";
   const [searchParams, setSearchParams] = useSearchParams();
   const tabId = searchParams.get("tab") === "compare" ? "compare" : "company";
   const tab = tabs.find((item) => item.id === tabId) || tabs[0];
-  const [catalogs, setCatalogs] = useState([]);
-  const [error, setError] = useState(null);
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadCatalogs = async () => {
       try {
-        const response = await axios.get("/api/v1/catalogs", {
+        const response = await axios.get<Catalog[]>("/api/v1/catalogs", {
           withCredentials: true,
         });
         setCatalogs(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load catalogs");
+        setError(apiMessage(err, "Could not load catalogs"));
       } finally {
         setLoading(false);
       }
@@ -67,11 +64,11 @@ const Catalogs = () => {
     [catalogs, tab.types]
   );
 
-  const setTab = (next) => {
+  const setTab = (next: TabId) => {
     setSearchParams(next === "company" ? {} : { tab: next });
   };
 
-  const removeCatalog = async (catalogId) => {
+  const removeCatalog = async (catalogId: string) => {
     setError(null);
     try {
       await axios.delete(`/api/v1/catalogs/${catalogId}`, {
@@ -81,7 +78,7 @@ const Catalogs = () => {
         current.filter((catalog) => catalog._id !== catalogId)
       );
     } catch (err) {
-      setError(err.response?.data?.message || "Could not remove catalog");
+      setError(apiMessage(err, "Could not remove catalog"));
     }
   };
 
@@ -165,7 +162,7 @@ const Catalogs = () => {
                     {typeLabel[catalog.type] || catalog.type}
                   </td>
                   <td className="px-4 py-3 text-ink">
-                    {kindLabel[catalog.connection?.kind] ||
+                    {connectionLabel(catalog.connection?.kind) ||
                       catalog.connection?.kind ||
                       "—"}
                     {catalog.connection?.platform

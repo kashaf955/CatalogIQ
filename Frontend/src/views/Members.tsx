@@ -1,25 +1,34 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
+import type { Member } from "../types/api";
+
+interface InviteLinkResponse {
+  message: string;
+  emailSent: boolean;
+  // Only sent when the email could not be delivered.
+  inviteUrl: string | null;
+}
 
 const Members = () => {
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canInvite = role === "owner";
-  const [members, setMembers] = useState([]);
-  const [error, setError] = useState(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [notice, setNotice] = useState(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const loadMembers = async () => {
       try {
-        const response = await axios.get("/api/v1/tenants/me/members", {
+        const response = await axios.get<{ members: Member[] }>("/api/v1/tenants/me/members", {
           withCredentials: true,
         });
         setMembers(response.data.members || []);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load members");
+        setError(apiMessage(err, "Could not load members"));
       } finally {
         setLoading(false);
       }
@@ -28,17 +37,17 @@ const Members = () => {
     loadMembers();
   }, []);
 
-  const copyInviteLink = async (memberId) => {
+  const copyInviteLink = async (memberId: string) => {
     setError(null);
     setNotice(null);
     try {
-      const response = await axios.post(
+      const response = await axios.post<InviteLinkResponse>(
         `/api/v1/tenants/me/members/${memberId}/invite-link`,
         {},
         { withCredentials: true }
       );
       const { inviteUrl, emailSent, message } = response.data;
-      if (emailSent) {
+      if (emailSent || !inviteUrl) {
         setNotice(message);
         return;
       }
@@ -49,11 +58,11 @@ const Members = () => {
         setNotice(`${message} ${inviteUrl}`);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Could not create invite link");
+      setError(apiMessage(err, "Could not create invite link"));
     }
   };
 
-  const removeMember = async (memberId) => {
+  const removeMember = async (memberId: string) => {
     setError(null);
     setNotice(null);
     try {
@@ -62,7 +71,7 @@ const Members = () => {
       });
       setMembers((current) => current.filter((member) => member.id !== memberId));
     } catch (err) {
-      setError(err.response?.data?.message || "Could not remove member");
+      setError(apiMessage(err, "Could not remove member"));
     }
   };
 

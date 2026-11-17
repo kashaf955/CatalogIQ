@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
 
 const fieldClass =
   "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
@@ -8,12 +9,12 @@ const fieldClass =
 const MembersInvite = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [inviteUrl, setInviteUrl] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
@@ -30,11 +31,12 @@ const MembersInvite = () => {
       setEmail("");
       setName("");
     } catch (err) {
-      setError(err.response?.data?.message || "Invite failed");
+      setError(apiMessage(err, "Invite failed"));
     }
   };
 
   const copyLink = async () => {
+    if (!inviteUrl) return;
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);

@@ -1,43 +1,43 @@
-import React, { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { BrowserRouter as Router, Navigate, Routes, Route } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import Home from "./views/Home.jsx";
-import Login from "./views/login.jsx";
-import Register from "./views/Register.jsx";
-import Members from "./views/Members.jsx";
-import MembersInvite from "./views/memebrsInvite.jsx";
-import Dashboard from "./views/Dashboard.jsx";
-import DashboardLayout from "./components/DashboardLayout.jsx";
-import Catalogs from "./views/Catalogs.jsx";
-import CatalogForm from "./views/CatalogForm.jsx";
-import CatalogDetail from "./views/CatalogDetail.jsx";
-import Products from "./views/Products.jsx";
-import ProductDetail from "./views/ProductDetail.jsx";
-import Matches from "./views/Matches.jsx";
-import Compare from "./views/Compare.jsx";
-import Reviews from "./views/Reviews.jsx";
-import Export from "./views/Export.jsx";
-import AcceptInvite from "./views/AcceptInvite.jsx";
-import ForgotPassword from "./views/ForgotPassword.jsx";
-import ResetPassword from "./views/ResetPassword.jsx";
+import { useAppDispatch, useAppSelector } from "./hooks";
+import Home from "./views/Home";
+import Login from "./views/login";
+import Register from "./views/Register";
+import Members from "./views/Members";
+import MembersInvite from "./views/memebrsInvite";
+import Dashboard from "./views/Dashboard";
+import DashboardLayout from "./components/DashboardLayout";
+import Catalogs from "./views/Catalogs";
+import CatalogForm from "./views/CatalogForm";
+import CatalogDetail from "./views/CatalogDetail";
+import Products from "./views/Products";
+import ProductDetail from "./views/ProductDetail";
+import Matches from "./views/Matches";
+import Compare from "./views/Compare";
+import Reviews from "./views/Reviews";
+import Export from "./views/Export";
+import AcceptInvite from "./views/AcceptInvite";
+import ForgotPassword from "./views/ForgotPassword";
+import ResetPassword from "./views/ResetPassword";
 import { loadUser } from "./actions/authActions";
 
-const GuestOnly = ({ children }) => {
-  const { user, checked } = useSelector((state) => state.auth);
+const GuestOnly = ({ children }: { children: ReactNode }) => {
+  const { user, checked } = useAppSelector((state) => state.auth);
   if (!checked) return null;
   if (user) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
-const RequireAuth = ({ children }) => {
-  const { user, checked } = useSelector((state) => state.auth);
+const RequireAuth = ({ children }: { children: ReactNode }) => {
+  const { user, checked } = useAppSelector((state) => state.auth);
   if (!checked) return null;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
-const RequireInvite = ({ children }) => {
-  const { role } = useSelector((state) => state.auth);
+const RequireInvite = ({ children }: { children: ReactNode }) => {
+  const { role } = useAppSelector((state) => state.auth);
   if (role !== "owner") {
     return <Navigate to="/dashboard/members" replace />;
   }
@@ -45,8 +45,8 @@ const RequireInvite = ({ children }) => {
 };
 
 const App = () => {
-  const dispatch = useDispatch();
-  const { checked } = useSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+  const { checked } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     if (!checked) {

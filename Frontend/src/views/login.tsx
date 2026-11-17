@@ -1,30 +1,39 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState, type FormEvent } from "react";
+import { useAppDispatch, useAppSelector } from "../hooks";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../actions/authActions";
 import { clearFeedback } from "../reducers/authReducers";
+import axios from "axios";
 import Header from "../components/Header";
+
+interface Workspace {
+  id: string;
+  name: string;
+}
 
 const fieldClass =
   "mt-2 w-full rounded-lg border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const Login = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const notice = useLocation().state?.notice;
-  const { status, error } = useSelector((state) => state.auth);
+  const { status, error } = useAppSelector((state) => state.auth);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [workspaces, setWorkspaces] = useState(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
   const loading = status === "loading";
 
-  const signIn = async (tenantId) => {
+  const signIn = async (tenantId?: string) => {
     try {
       await dispatch(login(email, password, tenantId));
       navigate("/dashboard");
     } catch (err) {
-      const tenants = err.response?.data?.tenants;
-      if (err.response?.status === 409 && Array.isArray(tenants)) {
+      // 409: the account belongs to several workspaces; let the person pick one.
+      const tenants = axios.isAxiosError<{ tenants?: Workspace[] }>(err)
+        ? err.response?.data?.tenants
+        : undefined;
+      if (axios.isAxiosError(err) && err.response?.status === 409 && Array.isArray(tenants)) {
         dispatch(clearFeedback());
         setWorkspaces(tenants);
       }
@@ -32,7 +41,7 @@ const Login = () => {
     }
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     signIn();
   };

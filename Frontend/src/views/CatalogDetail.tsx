@@ -1,45 +1,40 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
-import ProcessingBar from "../components/ProcessingBar.jsx";
+import ProcessingBar from "../components/ProcessingBar";
+import { apiMessage } from "../utils/apiError";
+import type { Catalog, ConnectionKind } from "../types/api";
+import { connectionLabel, typeLabel } from "../utils/labels";
 
-const typeLabel = {
-  our_catalog: "Company catalog",
-  manufacturer: "Manufacturer",
-  competitor: "Competitor",
-};
-
-const kindLabel = {
-  api: "API",
-  csv: "CSV",
-  excel: "Excel",
-  feed: "Feed",
-  website: "Website",
-};
+interface IngestResponse {
+  message?: string;
+  imported?: number;
+  stopped?: boolean;
+}
 
 const fieldClass =
   "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none placeholder:text-mute focus:border-brand";
 
 const CatalogDetail = () => {
   const { id } = useParams();
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canManage =
     role === "owner" || role === "manager";
-  const [catalog, setCatalog] = useState(null);
-  const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [stopping, setStopping] = useState(false);
-  const [imported, setImported] = useState(null);
-  const ingestAbort = useRef(null);
+  const [imported, setImported] = useState<number | null>(null);
+  const ingestAbort = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const loadCatalog = async () => {
       try {
-        const response = await axios.get(`/api/v1/catalogs/${id}`, {
+        const response = await axios.get<Catalog>(`/api/v1/catalogs/${id}`, {
           withCredentials: true,
         });
         if (!response.data?._id) {
@@ -48,7 +43,7 @@ const CatalogDetail = () => {
         }
         setCatalog(response.data);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load catalog");
+        setError(apiMessage(err, "Could not load catalog"));
       } finally {
         setLoading(false);
       }
@@ -57,7 +52,7 @@ const CatalogDetail = () => {
     loadCatalog();
   }, [id]);
 
-  const kind =
+  const kind: ConnectionKind | undefined =
     catalog?.connection?.kind ||
     (catalog?.type === "manufacturer" || catalog?.type === "our_catalog"
       ? "excel"
@@ -68,7 +63,7 @@ const CatalogDetail = () => {
     kind === "api" &&
     String(catalog?.connection?.platform || "").toLowerCase() === "bigcommerce";
 
-  const onIngest = async (event) => {
+  const onIngest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
@@ -96,21 +91,22 @@ const CatalogDetail = () => {
     setStopping(false);
     try {
       let response;
-      if (isExcel) {
+      if (isExcel && file) {
         const form = new FormData();
         form.append("file", file);
-        response = await axios.post(`/api/v1/catalogs/${id}/ingest`, form, {
+        response = await axios.post<IngestResponse>(`/api/v1/catalogs/${id}/ingest`, form, {
           withCredentials: true,
           signal: controller.signal,
         });
       } else {
-        response = await axios.post(
+        // API and website ingests can run for many minutes.
+        response = await axios.post<IngestResponse>(
           `/api/v1/catalogs/${id}/ingest`,
           {},
           {
             withCredentials: true,
             signal: controller.signal,
-            timeout: kind === "excel" || kind === "csv" ? 60000 : 15 * 60 * 1000,
+            timeout: 15 * 60 * 1000,
           }
         );
       }
@@ -124,16 +120,17 @@ const CatalogDetail = () => {
             : "Products imported"
       );
     } catch (err) {
-      if (err.code === "ERR_CANCELED" || err.name === "CanceledError") {
+      if (axios.isCancel(err)) {
         setImported(0);
         setMessage("Ingest stopped.");
-      } else if (err.code === "ECONNABORTED" || err.message === "Network Error" || !err.response) {
+      } else if (axios.isAxiosError(err) && !err.response) {
+        // Timeout or network error: the server may still be working.
         setImported(0);
         setError(
           "The request timed out, but the server may still be importing. Open this catalog's products to check."
         );
       } else {
-        setError(err.response?.data?.message || "Ingest failed");
+        setError(apiMessage(err, "Ingest failed"));
       }
     } finally {
       ingestAbort.current = null;
@@ -187,7 +184,7 @@ const CatalogDetail = () => {
           <p className="mt-2 text-mute">
             {typeLabel[catalog.type] || catalog.type}
             {" · "}
-            {kindLabel[kind] || kind || "No connection"}
+            {connectionLabel(kind) || "No connection"}
             {catalog.connection?.platform ? ` · ${catalog.connection.platform}` : ""}
           </p>
         </div>

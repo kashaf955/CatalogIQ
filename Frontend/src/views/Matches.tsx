@@ -1,27 +1,29 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
+import type { Catalog, MatchRow } from "../types/api";
 
 const fieldClass =
   "rounded-md border border-white/10 bg-canvas px-3 py-2 text-sm text-ink outline-none focus:border-brand";
 
-const money = (value) =>
+const money = (value?: number | null) =>
   typeof value === "number" ? value.toFixed(2) : "—";
 
 const Matches = () => {
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canManage =
     role === "owner" || role === "manager";
   const isOwner = role === "owner";
-  const [catalogs, setCatalogs] = useState([]);
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [against, setAgainst] = useState("manufacturer");
   const [status, setStatus] = useState("all");
-  const [matches, setMatches] = useState([]);
+  const [matches, setMatches] = useState<MatchRow[]>([]);
   const [running, setRunning] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const [message, setMessage] = useState(null);
-  const [error, setError] = useState(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [autoScore, setAutoScore] = useState("");
   const [savingAuto, setSavingAuto] = useState(false);
 
@@ -29,7 +31,7 @@ const Matches = () => {
     const load = async () => {
       try {
         const [catalogResponse, settingsResponse] = await Promise.all([
-          axios.get("/api/v1/catalogs", { withCredentials: true }),
+          axios.get<Catalog[]>("/api/v1/catalogs", { withCredentials: true }),
           axios.get("/api/v1/tenants/me/settings", { withCredentials: true }),
         ]);
         setCatalogs(
@@ -38,14 +40,14 @@ const Matches = () => {
         const score = settingsResponse.data?.autoAcceptScore;
         setAutoScore(typeof score === "number" ? String(score) : "");
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load catalogs");
+        setError(apiMessage(err, "Could not load catalogs"));
       }
     };
 
     load();
   }, []);
 
-  const saveAutoScore = async (event) => {
+  const saveAutoScore = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSavingAuto(true);
     setError(null);
@@ -63,7 +65,7 @@ const Matches = () => {
           : "Auto-accept is off. Every match goes to the review queue."
       );
     } catch (err) {
-      setError(err.response?.data?.message || "Could not save auto-accept score");
+      setError(apiMessage(err, "Could not save auto-accept score"));
     } finally {
       setSavingAuto(false);
     }
@@ -78,7 +80,7 @@ const Matches = () => {
         });
         setMatches(Array.isArray(response.data) ? response.data : []);
       } catch (err) {
-        setError(err.response?.data?.message || "Could not load matches");
+        setError(apiMessage(err, "Could not load matches"));
       }
     };
 
@@ -102,7 +104,7 @@ const Matches = () => {
       );
       setReloadKey((key) => key + 1);
     } catch (err) {
-      setError(err.response?.data?.message || "Matching failed");
+      setError(apiMessage(err, "Matching failed"));
     } finally {
       setRunning(false);
     }

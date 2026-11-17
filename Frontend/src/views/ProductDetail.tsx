@@ -1,20 +1,29 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import { apiMessage } from "../utils/apiError";
+import type { Catalog, Product } from "../types/api";
 
-const dash = (value) =>
+const dash = (value: unknown) =>
   value === 0 || (value != null && String(value).trim() !== "")
     ? String(value)
     : "—";
 
-const sanitizeHtml = (html) =>
+const sanitizeHtml = (html: unknown) =>
   String(html || "")
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
     .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, "")
     .replace(/\son\w+="[^"]*"/gi, "")
     .replace(/\son\w+='[^']*'/gi, "");
 
-const Field = ({ label, children, wide }) => (
+interface FieldProps {
+  label: string;
+  children?: ReactNode;
+  // Spans the full row on wide screens.
+  wide?: boolean;
+}
+
+const Field = ({ label, children, wide }: FieldProps) => (
   <div className={wide ? "sm:col-span-2 lg:col-span-3" : undefined}>
     <p className="text-xs uppercase tracking-wide text-mute">{label}</p>
     <div className="mt-1 whitespace-pre-wrap break-words text-sm text-ink">
@@ -25,9 +34,9 @@ const Field = ({ label, children, wide }) => (
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [catalogs, setCatalogs] = useState([]);
-  const [error, setError] = useState(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,7 +46,7 @@ const ProductDetail = () => {
       try {
         const [productResponse, catalogsResponse] = await Promise.all([
           axios.get(`/api/v1/products/${id}`, { withCredentials: true }),
-          axios.get("/api/v1/catalogs", { withCredentials: true }),
+          axios.get<Catalog[]>("/api/v1/catalogs", { withCredentials: true }),
         ]);
         if (cancelled) return;
         setProduct(productResponse.data);
@@ -46,7 +55,7 @@ const ProductDetail = () => {
         );
       } catch (err) {
         if (!cancelled) {
-          setError(err.response?.data?.message || "Could not load product");
+          setError(apiMessage(err, "Could not load product"));
         }
       } finally {
         if (!cancelled) setLoading(false);

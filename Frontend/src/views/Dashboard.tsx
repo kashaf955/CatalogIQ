@@ -1,6 +1,5 @@
-import React from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 
 const steps = [
   {
@@ -48,7 +47,7 @@ const steps = [
 ];
 
 const Dashboard = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
 
   return (
     <div>

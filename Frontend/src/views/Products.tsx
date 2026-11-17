@@ -1,20 +1,22 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../hooks";
 import axios from "axios";
-import ProcessingBar from "../components/ProcessingBar.jsx";
+import ProcessingBar from "../components/ProcessingBar";
+import { apiMessage } from "../utils/apiError";
+import type { Catalog, Product } from "../types/api";
 
 const PAGE_SIZE = 100;
 
 const fieldClass =
   "rounded-md border border-white/10 bg-canvas px-3 py-2 text-sm text-ink outline-none placeholder:text-mute focus:border-brand";
 
-const dash = (value) =>
+const dash = (value: unknown) =>
   value === 0 || (value != null && String(value).trim() !== "")
     ? String(value)
     : "—";
 
-const stripHtml = (value) =>
+const stripHtml = (value: unknown) =>
   String(value || "")
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, " ")
@@ -27,7 +29,16 @@ const stripHtml = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
+interface PagerProps {
+  page: number;
+  pages: number;
+  total: number;
+  limit: number;
+  disabled: boolean;
+  onPage: (page: number) => void;
+}
+
+const Pager = ({ page, pages, total, limit, disabled, onPage }: PagerProps) => {
   if (total <= 0) return null;
   const from = (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
@@ -59,30 +70,31 @@ const Pager = ({ page, pages, total, limit, disabled, onPage }) => {
 };
 
 const Products = () => {
-  const { role } = useSelector((state) => state.auth);
+  const { role } = useAppSelector((state) => state.auth);
   const canManage =
     role === "owner" || role === "manager";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [catalogs, setCatalogs] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [catalogs, setCatalogs] = useState<Catalog[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState(false);
-  const [progress, setProgress] = useState(null);
-  const [selected, setSelected] = useState([]);
+  // 0-100 while removing selected products; null when the size is unknown.
+  const [progress, setProgress] = useState<number | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const [selectAllMatching, setSelectAllMatching] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  const selectAllRef = useRef(null);
+  const selectAllRef = useRef<HTMLInputElement>(null);
   const source = searchParams.get("source") || "";
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
 
-  const setFilters = (nextSource, nextPage) => {
-    const params = {};
+  const setFilters = (nextSource: string, nextPage: number) => {
+    const params: Record<string, string> = {};
     if (nextSource) params.source = nextSource;
     if (nextPage > 1) params.page = String(nextPage);
     setSearchParams(params);
@@ -109,7 +121,7 @@ const Products = () => {
     let cancelled = false;
     const loadCatalogs = async () => {
       try {
-        const catalogsResponse = await axios.get("/api/v1/catalogs", {
+        const catalogsResponse = await axios.get<Catalog[]>("/api/v1/catalogs", {
           withCredentials: true,
         });
         if (!cancelled) {
@@ -119,7 +131,7 @@ const Products = () => {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err.response?.data?.message || "Could not load products");
+          setError(apiMessage(err, "Could not load products"));
         }
       }
     };
@@ -163,7 +175,7 @@ const Products = () => {
           setProducts([]);
           setTotal(0);
           setPages(1);
-          setError(err.response?.data?.message || "Could not load products");
+          setError(apiMessage(err, "Could not load products"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -176,7 +188,7 @@ const Products = () => {
     };
   }, [source, page, debouncedQuery, reloadKey]);
 
-  const catalogName = (id) =>
+  const catalogName = (id: string) =>
     catalogs.find((catalog) => catalog._id === id)?.name || "—";
   const sourceCatalog = catalogs.find((catalog) => catalog._id === source);
 
@@ -196,7 +208,7 @@ const Products = () => {
     }
   }, [allSelected, someSelected]);
 
-  const toggleOne = (productId) => {
+  const toggleOne = (productId: string) => {
     setSelectAllMatching(false);
     setSelected((current) =>
       current.includes(productId)
@@ -220,7 +232,7 @@ const Products = () => {
     setSelected(rowIds);
   };
 
-  const dropIds = (ids) => {
+  const dropIds = (ids: string[]) => {
     const removed = new Set(ids);
     setProducts((current) =>
       current.filter((product) => !removed.has(product._id))
@@ -229,13 +241,13 @@ const Products = () => {
     setTotal((current) => Math.max(0, current - ids.length));
   };
 
-  const goToPage = (nextPage) => {
+  const goToPage = (nextPage: number) => {
     const bounded = Math.min(Math.max(1, nextPage), pages);
     if (bounded === page) return;
     setFilters(source, bounded);
   };
 
-  const removeProduct = async (productId) => {
+  const removeProduct = async (productId: string) => {
     setError(null);
     try {
       await axios.delete(`/api/v1/products/${productId}`, {
@@ -247,7 +259,7 @@ const Products = () => {
         dropIds([productId]);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Could not remove product");
+      setError(apiMessage(err, "Could not remove product"));
     }
   };
 
@@ -295,7 +307,7 @@ const Products = () => {
         setReloadKey((key) => key + 1);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Could not remove products");
+      setError(apiMessage(err, "Could not remove products"));
     } finally {
       setRemoving(false);
       setProgress(null);
