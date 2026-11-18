@@ -2,6 +2,7 @@ import { Router } from "express";
 import catalogController from "../controllers/catalogController";
 import { authenticate, authorize } from "../middleware/auth";
 import { upload } from "../middleware/upload";
+import { getAiDescriptions, runAiDescriptions } from "../controllers/aiDescriptionController";
 
 const router = Router();
 router.use(authenticate);
@@ -12,6 +13,8 @@ router.get("/", catalogController.getCatalog);
 router.get("/:id", catalogController.getCatalogById);
 router.post("/", manage, catalogController.createCatalog);
 router.post("/:id/ingest/abort", manage, catalogController.abortIngest);
+router.get("/:id/ai-descriptions", getAiDescriptions);
+router.post("/:id/ai-descriptions", manage, runAiDescriptions);
 router.post(
   "/:id/ingest",
   manage,

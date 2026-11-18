@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import CatalogSource, { type CatalogDocument, type CatalogRecord } from "../models/catalogSourceModel";
-import type { QueryFilter, UpdateQuery } from "mongoose";
+import type { QueryFilter } from "mongoose";
 import Product, { type ProductRecord } from "../models/productModel";
 import { fetchBigCommerceProducts } from "../services/bigcommerceService";
 import { parseExcelProducts } from "../services/excelService";
@@ -20,14 +20,17 @@ const CATALOG_STATUSES: unknown[] = ["active", "inactive", "error"];
 // How re-imported products are matched to the ones already saved.
 type MatchKey = "sku" | "bigcommerceId";
 
+// One operation in Product.bulkWrite, typed from the model itself.
+type ProductBulkOp = Parameters<typeof Product.bulkWrite>[0][number];
+
 const upsertProducts = async (
   tenantId: Id,
   sourceId: Id,
   items: ProductInput[],
   matchKey: MatchKey
 ) => {
-  const ops = items
-    .map((item) => {
+  const ops: ProductBulkOp[] = items
+    .map((item): ProductBulkOp | null => {
       const filter: QueryFilter<ProductRecord> = { tenantId, sourceId, isDeleted: false };
       if (matchKey === "bigcommerceId") {
         const bigcommerceId = item.attributes?.bigcommerceId;
@@ -50,7 +53,7 @@ const upsertProducts = async (
               isDeleted: false,
               deletedAt: null,
             },
-          } as UpdateQuery<ProductRecord>,
+          },
           upsert: true,
         },
       };

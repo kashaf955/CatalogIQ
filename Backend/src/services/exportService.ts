@@ -7,6 +7,7 @@ import { isMatchAgainst, type Id } from "../types/domain";
 import { isMatchableProduct } from "../utils/productMatchability";
 import { realSku } from "../utils/productCodes";
 import { HttpError } from "../utils/httpError";
+import { currentAiDescription } from "../utils/productFacts";
 
 const SCOPES = ["accepted", "pending", "all"] as const;
 const FORMATS = ["csv", "xlsx"] as const;
@@ -28,7 +29,7 @@ export interface ExportRequest {
 }
 const MAX_ROWS = 20000;
 const PRODUCT_FIELDS =
-  "sku mpn gtin name brand description price currency availability category fitment sourceUrl weight";
+  "sku mpn gtin name brand description price currency availability category fitment sourceUrl weight attributes aiDescription";
 
 const plain = (value: unknown) =>
   String(value || "")
@@ -69,6 +70,9 @@ const toProductRow = (product: ProductRecord): Row => ({
   Category: product.category || "",
   Fitment: product.fitment || "",
   Description: plain(product.description),
+  // Store-ready HTML written by AI; empty until generated (or after the
+  // product changed and it has not been rewritten yet).
+  "Enhanced description": currentAiDescription(product),
   URL: product.sourceUrl || "",
 });
 
@@ -89,6 +93,7 @@ const toMatchRow = (match: PopulatedMatch): Row => {
     "Our brand": ours.brand || "",
     "Our price": ourPrice,
     "Our availability": ours.availability || "",
+    "Our enhanced description": currentAiDescription(ours),
     "Their SKU": realSku(theirs),
     "Their name": theirs.name || "",
     "Their price": theirPrice,

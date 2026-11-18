@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { apiMessage } from "../utils/apiError";
 import type { Catalog } from "../types/api";
+import { useAppSelector } from "../hooks";
+import AiDescriptionsPanel from "../components/AiDescriptionsPanel";
 
 const fieldClass =
   "mt-2 w-full rounded-md border border-white/10 bg-canvas px-3 py-2.5 text-ink outline-none focus:border-brand";
@@ -28,6 +30,8 @@ const readBlobError = async (error: unknown) => {
 };
 
 const Export = () => {
+  const { role } = useAppSelector((state) => state.auth);
+  const canManage = role === "owner" || role === "manager";
   const [catalogs, setCatalogs] = useState<Catalog[]>([]);
   const [sourceId, setSourceId] = useState("");
   const [format, setFormat] = useState("csv");
@@ -140,6 +144,10 @@ const Export = () => {
             ))}
           </select>
         </label>
+
+        {selected?.type === "our_catalog" ? (
+          <AiDescriptionsPanel catalogId={selected._id} canManage={canManage} />
+        ) : null}
 
         <label className="mb-4 block text-sm text-ink">
           Include
