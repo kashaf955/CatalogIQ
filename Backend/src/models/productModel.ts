@@ -89,6 +89,24 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Store-ready description written by AI. The original `description` is
+    // never changed; exports add this as a separate column.
+    aiDescription: {
+      type: new mongoose.Schema(
+        {
+          html: { type: String },
+          // Fingerprint of the product facts it was written from; when the
+          // product is re-imported with different facts, it no longer matches.
+          factsHash: { type: String },
+          // Hash of everything sent to the AI, so an unchanged request is not paid twice.
+          inputHash: { type: String },
+          model: { type: String },
+          generatedAt: { type: Date },
+        },
+        { _id: false }
+      ),
+      default: undefined,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

@@ -21,6 +21,8 @@ const AI_MODEL = process.env.AI_MODEL || "claude-opus-5-5";
 // Most new AI calls one "AI check" run may make; cached answers are free.
 const AI_MAX_CHECKS = Number(process.env.AI_MAX_CHECKS) || 100;
 const AI_CONCURRENCY = Number(process.env.AI_CONCURRENCY) || 3;
+// Most new descriptions one "write descriptions" run may generate.
+const AI_MAX_DESCRIPTIONS = Number(process.env.AI_MAX_DESCRIPTIONS) || 50;
 
 const assertTokenEncryptionKey = () => {
   if (!TOKEN_ENCRYPTION_KEY) {
@@ -50,5 +52,6 @@ export {
   AI_MODEL,
   AI_MAX_CHECKS,
   AI_CONCURRENCY,
+  AI_MAX_DESCRIPTIONS,
   assertTokenEncryptionKey,
 };

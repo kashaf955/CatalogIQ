@@ -215,6 +215,32 @@ export interface PricePlan extends MessageResponse {
   modified?: number;
 }
 
+// ---------- AI descriptions ----------
+
+export interface AiDescriptionJob {
+  catalogId: string;
+  status: "running" | "finished" | "failed";
+  total: number;
+  upToDate: number;
+  written: number;
+  notEnoughInfo: number;
+  skipped: number;
+  errors: number;
+  aiCalls: number;
+  limit: number;
+  stopReason: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+}
+
+export interface AiDescriptionStatus {
+  configured: boolean;
+  job: AiDescriptionJob | null;
+  total: number;
+  // Products with a current AI description (included in exports).
+  ready: number;
+}
+
 // ---------- members ----------
 
 export interface Member {
